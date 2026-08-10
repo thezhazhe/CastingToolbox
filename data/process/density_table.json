@@ -1,0 +1,29 @@
+{
+  "id": "density_table",
+  "title": "各材料密度汇总",
+  "category": "process",
+  "keywords": [
+    "密度",
+    "比重",
+    "kg/dm³",
+    "重量计算"
+  ],
+  "related_calcs": [
+    "yield"
+  ],
+  "content": {
+    "灰铁HT": "6.8~7.3 kg/dm³（取7.0）",
+    "球铁QT": "6.9~7.2 kg/dm³（取7.0）",
+    "铸钢ZG": "7.8 kg/dm³",
+    "铝合金": "2.6~2.8 kg/dm³（取2.7）",
+    "铜合金": "7.5~8.8 kg/dm³",
+    "notes": [
+      "重量 = 体积 × 密度，用于铁液重量/冒口体积换算"
+    ]
+  },
+  "reference": {
+    "book": "铸造工程师手册",
+    "chapter": "铸造工艺参数"
+  },
+  "confidence": "medium-high"
+}

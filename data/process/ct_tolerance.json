@@ -1,0 +1,30 @@
+{
+  "id": "ct_tolerance",
+  "title": "铸件尺寸公差等级 CT（GB/T 6414）",
+  "category": "process",
+  "keywords": [
+    "尺寸公差",
+    "CT等级",
+    "GB/T 6414",
+    "公差"
+  ],
+  "content": {
+    "砂型 手工造型": "CT9~CT12",
+    "砂型 机器造型": "CT8~CT10",
+    "壳型": "CT7~CT9",
+    "金属型（重力）": "CT7~CT9",
+    "低压铸造": "CT7~CT8",
+    "压力铸造": "CT6~CT7",
+    "熔模铸造": "CT4~CT7",
+    "notes": [
+      "CT 等级数字越小精度越高",
+      "尺寸公差与机械加工余量联合标注：如 GB/T 6414 CT10-RMA F",
+      "CT 公差值按基本尺寸分段查 GB/T 6414-1999 表"
+    ]
+  },
+  "reference": {
+    "book": "GB/T 6414-1999",
+    "chapter": "尺寸公差"
+  },
+  "confidence": "medium-high"
+}

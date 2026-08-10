@@ -1,0 +1,73 @@
+{
+  "id": "QT450",
+  "title": "QT450-10 球墨铸铁",
+  "category": "material",
+  "keywords": [
+    "QT450",
+    "QT450-10",
+    "球铁",
+    "球墨铸铁",
+    "QT"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 1348"
+    },
+    "composition": {
+      "carbon": "3.6~3.8%",
+      "silicon": "2.4~2.8%",
+      "manganese": "0.3~0.5%",
+      "phosphorus": "≤0.08%",
+      "sulfur": "≤0.03%",
+      "carbon_equivalent": "4.3~4.6",
+      "magnesium_residual": "0.03~0.05%",
+      "inoculant": "75硅铁 0.4~1.0%",
+      "spheroidizer": "稀土镁球化剂 1.1~1.5%"
+    },
+    "physical": {
+      "density": "6.9~7.2 kg/dm³",
+      "linear_shrinkage": "0.5~0.8%",
+      "volumetric_shrinkage": "~3%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥450 MPa",
+      "elongation": "≥10%",
+      "hardness": "160~210 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1380~1420℃",
+      "yield_range": "55~75%"
+    },
+    "casting_behavior": {
+      "solidification": "糊状凝固，石墨化膨胀可部分自补缩",
+      "riser_efficiency": "球顶柱暗冒口 ~25%"
+    },
+    "melt_shop": {
+      "球化效果快速判定": "炉前取样看断面：银白、缩陷明显、敲击清脆 → 球化良好；灰暗无缩陷、声音闷哑 → 球化不良",
+      "原铁液硫含量": "≤0.03%（硫高球化剂消耗大、易球化不良）",
+      "球化温度": "1400~1450℃",
+      "球化后浇注时限": "≤15min 内浇完，防球化衰退",
+      "孕育": "出铁随流孕育，孕育后尽快浇注，防孕育衰退"
+    },
+    "recommendations": [
+      "球化处理控制残余镁，过度球化易产生缩松",
+      "薄壁复杂件建议加强孕育",
+      "浇注系统按开放式或半封闭式设计，冒口补缩+石墨化膨胀双保障"
+    ],
+    "notes": [
+      "常用于汽车底盘件、曲轴、齿轮箱体、泵阀等要求强度与韧性的铸件"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "球墨铸铁（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

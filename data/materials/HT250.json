@@ -1,0 +1,69 @@
+{
+  "id": "HT250",
+  "title": "HT250 灰铸铁",
+  "category": "material",
+  "keywords": [
+    "HT250",
+    "灰铁",
+    "灰铸铁",
+    "HT"
+  ],
+  "related_calcs": [
+    "gating",
+    "riser",
+    "shrinkage",
+    "yield",
+    "yield",
+    "machining"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 9439"
+    },
+    "composition": {
+      "carbon": "3.2~3.5%",
+      "silicon": "1.8~2.3%",
+      "manganese": "0.6~1.0%",
+      "phosphorus": "≤0.12%",
+      "sulfur": "≤0.12%",
+      "carbon_equivalent": "3.7~4.1"
+    },
+    "physical": {
+      "density": "7.1~7.4 kg/dm³",
+      "linear_shrinkage": "1.0~1.1%",
+      "volumetric_shrinkage": "~2%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥250 MPa",
+      "hardness": "170~241 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1310~1380℃",
+      "yield_range": "65~85%"
+    },
+    "casting_behavior": {
+      "solidification": "共晶凝固，石墨化膨胀大",
+      "riser_efficiency": "明顶圆柱 ~14%"
+    },
+    "melt_shop": {
+      "炉前三角试片白口深度": "3~5mm（参考）；过浅→碳硅偏高、强度不足，过深→易白口难加工",
+      "炉前检测": "热分析（碳硅仪）快速测 CE，或光谱仪炉前分析",
+      "出铁温度": "1400~1440℃",
+      "孕育后复检": "孕育后三角试片白口明显变浅为孕育正常",
+      "浇注前": "浇口杯充满、平稳充型，防止卷入渣气"
+    },
+    "recommendations": [
+      "耐磨、耐压、要求较高的结构件（缸体、阀体、液压件）",
+      "薄壁高强度件可加合金（Cu/Cr）或孕育处理提高强度",
+      "加工余量等级建议取 E~G 级"
+    ],
+    "notes": [
+      "高强度灰铁，用于机床床身、液压件、模具底板等"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "灰铸铁（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

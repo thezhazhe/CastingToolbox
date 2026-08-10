@@ -1,0 +1,63 @@
+{
+  "id": "ZG230-450",
+  "title": "ZG230-450 铸造碳钢",
+  "category": "material",
+  "keywords": [
+    "ZG230-450",
+    "ZG230",
+    "铸钢",
+    "铸造碳钢",
+    "ZG"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 11352"
+    },
+    "composition": {
+      "carbon": "0.20~0.30%",
+      "silicon": "0.35~0.60%",
+      "manganese": "0.70~1.00%",
+      "phosphorus": "≤0.04%",
+      "sulfur": "≤0.04%"
+    },
+    "physical": {
+      "density": "7.8 kg/dm³",
+      "linear_shrinkage": "1.8~2.0%",
+      "volumetric_shrinkage": "4.5~5%（无石墨化，冒口补缩需求大）"
+    },
+    "mechanical": {
+      "yield_strength": "≥230 MPa",
+      "tensile_strength": "≥450 MPa",
+      "elongation": "≥22%",
+      "hardness": "≥130 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1540~1600℃",
+      "yield_range": "50~65%"
+    },
+    "casting_behavior": {
+      "solidification": "逐层凝固，收缩集中，易产生集中缩孔",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "必须设置足够大的冒口补缩，缩孔倾向大",
+      "浇注温度高，注意型砂耐火度与透气性",
+      "退火或正火处理改善切削性与组织"
+    ],
+    "notes": [
+      "用于受力不大的机架、箱体、犁铧等普通铸钢件"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "铸钢（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

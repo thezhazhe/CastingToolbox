@@ -1,0 +1,32 @@
+{
+  "id": "rule_03_laminar",
+  "title": "规则3 · 避免层流卷入（液面不停滞不倒退）",
+  "category": "rule",
+  "keywords": ["层流卷入", "液面前沿", "氧化褶皱", "冷隔", "茶壶式浇口杯", "底注包", "Campbell", "十规则"],
+  "related_calcs": ["gating"],
+  "content": {
+    "rule": "金属液前沿持续前进、不停滞、不倒退、不回翻（避免层流卷入表面膜）",
+    "mechanism": "液面前沿若停止，表面氧化膜变厚变强；再流动时被新金属覆盖、卷入成『双膜』，形成水平裂纹状缺陷（氧化褶皱 oxide lap）。旧氧化膜必须留在浇口杯/横浇道，不让进入型腔。",
+    "parameter": "工程落点：内浇道尽量低位（上行充型）· 茶壶式浇口杯 / 底注包防旧膜进入 · 反重力 / 倾斜浇注更优",
+    "violation": [
+      "氧化褶皱（水平裂纹状夹层，常被误判为冷裂）",
+      "冷隔（凝固型）与冷接痕",
+      "表面夹渣、铸件整体渗漏风险"
+    ],
+    "check": [
+      "内浇道低位进入，金属液上行充型",
+      "浇口杯用茶壶式 / 挡渣式，避免浇注漩涡卷入旧膜",
+      "钢液用底注包（塞杆式）减少表面渣进入",
+      "型腔顶部开排气，防止液面因憋气停止",
+      "浇注连续不断流（中断=液面停止）"
+    ],
+    "defects": ["冷隔", "夹渣", "冷裂"]
+  },
+  "reference": {
+    "book": "Complete Casting Handbook",
+    "chapter": "10.3 Rule 3: Avoid laminar entrainment (non-stopping, non-reversing)",
+    "author": "John Campbell"
+  },
+  "confidence": "high",
+  "reliability": "A"
+}

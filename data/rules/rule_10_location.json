@@ -1,0 +1,32 @@
+{
+  "id": "rule_10_location",
+  "title": "规则10 · 提供定位点",
+  "category": "rule",
+  "keywords": ["定位点", "基准面", "datum", "尺寸公差", "机加工定位", "装夹", "Campbell", "十规则"],
+  "related_calcs": ["machining", "shrinkage"],
+  "content": {
+    "rule": "在铸件上提供明确的定位点 / 基准面，供模具、加工、检验三方共用",
+    "mechanism": "三个正交基准面定义所有尺寸的零位。基准应固定在真实铸件特征上（凸台边缘/壁面，而非中心线），靠近关键特征、尽量靠近零件中心——这样尺寸波动的影响最小。定位点让模具/加工/检验三方的尺寸基准一致，否则成品时好时坏。",
+    "parameter": "基准面规则：①三个正交基准面 ②平行于机加工运动轴 ③固定在真实特征上 ④靠近关键特征与中心",
+    "violation": [
+      "铸件尺寸合格但机加工后关键特征错位",
+      "同一铸件不同视图尺寸基准漂移",
+      "装夹变形、返工率高"
+    ],
+    "check": [
+      "图纸是否有明确的三个正交基准面",
+      "基准是否在真实特征上（而非中心线/抽象线）",
+      "关键特征（如凸台）是否靠近基准面",
+      "基准是否平行机加工运动轴",
+      "检验时是否用与加工一致的定位点"
+    ],
+    "defects": ["尺寸超差", "变形"]
+  },
+  "reference": {
+    "book": "Complete Casting Handbook",
+    "chapter": "10.10 Rule 10: Provide location points",
+    "author": "John Campbell"
+  },
+  "confidence": "high",
+  "reliability": "A"
+}

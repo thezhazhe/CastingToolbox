@@ -1,0 +1,63 @@
+{
+  "id": "ZG340-640",
+  "title": "ZG340-640 铸造碳钢",
+  "category": "material",
+  "keywords": [
+    "ZG340-640",
+    "ZG340",
+    "铸钢",
+    "铸造碳钢",
+    "ZG"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 11352"
+    },
+    "composition": {
+      "carbon": "0.42~0.52%",
+      "silicon": "0.50~0.80%",
+      "manganese": "0.70~1.00%",
+      "phosphorus": "≤0.04%",
+      "sulfur": "≤0.04%"
+    },
+    "physical": {
+      "density": "7.8 kg/dm³",
+      "linear_shrinkage": "1.8~2.0%",
+      "volumetric_shrinkage": "4.5~5%"
+    },
+    "mechanical": {
+      "yield_strength": "≥340 MPa",
+      "tensile_strength": "≥640 MPa",
+      "elongation": "≥10%",
+      "hardness": "≥170 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1500~1560℃",
+      "yield_range": "50~65%"
+    },
+    "casting_behavior": {
+      "solidification": "逐层凝固，收缩集中，热裂倾向较大",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "高碳高强度铸钢，耐磨性好",
+      "热裂与缩孔风险高，冒口与浇注系统设计要慎重",
+      "铸后需热处理改善性能"
+    ],
+    "notes": [
+      "齿轮、联轴器、耐磨机件等"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "铸钢（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

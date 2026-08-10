@@ -1,0 +1,74 @@
+{
+  "id": "QT500-7",
+  "title": "QT500-7 球墨铸铁",
+  "category": "material",
+  "keywords": [
+    "QT500-7",
+    "QT500",
+    "球铁",
+    "球墨铸铁",
+    "QT"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 1348"
+    },
+    "composition": {
+      "carbon": "3.6~3.8%",
+      "silicon": "2.2~2.7%",
+      "manganese": "0.3~0.6%",
+      "phosphorus": "≤0.08%",
+      "sulfur": "≤0.03%",
+      "carbon_equivalent": "4.3~4.5",
+      "magnesium_residual": "0.03~0.05%",
+      "inoculant": "75硅铁 0.4~0.8%",
+      "spheroidizer": "稀土镁球化剂 1.1~1.5%"
+    },
+    "physical": {
+      "density": "6.9~7.2 kg/dm³",
+      "linear_shrinkage": "0.5~0.8%",
+      "volumetric_shrinkage": "~3%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥500 MPa",
+      "yield_strength": "≥320 MPa",
+      "elongation": "≥7%",
+      "hardness": "170~230 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1360~1410℃",
+      "yield_range": "55~75%"
+    },
+    "casting_behavior": {
+      "solidification": "糊状凝固，石墨化膨胀可部分自补缩",
+      "riser_efficiency": "球顶柱暗冒口 ~25%"
+    },
+    "melt_shop": {
+      "球化效果快速判定": "炉前取样看断面：银白、缩陷明显、敲击清脆 → 球化良好；灰暗无缩陷、声音闷哑 → 球化不良",
+      "原铁液硫含量": "≤0.03%（硫高球化剂消耗大、易球化不良）",
+      "球化温度": "1400~1450℃",
+      "球化后浇注时限": "≤15min 内浇完，防球化衰退",
+      "孕育": "出铁随流孕育，孕育后尽快浇注，防孕育衰退"
+    },
+    "recommendations": [
+      "珠光体+铁素体混合基体，强度与韧性兼顾",
+      "中等壁厚件适用，控制冷却速度获得所需基体",
+      "注意冒口补缩与石墨化膨胀配合"
+    ],
+    "notes": [
+      "用于曲轴、凸轮轴、齿轮、缸体、缸盖等"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "球墨铸铁（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

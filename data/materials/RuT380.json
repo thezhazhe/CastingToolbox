@@ -1,0 +1,62 @@
+{
+  "id": "RuT380",
+  "title": "RuT380 蠕墨铸铁",
+  "category": "material",
+  "keywords": [
+    "RuT380",
+    "RuT",
+    "蠕墨铸铁",
+    "蠕铁"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 26655"
+    },
+    "composition": {
+      "carbon": "3.5~3.8%",
+      "silicon": "2.0~2.6%",
+      "manganese": "0.3~0.5%",
+      "phosphorus": "≤0.06%",
+      "sulfur": "≤0.03%",
+      "carbon_equivalent": "4.2~4.5"
+    },
+    "physical": {
+      "density": "6.9~7.2 kg/dm³",
+      "linear_shrinkage": "0.5~1.0%",
+      "volumetric_shrinkage": "~3%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥380 MPa",
+      "elongation": "≥1%",
+      "hardness": "200~300 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1350~1400℃",
+      "yield_range": "55~75%"
+    },
+    "casting_behavior": {
+      "solidification": "石墨呈蠕虫状，导热性好、抗热疲劳，强度接近球铁、铸造性能优于球铁",
+      "riser_efficiency": "球顶柱暗冒口 ~25%"
+    },
+    "recommendations": [
+      "蠕化处理控制蠕化率，防止球化过度或不足",
+      "导热性好、耐热疲劳，适合热循环件",
+      "缩松倾向小于球铁，冒口可适当减小"
+    ],
+    "notes": [
+      "缸盖、制动盘、排气管、热风炉管等热疲劳件"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "蠕墨铸铁（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

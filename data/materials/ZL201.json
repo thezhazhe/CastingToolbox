@@ -1,0 +1,61 @@
+{
+  "id": "ZL201",
+  "title": "ZL201 铸造铝合金（AlCu5）",
+  "category": "material",
+  "keywords": [
+    "ZL201",
+    "铝铜",
+    "铸造铝合金",
+    "铝合金",
+    "Al"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 1173"
+    },
+    "composition": {
+      "copper": "4.5~5.3%",
+      "manganese": "0.6~1.0%",
+      "titanium": "0.15~0.35%",
+      "silicon": "≤0.3%"
+    },
+    "physical": {
+      "density": "2.78 kg/dm³",
+      "linear_shrinkage": "1.0~1.2%",
+      "volumetric_shrinkage": "4~5%（收缩大，需强补缩）"
+    },
+    "mechanical": {
+      "tensile_strength": "≥290 MPa（T5）",
+      "elongation": "≥4%（T5）",
+      "hardness": "~80 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "700~750℃",
+      "yield_range": "70~90%"
+    },
+    "casting_behavior": {
+      "solidification": "糊状凝固，凝固范围宽，缩松与热裂倾向大",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "高强度铝铜系合金，需固溶时效（T5/T6）",
+      "收缩大，冒口+冷铁补缩要求高",
+      "易热裂，注意浇冒口连接圆角"
+    ],
+    "notes": [
+      "要求高强度高硬度的铝合金件（支架、轮毂、壳体）等"
+    ]
+  },
+  "reference": {
+    "book": "GB/T 1173-2013 铸造铝合金",
+    "chapter": "常用铸造铝合金"
+  },
+  "confidence": "medium-high"
+}

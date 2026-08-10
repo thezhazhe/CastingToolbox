@@ -1,0 +1,62 @@
+{
+  "id": "KTH350-10",
+  "title": "KTH350-10 黑心可锻铸铁",
+  "category": "material",
+  "keywords": [
+    "KTH350-10",
+    "KTH",
+    "可锻铸铁",
+    "玛钢",
+    "黑心"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 9440"
+    },
+    "composition": {
+      "carbon": "2.5~2.8%",
+      "silicon": "1.1~1.4%",
+      "manganese": "0.5~0.7%",
+      "phosphorus": "≤0.06%",
+      "sulfur": "≤0.04%"
+    },
+    "physical": {
+      "density": "7.2~7.4 kg/dm³",
+      "linear_shrinkage": "1.2~1.5%",
+      "volumetric_shrinkage": "~3%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥350 MPa",
+      "elongation": "≥10%",
+      "hardness": "≤150 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1350~1400℃",
+      "yield_range": "55~70%"
+    },
+    "casting_behavior": {
+      "solidification": "先得白口铸铁，再经石墨化退火（可锻化退火）得到团絮状石墨",
+      "riser_efficiency": "明顶圆柱 ~14%"
+    },
+    "recommendations": [
+      "浇注时必须先保证白口（薄壁件），靠退火获得韧性",
+      "退火周期长，成本较高",
+      "适合薄壁复杂小件，厚壁件难以退透"
+    ],
+    "notes": [
+      "管件、阀门、农机零件、汽车底盘件等（俗称玛钢）"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "可锻铸铁（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

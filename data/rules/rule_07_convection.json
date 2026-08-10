@@ -1,0 +1,32 @@
+{
+  "id": "rule_07_convection",
+  "title": "规则7 · 避免对流损害（低浇高补）",
+  "category": "rule",
+  "keywords": ["对流", "补缩", "内浇道低位", "冒口高位", "低浇高补", "fill uphill feed downhill", "Campbell", "十规则"],
+  "related_calcs": ["riser", "gating"],
+  "content": {
+    "rule": "内浇道低位进料（上行充型）、冒口高位补缩（下行补缩）——『低浇高补』",
+    "mechanism": "充型与补缩方向相反才是最优：内浇道尽量低，让金属液平稳上行充满型腔；冒口放在铸件最高热节上方，靠重力向下补缩。向上补缩（靠负压/大气压）并不可靠，一旦铸件表面破裂释放压力，补缩即失效。",
+    "parameter": "两条同等重要的原则：①内浇道低——fill uphill ②冒口高——feed downhill；盲冒口置于低位不可靠",
+    "violation": [
+      "高位内浇道使补缩通道提前凝固 → 缩松",
+      "低位盲冒口 → 补缩失效，铸件表面缩陷",
+      "对流卷渣、夹杂上浮滞留"
+    ],
+    "check": [
+      "内浇道是否在型腔低位（自下而上充型）",
+      "冒口是否在最高热节上方（高于补缩点）",
+      "盲冒口位置与大气连通（通气针）",
+      "冒口颈是否让补缩液流畅通",
+      "复杂件用模拟验证补缩路径"
+    ],
+    "defects": ["缩孔与缩松", "夹渣"]
+  },
+  "reference": {
+    "book": "Complete Casting Handbook",
+    "chapter": "10.7 Rule 7: Avoid convection damage",
+    "author": "John Campbell"
+  },
+  "confidence": "high",
+  "reliability": "A"
+}

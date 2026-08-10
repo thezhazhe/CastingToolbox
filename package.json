@@ -1,0 +1,16 @@
+{
+  "name": "casting-toolbox",
+  "version": "0.3.0",
+  "description": "Casting Toolbox 开源铸造工具箱：计算工具 + 知识库 + 工艺向导，完全离线、本地数据。",
+  "main": "serve.js",
+  "type": "module",
+  "scripts": {
+    "start": "node serve.js",
+    "test": "node scripts/browser_test.mjs",
+    "validate": "node scripts/validate_data.mjs",
+    "qa": "node scripts/qa_static.mjs && node scripts/qa_sweep.mjs",
+    "screenshot": "node scripts/screenshot.mjs"
+  },
+  "keywords": ["foundry", "casting", "riser", "gating", "铸造", "工具箱"],
+  "license": "MIT"
+}

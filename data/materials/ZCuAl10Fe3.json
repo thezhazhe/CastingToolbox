@@ -1,0 +1,60 @@
+{
+  "id": "ZCuAl10Fe3",
+  "title": "ZCuAl10Fe3 铝青铜",
+  "category": "material",
+  "keywords": [
+    "ZCuAl10Fe3",
+    "铝青铜",
+    "铜合金",
+    "铸造铜合金"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 1176"
+    },
+    "composition": {
+      "aluminum": "8.5~10.5%",
+      "iron": "2.0~4.0%",
+      "zinc": "≤0.4%",
+      "tin": "≤0.3%"
+    },
+    "physical": {
+      "density": "7.5 kg/dm³",
+      "linear_shrinkage": "1.4~1.5%",
+      "volumetric_shrinkage": "4~5%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥490 MPa（砂型）",
+      "elongation": "≥13%",
+      "hardness": "100~120 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1120~1180℃",
+      "yield_range": "55~70%"
+    },
+    "casting_behavior": {
+      "solidification": "凝固范围较窄，氧化膜易卷入夹渣",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "高强度高耐磨耐蚀，氧化铝膜致密",
+      "浇注系统应挡渣，防止氧化夹渣",
+      "冒口补缩充足，注意防热裂"
+    ],
+    "notes": [
+      "船舶螺旋桨、齿轮、轴套、阀体等高强度铜件"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "铸造铜合金（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

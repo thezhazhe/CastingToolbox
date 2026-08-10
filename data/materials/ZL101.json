@@ -1,0 +1,61 @@
+{
+  "id": "ZL101",
+  "title": "ZL101 铸造铝合金（AlSi7Mg）",
+  "category": "material",
+  "keywords": [
+    "ZL101",
+    "铝硅镁",
+    "铸造铝合金",
+    "铝合金",
+    "Al"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 1173"
+    },
+    "composition": {
+      "silicon": "6.5~7.5%",
+      "magnesium": "0.25~0.45%",
+      "manganese": "≤0.5%",
+      "copper": "≤0.2%"
+    },
+    "physical": {
+      "density": "2.66 kg/dm³",
+      "linear_shrinkage": "0.8~1.0%",
+      "volumetric_shrinkage": "3.5~4.5%（需冒口+冷铁补缩）"
+    },
+    "mechanical": {
+      "tensile_strength": "≥195 MPa（T6）",
+      "elongation": "≥5%（T6）",
+      "hardness": "~60 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "690~740℃",
+      "yield_range": "70~90%"
+    },
+    "casting_behavior": {
+      "solidification": "糊状凝固，缩松倾向中等，需补缩与冷铁",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "需热处理（T6）获得最佳力学性能",
+      "铝合金浇注前应除气精炼（减少针孔）",
+      "厚壁处加冷铁+冒口配合，防缩松"
+    ],
+    "notes": [
+      "用途最广的铝硅系合金：发动机缸体、缸盖、壳体、泵体等"
+    ]
+  },
+  "reference": {
+    "book": "GB/T 1173-2013 铸造铝合金",
+    "chapter": "常用铸造铝合金"
+  },
+  "confidence": "medium-high"
+}

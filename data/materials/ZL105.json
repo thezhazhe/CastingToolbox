@@ -1,0 +1,61 @@
+{
+  "id": "ZL105",
+  "title": "ZL105 铸造铝合金（AlSi5Cu1Mg）",
+  "category": "material",
+  "keywords": [
+    "ZL105",
+    "铝硅铜镁",
+    "铸造铝合金",
+    "铝合金",
+    "Al"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 1173"
+    },
+    "composition": {
+      "silicon": "4.5~5.5%",
+      "copper": "1.0~1.5%",
+      "magnesium": "0.35~0.6%",
+      "manganese": "≤0.5%"
+    },
+    "physical": {
+      "density": "2.71 kg/dm³",
+      "linear_shrinkage": "0.9~1.1%",
+      "volumetric_shrinkage": "3.5~4.5%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥225 MPa（T5）",
+      "elongation": "≥2%（T5）",
+      "hardness": "~75 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "690~740℃",
+      "yield_range": "70~90%"
+    },
+    "casting_behavior": {
+      "solidification": "糊状凝固，缩松倾向中等，需补缩+冷铁",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "含铜，强度高、切削性好",
+      "需热处理（T5/T6）达到最佳性能",
+      "防针孔：除气精炼"
+    ],
+    "notes": [
+      "中等复杂壳体、支架、曲轴箱等"
+    ]
+  },
+  "reference": {
+    "book": "GB/T 1173-2013 铸造铝合金",
+    "chapter": "常用铸造铝合金"
+  },
+  "confidence": "medium-high"
+}

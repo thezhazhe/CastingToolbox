@@ -1,0 +1,63 @@
+{
+  "id": "ZG310-570",
+  "title": "ZG310-570 铸造碳钢",
+  "category": "material",
+  "keywords": [
+    "ZG310-570",
+    "ZG310",
+    "铸钢",
+    "铸造碳钢",
+    "ZG"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 11352"
+    },
+    "composition": {
+      "carbon": "0.35~0.45%",
+      "silicon": "0.50~0.80%",
+      "manganese": "0.70~1.00%",
+      "phosphorus": "≤0.04%",
+      "sulfur": "≤0.04%"
+    },
+    "physical": {
+      "density": "7.8 kg/dm³",
+      "linear_shrinkage": "1.8~2.0%",
+      "volumetric_shrinkage": "4.5~5%"
+    },
+    "mechanical": {
+      "yield_strength": "≥310 MPa",
+      "tensile_strength": "≥570 MPa",
+      "elongation": "≥15%",
+      "hardness": "≥150 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1520~1580℃",
+      "yield_range": "50~65%"
+    },
+    "casting_behavior": {
+      "solidification": "逐层凝固，收缩集中，热裂倾向较大",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "强度较高，注意热裂与缩孔双重控制",
+      "冒口尺寸要足够，浇注系统避免过热集中",
+      "控制硫含量，降低热裂敏感性"
+    ],
+    "notes": [
+      "用于轴承座、联轴器、齿轮、缸体等较高强度铸钢件"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "铸钢（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

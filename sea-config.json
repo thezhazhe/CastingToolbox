@@ -1,0 +1,5 @@
+{
+  "main": "CastingToolboxApp.cjs",
+  "output": "sea-prep.blob",
+  "disableExperimentalSEAWarning": true
+}

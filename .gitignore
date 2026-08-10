@@ -1,0 +1,23 @@
+# 依赖 / 构建产物
+node_modules/
+dist/
+*.exe
+sea-prep.blob
+
+# 版权内容（书摘/提取原文，不公开）
+_books/
+_extract/
+scripts/_books/
+scripts/extract/_extract/
+
+# 测试 / 打包残留
+_edge_profile/
+_qa_profile/
+screenshots/
+legacy/
+.ct-server.json
+
+# 系统杂项
+*.log
+.DS_Store
+Thumbs.db

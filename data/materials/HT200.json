@@ -1,0 +1,69 @@
+{
+  "id": "HT200",
+  "title": "HT200 灰铸铁",
+  "category": "material",
+  "keywords": [
+    "HT200",
+    "灰铁",
+    "灰铸铁",
+    "HT"
+  ],
+  "related_calcs": [
+    "gating",
+    "riser",
+    "shrinkage",
+    "yield",
+    "yield",
+    "machining"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 9439"
+    },
+    "composition": {
+      "carbon": "3.3~3.6%",
+      "silicon": "1.9~2.4%",
+      "manganese": "0.5~0.9%",
+      "phosphorus": "≤0.15%",
+      "sulfur": "≤0.12%",
+      "carbon_equivalent": "3.8~4.2"
+    },
+    "physical": {
+      "density": "7.0~7.3 kg/dm³",
+      "linear_shrinkage": "1.0~1.1%",
+      "volumetric_shrinkage": "~2%（石墨化膨胀补偿大部凝固收缩）"
+    },
+    "mechanical": {
+      "tensile_strength": "≥200 MPa",
+      "hardness": "150~230 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1320~1390℃",
+      "yield_range": "65~85%"
+    },
+    "casting_behavior": {
+      "solidification": "共晶凝固，石墨化膨胀大",
+      "riser_efficiency": "明顶圆柱 ~14%"
+    },
+    "melt_shop": {
+      "炉前三角试片白口深度": "2~4mm（参考）；过浅→碳硅偏高、强度不足，过深→易白口难加工",
+      "炉前检测": "热分析（碳硅仪）快速测 CE，或光谱仪炉前分析",
+      "出铁温度": "1390~1420℃",
+      "孕育后复检": "孕育后三角试片白口明显变浅为孕育正常",
+      "浇注前": "浇口杯充满、平稳充型，防止卷入渣气"
+    },
+    "recommendations": [
+      "强度、耐磨性和气密性要求较高的铸件",
+      "控制碳当量 3.8~4.2，过高易缩松",
+      "复杂薄壁件注意浇注系统设计，保证平稳充型"
+    ],
+    "notes": [
+      "用途最广的灰铁牌号：箱体、缸体、齿轮箱、机床床身等"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "灰铸铁（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

@@ -1,0 +1,32 @@
+{
+  "id": "rule_08_segregation",
+  "title": "规则8 · 减少偏析损害",
+  "category": "rule",
+  "keywords": ["偏析", "宏观偏析", "碳漂浮", "凝固时间", "冷铁", "segregation", "Campbell", "十规则"],
+  "related_calcs": ["charge", "gating"],
+  "content": {
+    "rule": "减少凝固过程中的宏观偏析（成分在局部富集或贫化）",
+    "mechanism": "树枝晶凝固使溶质重新分配：正偏析元素（如钢中的碳、铝铜合金的铜）在冷面富集。宏观偏析不可逆，且冷铁会加剧偏析（冷速越大偏析越重）。一切偏析都需要时间积累——缩短凝固时间是通用对策。",
+    "parameter": "对策核心：减少凝固时间（冷铁/冷却速度）+ 注意冷铁位置（单侧冷铁易偏析）；通道偏析多发生在厚壁慢冷铸件",
+    "violation": [
+      "碳漂浮（球铁厚壁件）",
+      "钢件冒口下富碳区（成分超差报废）",
+      "薄厚界面成分突变 → 局部性能脆化"
+    ],
+    "check": [
+      "厚壁球铁/铸钢件查凝固时间（慢冷→偏析）",
+      "冷铁布置：多块均布优于单块（避免单侧富集）",
+      "关键部位成分检测（光谱/湿法）",
+      "浇注温度偏高 → 凝固变慢，偏析加重",
+      "铸件成分检测在偏析敏感部位取样"
+    ],
+    "defects": ["碳漂浮", "白口", "成分超差"]
+  },
+  "reference": {
+    "book": "Complete Casting Handbook",
+    "chapter": "10.8 Rule 8: Reduce segregation damage",
+    "author": "John Campbell"
+  },
+  "confidence": "high",
+  "reliability": "A"
+}

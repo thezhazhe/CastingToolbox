@@ -1,0 +1,177 @@
+/* ============================================================
+   Casting Toolbox · 设计系统令牌
+   VS Code / Linear 风 · 完全离线（系统字体，无网络字体）
+   主题：auto（跟随系统）/ light / dark（三态，localStorage 记忆）
+   ============================================================ */
+
+/* ---- 深色（默认基底） ---- */
+:root {
+  color-scheme: dark;
+  --bg:          #0B0F1A;   /* 应用背景 */
+  --bg-elev:     #0E1320;   /* 浮层/顶栏 */
+  --bg-card:     #121829;   /* 卡片 */
+  --bg-card-hi:  #161E33;   /* 卡片高亮/悬停 */
+  --bg-input:    #0A0E18;   /* 输入框 */
+  --bg-sidebar:  #0E1424;   /* 侧边栏 */
+  --bg-hover:    rgba(148,163,184,0.08);
+  --bg-active:   rgba(79,140,255,0.14);
+
+  --text:          #E6EAF2;
+  --text-secondary:#9AA5B8;
+  --text-muted:    #6B768A;
+
+  --primary:      #4F8CFF;
+  --primary-dark: #2F6BE0;
+  --primary-soft: rgba(79,140,255,0.16);
+  --success:      #34D399;
+  --success-soft: rgba(52,211,153,0.12);
+  --warning:      #FBBF24;
+  --warning-soft: rgba(251,191,36,0.12);
+  --danger:       #FB7185;
+  --danger-soft:  rgba(251,113,133,0.12);
+  --info-soft:    rgba(79,140,255,0.10);
+
+  /* 卡片分类色（左色条 / 类别锚点） */
+  --cat-mat:      #5B9DFF;
+  --cat-mat-soft: rgba(91,157,255,0.14);
+  --cat-def:      #FB7185;
+  --cat-def-soft: rgba(251,113,133,0.14);
+  --cat-std:      #34D399;
+  --cat-std-soft: rgba(52,211,153,0.14);
+  --cat-kb:       #A78BFA;
+  --cat-kb-soft:  rgba(167,139,250,0.14);
+  --cat-tool:     #FBBF24;
+  --cat-tool-soft: rgba(251,191,36,0.14);
+
+  --border:        rgba(148,163,184,0.14);
+  --border-strong: rgba(148,163,184,0.26);
+
+  --radius:    12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.55);
+
+  --ease:  cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 0.14s;
+  --t:      0.26s;
+
+  --sidebar-w: 236px;
+  --topbar-h:  62px;
+  --topbar-bg: rgba(11,15,26,0.85);
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-mono: "Cascadia Code", Consolas, "Courier New", monospace;
+}
+
+/* ---- 亮色（auto 模式：系统为亮色时生效） ---- */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg:          #F5F6FA;
+    --bg-elev:     #FFFFFF;
+    --bg-card:     #FFFFFF;
+    --bg-card-hi:  #F0F3F9;
+    --bg-input:    #FFFFFF;
+    --bg-sidebar:  #ECEFF5;
+    --bg-hover:    rgba(30,41,59,0.06);
+    --bg-active:   rgba(47,107,224,0.12);
+
+    --text:          #1E293B;
+    --text-secondary:#51617A;
+    --text-muted:    #8B95A7;
+
+    --primary:      #2F6BE0;
+    --primary-dark: #1D4ED8;
+    --primary-soft: rgba(47,107,224,0.12);
+    --success:      #0E9F6E;
+    --success-soft: rgba(14,159,110,0.12);
+    --warning:      #D97706;
+    --warning-soft: rgba(217,119,6,0.12);
+    --danger:       #E11D48;
+    --danger-soft:  rgba(225,29,72,0.10);
+    --info-soft:    rgba(47,107,224,0.08);
+
+    /* 卡片分类色（左色条 / 类别锚点） */
+    --cat-mat:      #2F6BE0;
+    --cat-mat-soft: rgba(47,107,224,0.12);
+    --cat-def:      #E11D48;
+    --cat-def-soft: rgba(225,29,72,0.12);
+    --cat-std:      #0E9F6E;
+    --cat-std-soft: rgba(14,159,110,0.12);
+    --cat-kb:       #7C3AED;
+    --cat-kb-soft:  rgba(124,58,237,0.12);
+    --cat-tool:     #D97706;
+    --cat-tool-soft: rgba(217,119,6,0.12);
+
+    --border:        rgba(15,23,42,0.12);
+    --border-strong: rgba(15,23,42,0.22);
+
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.08);
+    --shadow-md: 0 4px 16px rgba(15,23,42,0.12);
+    --shadow-lg: 0 16px 48px rgba(15,23,42,0.18);
+    --topbar-bg: rgba(255,255,255,0.88);
+  }
+}
+
+/* ---- 亮色（手动强制 light） ---- */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:          #F5F6FA;
+  --bg-elev:     #FFFFFF;
+  --bg-card:     #FFFFFF;
+  --bg-card-hi:  #F0F3F9;
+  --bg-input:    #FFFFFF;
+  --bg-sidebar:  #ECEFF5;
+  --bg-hover:    rgba(30,41,59,0.06);
+  --bg-active:   rgba(47,107,224,0.12);
+
+  --text:          #1E293B;
+  --text-secondary:#51617A;
+  --text-muted:    #8B95A7;
+
+  --primary:      #2F6BE0;
+  --primary-dark: #1D4ED8;
+  --primary-soft: rgba(47,107,224,0.12);
+  --success:      #0E9F6E;
+  --success-soft: rgba(14,159,110,0.12);
+  --warning:      #D97706;
+  --warning-soft: rgba(217,119,6,0.12);
+  --danger:       #E11D48;
+  --danger-soft:  rgba(225,29,72,0.10);
+  --info-soft:    rgba(47,107,224,0.08);
+
+  --border:        rgba(15,23,42,0.12);
+  --border-strong: rgba(15,23,42,0.22);
+
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.08);
+  --shadow-md: 0 4px 16px rgba(15,23,42,0.12);
+  --shadow-lg: 0 16px 48px rgba(15,23,42,0.18);
+  --topbar-bg: rgba(255,255,255,0.88);
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; -webkit-text-size-adjust: 100%; transition: background-color var(--t) var(--ease), color var(--t) var(--ease); }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color var(--t) var(--ease);
+}
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+::selection { background: rgba(79,140,255,0.30); }
+
+/* ---- 滚动条 ---- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.22); border-radius: 6px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.38); background-clip: content-box; }
+::-webkit-scrollbar-track { background: transparent; }

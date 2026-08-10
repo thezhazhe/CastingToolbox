@@ -1,0 +1,42 @@
+{
+  "id": "surface_sink",
+  "title": "缩陷（表面凹陷）",
+  "category": "defect",
+  "keywords": [
+    "缩陷",
+    "表面凹陷",
+    "凹坑",
+    "缩孔"
+  ],
+  "related_calcs": [
+    "riser"
+  ],
+  "content": {
+    "symptoms": [
+      "铸件厚大处表面出现凹陷",
+      "表面完整但局部下陷",
+      "铸件表层凝固后内部收缩造成"
+    ],
+    "causes": [
+      "内部缩孔导致表层塌陷",
+      "冒口补缩不足",
+      "热节处无冷铁或补缩"
+    ],
+    "prevention": [
+      "加强冒口补缩",
+      "热节处加冷铁",
+      "控制浇注温度",
+      "调整铸件壁厚均匀化"
+    ],
+    "inspection": [
+      "目视检查",
+      "壁厚测量"
+    ]
+  },
+  "reference": {
+    "book": "铸造原理 第2版",
+    "chapter": "铸件缺陷"
+  },
+  "confidence": "medium-high",
+  "reliability": "B"
+}

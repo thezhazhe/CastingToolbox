@@ -1,0 +1,61 @@
+{
+  "id": "ZL111",
+  "title": "ZL111 铸造铝合金（AlSi8Cu3Mg）",
+  "category": "material",
+  "keywords": [
+    "ZL111",
+    "铝硅铜镁",
+    "铸造铝合金",
+    "铝合金",
+    "Al"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 1173"
+    },
+    "composition": {
+      "silicon": "7.5~9.5%",
+      "copper": "1.5~2.0%",
+      "magnesium": "0.4~0.6%",
+      "manganese": "0.2~0.4%"
+    },
+    "physical": {
+      "density": "2.73 kg/dm³",
+      "linear_shrinkage": "0.9~1.1%",
+      "volumetric_shrinkage": "3.5~4.5%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥240 MPa（T6）",
+      "elongation": "≥1.5%（T6）",
+      "hardness": "~90 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "690~740℃",
+      "yield_range": "70~90%"
+    },
+    "casting_behavior": {
+      "solidification": "糊状凝固，缩松倾向中等",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "高强度，耐磨耐蚀综合好",
+      "需热处理强化",
+      "防针孔与夹渣：除气+浇注系统挡渣"
+    ],
+    "notes": [
+      "高强度壳体、缸体、泵体等"
+    ]
+  },
+  "reference": {
+    "book": "GB/T 1173-2013 铸造铝合金",
+    "chapter": "常用铸造铝合金"
+  },
+  "confidence": "medium-high"
+}

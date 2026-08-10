@@ -1,0 +1,32 @@
+{
+  "id": "rule_02_critical_velocity",
+  "title": "规则2 · 避免湍流卷入（临界速度）",
+  "category": "rule",
+  "keywords": ["临界速度", "0.5m/s", "湍流", "表面湍流", "卷入", "内浇道流速", "Campbell", "十规则"],
+  "related_calcs": ["gating"],
+  "content": {
+    "rule": "充型速度不超过临界速度 ≈0.5 m/s，防止金属液表面折叠卷入氧化膜",
+    "mechanism": "金属液超过临界速度时，表面被扰动、折叠，氧化膜随折叠卷入熔体内部（表面湍流）。一旦超过临界速度就有卷入危险；铸铁/钢/青铜约 0.4 m/s，铝 0.5 m/s，镁 0.45~0.60 m/s。",
+    "parameter": "临界速度：铸铁/钢 ≈0.4 m/s · 铝 ≈0.5 m/s（工程上取 0.5 m/s 足够）；设计浇注系统时以『最大速度要求』为底线",
+    "violation": [
+      "卷入缺陷：氧化膜双膜、气泡、夹渣",
+      "夹渣与缩松常同时出现（双膜是两者共同的核）",
+      "同一铸件时好时坏——变量只是内浇道流速"
+    ],
+    "check": [
+      "计算内浇道金属流速，超过 0.5 m/s 报警（用浇注系统计算器）",
+      "浇注系统截面比（阻流口设计）使充型平稳",
+      "直浇道充满（无吸气）、横浇道挡渣",
+      "必要处设过滤器 / 陷阱控制流速",
+      "薄壁高速区段：评估延长浇注时间或增加内浇道数量"
+    ],
+    "defects": ["夹渣", "气孔", "缩孔与缩松"]
+  },
+  "reference": {
+    "book": "Complete Casting Handbook",
+    "chapter": "10.2 Rule 2: Avoid turbulent entrainment (critical velocity)",
+    "author": "John Campbell"
+  },
+  "confidence": "high",
+  "reliability": "A"
+}

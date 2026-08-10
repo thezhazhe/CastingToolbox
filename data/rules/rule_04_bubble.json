@@ -1,0 +1,32 @@
+{
+  "id": "rule_04_bubble",
+  "title": "规则4 · 避免气泡损害",
+  "category": "rule",
+  "keywords": ["气泡", "气泡尾迹", "bubble trail", "充型", "直浇道", "吸气", "误诊缩松", "Campbell", "十规则"],
+  "related_calcs": ["gating"],
+  "content": {
+    "rule": "避免卷入大气泡及其上升留下的『气泡尾迹』损伤",
+    "mechanism": "被折叠进熔体的大气泡上升时，氧化膜在气泡冠部不断撕裂、重生成，在后方留下一串折叠的双膜尾迹（bubble trail）。气泡尾迹是最常见、但最不被认识的缺陷——其不规则的形态常被误诊为缩松。",
+    "parameter": "气泡 <5mm 浮力不足以撕裂氧化膜会滞留；直浇道充满 / 浇口杯 / 过滤器是主要防线",
+    "violation": [
+      "气泡尾迹：不规则孔隙，常被误诊为缩松（特征：非均匀分布、月牙形）",
+      "贯穿壁厚形成渗漏通道（水压试验泄漏）",
+      "机加工后显现的『疏松』带"
+    ],
+    "check": [
+      "直浇道是否充满（截面设计避免吸气）",
+      "浇口杯形状避免漩涡与空吸",
+      "横浇道满流、内浇道低位",
+      "X光/超声检查：尾迹呈线状、月牙状，区别于缩松",
+      "必要时在直浇道底部设缓冲窝"
+    ],
+    "defects": ["气孔", "渗漏", "缩孔与缩松"]
+  },
+  "reference": {
+    "book": "Complete Casting Handbook",
+    "chapter": "10.4 Rule 4: Avoid bubble damage",
+    "author": "John Campbell"
+  },
+  "confidence": "high",
+  "reliability": "A"
+}

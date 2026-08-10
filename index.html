@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0B0F1A">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<title>Casting Toolbox · 铸造工具箱</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ===== 侧边栏 ===== -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 108 108" width="38" height="38">
+          <defs>
+            <linearGradient id="ctTile" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#101A33"/><stop offset="1" stop-color="#0B101F"/>
+            </linearGradient>
+            <linearGradient id="ctLett" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#E2E8F0"/><stop offset="0.55" stop-color="#60A5FA"/><stop offset="1" stop-color="#34D399"/>
+            </linearGradient>
+            <linearGradient id="ctBar" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#60A5FA"/><stop offset="1" stop-color="#34D399"/>
+            </linearGradient>
+          </defs>
+          <rect x="4" y="4" width="100" height="100" rx="24" fill="url(#ctTile)"/>
+          <rect x="4" y="4" width="100" height="100" rx="24" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="2"/>
+          <text x="54" y="62" text-anchor="middle" font-family="Bahnschrift, Arial, sans-serif" font-size="46" font-weight="700" fill="url(#ctLett)" letter-spacing="0.5">Cx</text>
+          <rect x="30" y="76" width="48" height="6" rx="3" fill="url(#ctBar)"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-title">Casting Toolbox</div>
+        <div class="logo-sub">开源铸造工具箱</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-view="home" title="首页">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>
+        首页
+      </button>
+      <button class="nav-item" data-view="calculators" title="计算工具">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7.5" x2="15" y2="7.5"/><line x1="9" y1="11.5" x2="9" y2="11.5"/><line x1="12.5" y1="11.5" x2="12.5" y2="11.5"/><line x1="16" y1="11.5" x2="16" y2="11.5"/><line x1="9" y1="15.5" x2="9" y2="15.5"/><line x1="12.5" y1="15.5" x2="12.5" y2="15.5"/><line x1="16" y1="15.5" x2="16" y2="15.5"/></svg>
+        计算工具
+      </button>
+      <button class="nav-item" data-view="knowledge" title="知识库" id="navKnowledge" hidden>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        知识库
+      </button>
+      <button class="nav-item" data-view="wizard" title="工艺向导（试用版）">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        工艺向导 <span class="nav-badge" style="font-size:.58rem;padding:0 5px;border-radius:8px;background:var(--warning-soft);color:var(--warning)">试用</span>
+      </button>
+      <button class="nav-item" id="btnDonate" data-action="donate" title="捐助支持">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.8s-7.5-4.9-9.5-9.5C1 7.6 3.2 5 6 5c2 0 3.5 1.2 4.5 2.7L12 9l1.5-1.3C14.5 6.2 16 5 18 5c2.8 0 5 2.6 3.5 6.3-2 4.6-9.5 9.5-9.5 9.5z"/></svg>
+        捐助
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="version"><b>v0.16</b> · 完全离线 · 数据本地</div>
+      <button class="dev-badge" id="devBadge" hidden title="退出开发者模式">🔓 开发者已解锁 · 点击锁定</button>
+    </div>
+  </aside>
+
+  <!-- ===== 主区 ===== -->
+  <div class="main">
+    <header class="topbar">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="globalSearch" class="search-input" type="text" autocomplete="off" spellcheck="false" placeholder="搜索材料、缺陷、标准、公式、计算工具…">
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost icon-btn" id="themeBtn" title="主题：自动 / 亮色 / 暗色" aria-label="切换主题"></button>
+        <button class="btn btn-ghost icon-btn" id="devLockBtn" title="退出开发者模式" aria-label="退出开发者模式" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button class="btn btn-ghost" id="btnAbout" title="关于与许可">关于</button>
+        <button class="btn btn-ghost" id="btnSource" title="查看源码 / 反馈">反馈</button>
+      </div>
+    </header>
+
+    <!-- ===== 生产场景条（向导完成自动保存 · 计算器自动预填） ===== -->
+    <div class="ctx-bar" id="ctxBar" hidden>
+      <span class="ctx-label">🎯 生产场景</span>
+      <div class="ctx-chips" id="ctxChips"></div>
+      <div class="ctx-actions">
+        <button class="btn btn-ghost" id="ctxEdit" title="编辑生产场景">✎ 编辑</button>
+        <button class="btn btn-ghost" id="ctxClear" title="清除生产场景">🗑 清除</button>
+      </div>
+    </div>
+
+    <div class="view" id="view"><!-- 视图由 app.js 渲染 --></div>
+  </div>
+
+</div>
+
+<!-- ===== 反馈弹窗 ===== -->
+<div class="modal-overlay" id="feedbackModal" hidden>
+  <div class="modal" style="max-width:460px">
+    <button class="modal-close" data-close-modal aria-label="关闭">✕</button>
+    <div class="donate-heart">
+      <p>👋 你好，谢谢你在使用 <b>Casting Toolbox</b>。</p>
+      <p>这个工具箱<b>完全开源、永久免费</b>，靠大家的力量一点点长大。如果你在使用中<b>发现了 bug、数据错误，或希望新增什么功能</b>，欢迎把问题整理成几句话，发邮件告诉我：</p>
+      <p class="donate-strong" style="font-size:.95rem">📮 320451242@QQ.COM</p>
+      <p>（最好附上：你用的工具 / 输入了什么 / 期望得到什么 / 实际得到什么，越具体越好修。）</p>
+      <p>每一条反馈我都会认真看。你的一个提醒，可能就帮了成千上万的同行少走一次弯路。</p>
+      <p>再次谢谢你，愿咱们的铸造行业越走越亮 🌟</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 关于 / 许可弹窗 ===== -->
+<div class="modal-overlay" id="aboutModal" hidden>
+  <div class="modal" style="max-width:480px">
+    <button class="modal-close" data-close-about aria-label="关闭">✕</button>
+    <div class="modal-head"><div class="modal-title">📄 关于 Casting Toolbox</div></div>
+    <div class="donate-heart" style="font-size:.86rem;line-height:1.8">
+      <p>🧑‍💻 <b>作者：</b>感谢每一天的生活<br>
+         📮 <b>联系：</b>320451242@QQ.COM<br>
+         🏷️ <b>版本：</b>v0.16 · 完全离线 · 数据全部在本地，不上传任何服务器</p>
+      <p>💚 <b>免费与开源：</b>本工具<b>完全开源（MIT 许可）、永久免费</b>，源码公开、可供学习研究。</p>
+      <p>🚫 <b>请尊重作者的劳动：</b><br>
+         · 任何使用、复制或分发时，必须保留本版权声明与作者署名，不得删除、遮挡、修改；<br>
+         · 禁止将本工具或其修改版本<b>打包进商业产品、商业软件或收费服务</b>进行转售牟利；<br>
+         · 工厂 / 个人用于自身内部的生产与工艺设计，完全允许。</p>
+      <p>⚠️ <b>免责声明：</b>本工具按"现状"提供，作者不对其正确性或任何使用后果承担责任。推荐结果请结合本厂工艺复核。</p>
+      <p>☕ 如果它对你有一点用，欢迎在「捐助」里打赏支持；发现 bug 或数据问题，欢迎发邮件反馈。<br>
+         <span style="color:var(--primary)">愿咱们的铸造行业，越走越亮 🌟</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 捐助弹窗 ===== -->
+<div class="modal-overlay" id="donateModal" hidden>
+  <div class="modal donate-modal">
+    <button class="modal-close" data-close-modal aria-label="关闭">✕</button>
+    <div class="donate-heart">
+      <p>这个小工具，写给每一位还在炉前、案头埋头苦干的铸造同行。</p>
+      <p>它<b>完全开源、永久免费</b>，只想让咱们这行人的日常，少一点差错、省一点时间。</p>
+      <p>铸造是工业之母，每一件铸件背后，都是几代人的汗水与手艺。</p>
+      <p>愿这个小小的工具箱，能陪你把铁水浇得更顺、把铸件做得更好。</p>
+      <p>如果它对你有一点用，随手打个赏、转个发，就是对我们最大的鼓励。</p>
+      <p class="donate-strong">谢谢你，愿中国的铸造行业，越走越亮 🌟</p>
+    </div>
+    <div class="donate-scan">
+      <img class="donate-qr" src="assets/alipay_qr.png" alt="支付宝收款码" data-open-lightbox>
+      <div class="donate-tip">👆 点击二维码可放大 · 金额随意 ☕</div>
+      <div class="donate-author">作者：感谢每一天的生活 · 联系：320451242@QQ.COM</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 二维码放大层 ===== -->
+<div class="lightbox-overlay" id="qrLightbox" hidden>
+  <button class="lightbox-close" data-close-lightbox aria-label="关闭">✕</button>
+  <img class="lightbox-img" src="assets/alipay_qr.png" alt="收款码放大">
+  <div class="lightbox-tip">点击任意处关闭 · 金额随意 ☕</div>
+</div>
+
+<!-- ===== 生产场景编辑弹窗 ===== -->
+<div class="modal-overlay" id="ctxModal" hidden>
+  <div class="modal" style="max-width:420px">
+    <button class="modal-close" data-close-ctx aria-label="关闭">✕</button>
+    <div class="modal-head"><div class="modal-title">🎯 生产场景</div></div>
+    <p class="field-hint" style="line-height:1.7;margin:4px 0 14px">记下你的生产场景（材料 / 造型线 / 生产方式 / 铸造方法）后：计算工具自动预填材质，搜索结果优先匹配场景卡片。工艺向导完成也会自动写入。</p>
+    <div class="field" style="margin-bottom:12px">
+      <label class="field-label">🔩 材料</label>
+      <div class="f-row"><select class="field-select" id="ctxMaterial"><option value="">不指定</option></select></div>
+    </div>
+    <div class="field-grid2">
+      <div class="field"><label class="field-label">📐 造型线</label><div class="f-row"><select class="field-select" id="ctxLine"><option value="">不指定</option><option>垂直线</option><option>水平线</option></select></div></div>
+      <div class="field"><label class="field-label">🏭 生产方式</label><div class="f-row"><select class="field-select" id="ctxProd"><option value="">不指定</option><option>自动线</option><option>手工线</option></select></div></div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label class="field-label">⚙️ 铸造方法</label>
+      <div class="f-row"><select class="field-select" id="ctxMethod"><option value="">不指定</option><option>砂型</option><option>金属型</option><option>3D打印</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="ctxCancel" style="flex:1">取消</button>
+      <button class="btn btn-primary" id="ctxSave" style="flex:1">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 开发者解锁弹窗 ===== -->
+<div class="modal-overlay" id="devModal" hidden>
+  <div class="modal" style="max-width:360px">
+    <button class="modal-close" data-close-dev aria-label="关闭">✕</button>
+    <div class="modal-head"><div class="modal-title">🔓 开发者解锁</div></div>
+    <p class="field-hint" style="line-height:1.7;margin:4px 0 14px">工艺资料库三级树仅供后台维护浏览。<br>输入开发者密码解锁：</p>
+    <input class="field-input" id="devPass" type="password" placeholder="请输入密码" autocomplete="off" style="width:100%">
+    <div class="field-error" id="devErr" style="min-height:18px;margin-top:6px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="devCancel" style="flex:1">取消</button>
+      <button class="btn btn-primary" id="devConfirm" style="flex:1">解锁</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

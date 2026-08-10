@@ -1,0 +1,49 @@
+{
+  "id": "cross_ref_steel_nonferrous",
+  "title": "国内外铸钢与有色牌号对照（铸钢/铝合金/铜合金）",
+  "category": "material",
+  "keywords": [
+    "铸钢",
+    "铝合金",
+    "铜合金",
+    "牌号对照",
+    "ZG",
+    "ZL",
+    "黄铜",
+    "锡青铜",
+    "DIN",
+    "JIS",
+    "ISO",
+    "ASTM"
+  ],
+  "content": {
+    "一般工程用铸造碳钢（GB → 俄 / 德 / 美 / 日 / ISO）": {
+      "ZG200-400": "15л · GS-20-38 · U-60-30 · SC410 · E20-40M",
+      "ZG230-450": "25л · GS-23-45 · 65-35 · SC450 · E23-45M",
+      "ZG270-500": "35л · GS-26-52 · 70-36 · SC480 · E26-52M",
+      "ZG310-570": "45л · GS-30-60 · 80-50 · — · E30-57M",
+      "ZG340-640": "55л · — · 90-60 · SCC5A · —"
+    },
+    "铸造铝合金（GB → 俄 / 美 / 英 / 德 / 日 / ISO）": {
+      "ZL101": "AЛ9 · A356.0 · — · G-AlSi7Mg · AC4C · AlSi7Mg",
+      "ZL102": "AЛ2 · A413.0 · LM20 · G-AlSi12 · AC3A · AlSi12",
+      "ZL104": "AЛ4 · A360.0 · LM9 · G-AlSi10Mg · AC4A · AlSi9Mg",
+      "ZL105": "AЛ5 · C355.0 · LM16 · G-AlSi5Cu · AC4A · —",
+      "ZL109": "AЛ30 · 336.0 · LM13 · — · AC8A · AlSi12Cu",
+      "ZL201": "АЛ19 · — · — · G-AlCu4TiMg · — · AlCu5MgTi"
+    },
+    "铜及铜合金（GB → ISO / 美 / 日 / 英 / 德 / 欧）": {
+      "T2": "Cu-FRHC · C11000 · C1100 · — · E-Cu58 · —",
+      "TU2": "Cu-OF · C10100 · C1011 · — · OF-Cu · CW008A",
+      "H62": "CuZn40 · C28000 · C2800 · CZ109 · — · CW509L",
+      "H70": "CuZn30 · C26000 · C2600 · CZ106 · CuZn30 · CW505L",
+      "QSn4-0.3": "CuSn4 · C51100 · C5111 · PB101 · CuSn4 · CW450K",
+      "QSn6.5-0.1": "CuSn6 · C51900 · C5191 · PB103 · CuSn6 · CW452K"
+    }
+  },
+  "reference": {
+    "book": "国内外材料对照表（脱敏）",
+    "chapter": "铸钢/有色牌号对照"
+  },
+  "confidence": "medium"
+}

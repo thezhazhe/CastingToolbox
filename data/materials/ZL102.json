@@ -1,0 +1,60 @@
+{
+  "id": "ZL102",
+  "title": "ZL102 铸造铝合金（AlSi12 共晶）",
+  "category": "material",
+  "keywords": [
+    "ZL102",
+    "共晶铝硅",
+    "铸造铝合金",
+    "铝合金",
+    "Al"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 1173"
+    },
+    "composition": {
+      "silicon": "10~13%",
+      "manganese": "≤0.5%",
+      "copper": "≤0.6%"
+    },
+    "physical": {
+      "density": "2.65 kg/dm³",
+      "linear_shrinkage": "0.9~1.1%",
+      "volumetric_shrinkage": "3.5~4.5%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥145 MPa（SB 铸态）",
+      "elongation": "≥3%（SB 铸态）",
+      "hardness": "~50 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "680~730℃",
+      "yield_range": "70~90%"
+    },
+    "casting_behavior": {
+      "solidification": "近共晶凝固，流动性最好，缩松倾向较小",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "流动性好，适合复杂薄壁铸件",
+      "气密性要求高时需变质处理+除气",
+      "强度较低，仅用于一般壳体"
+    ],
+    "notes": [
+      "复杂薄壁件、气密件（仪表壳体、散热器）等"
+    ]
+  },
+  "reference": {
+    "book": "GB/T 1173-2013 铸造铝合金",
+    "chapter": "常用铸造铝合金"
+  },
+  "confidence": "medium-high"
+}

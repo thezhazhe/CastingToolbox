@@ -1,0 +1,61 @@
+{
+  "id": "ZL104",
+  "title": "ZL104 铸造铝合金（AlSi9Mg）",
+  "category": "material",
+  "keywords": [
+    "ZL104",
+    "铝硅镁",
+    "铸造铝合金",
+    "铝合金",
+    "Al"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 1173"
+    },
+    "composition": {
+      "silicon": "8.0~10.5%",
+      "magnesium": "0.17~0.30%",
+      "manganese": "0.2~0.5%",
+      "copper": "≤0.3%"
+    },
+    "physical": {
+      "density": "2.65 kg/dm³",
+      "linear_shrinkage": "0.9~1.0%",
+      "volumetric_shrinkage": "3.5~4.5%"
+    },
+    "mechanical": {
+      "tensile_strength": "≥230 MPa（T6）",
+      "elongation": "≥4%（T6）",
+      "hardness": "~70 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "690~730℃",
+      "yield_range": "70~90%"
+    },
+    "casting_behavior": {
+      "solidification": "糊状凝固，缩松倾向中等",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "综合性能好，可热处理强化",
+      "薄壁件浇温取上限，利于充型",
+      "防针孔：精炼除气+控制浇注温度"
+    ],
+    "notes": [
+      "发动机零件、泵体、电机壳体等要求较高的铝合金件"
+    ]
+  },
+  "reference": {
+    "book": "GB/T 1173-2013 铸造铝合金",
+    "chapter": "常用铸造铝合金"
+  },
+  "confidence": "medium-high"
+}

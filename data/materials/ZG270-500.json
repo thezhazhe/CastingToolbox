@@ -1,0 +1,63 @@
+{
+  "id": "ZG270-500",
+  "title": "ZG270-500 铸造碳钢",
+  "category": "material",
+  "keywords": [
+    "ZG270-500",
+    "ZG270",
+    "铸钢",
+    "铸造碳钢",
+    "ZG"
+  ],
+  "related_calcs": [
+    "riser",
+    "gating",
+    "shrinkage",
+    "yield",
+    "yield"
+  ],
+  "content": {
+    "identity": {
+      "standard": "GB/T 11352"
+    },
+    "composition": {
+      "carbon": "0.25~0.35%",
+      "silicon": "0.50~0.80%",
+      "manganese": "0.70~1.00%",
+      "phosphorus": "≤0.04%",
+      "sulfur": "≤0.04%"
+    },
+    "physical": {
+      "density": "7.8 kg/dm³",
+      "linear_shrinkage": "1.8~2.0%",
+      "volumetric_shrinkage": "4.5~5%"
+    },
+    "mechanical": {
+      "yield_strength": "≥270 MPa",
+      "tensile_strength": "≥500 MPa",
+      "elongation": "≥18%",
+      "hardness": "≥140 HBW"
+    },
+    "pouring": {
+      "pour_temperature": "1530~1590℃",
+      "yield_range": "50~65%"
+    },
+    "casting_behavior": {
+      "solidification": "逐层凝固，收缩集中，易产生集中缩孔",
+      "riser_efficiency": "暗侧圆柱 ~20%"
+    },
+    "recommendations": [
+      "应用最广的普通碳钢牌号，强度与塑性综合好",
+      "注意补缩系统设计与冒口尺寸校核",
+      "浇注温度高，控制型砂水分与排气"
+    ],
+    "notes": [
+      "用于机架、箱体、缸体、飞轮、齿轮等一般结构件"
+    ]
+  },
+  "reference": {
+    "book": "铸造手册",
+    "chapter": "铸钢（第2卷 铸造合金）"
+  },
+  "confidence": "medium-high"
+}

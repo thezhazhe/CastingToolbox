@@ -1,0 +1,32 @@
+{
+  "id": "rule_09_residual_stress",
+  "title": "规则9 · 减少残余应力",
+  "category": "rule",
+  "keywords": ["残余应力", "变形", "应力", "开箱温度", "冷却速度", "热时效", "residual stress", "Campbell", "十规则"],
+  "related_calcs": ["shakeout"],
+  "content": {
+    "rule": "减少铸件内的残余应力，防止加工时爆裂、服役时变形",
+    "mechanism": "铸件因壁厚不均、冷却不均而在内部锁住高应力——像『小炸弹』，机加工或放置时可能瞬间开裂。应力常达甚至超过屈服强度，严重时主导零件失效。应力主要取决于冷却速度（型内冷却），而非砂型强度。",
+    "parameter": "残余应力来源：壁厚差冷却不均 · 开箱温度过高 · 铸型约束；缓解：均匀冷却 + 热时效",
+    "violation": [
+      "机加工时突然爆裂（应力释放）",
+      "铸件变形、尺寸超差",
+      "疲劳寿命骤降（叠加服役应力提前破坏）"
+    ],
+    "check": [
+      "壁厚突变处设计圆角、过渡（减少应力集中）",
+      "控制开箱温度（用开箱时间计算器，不热时效灰铁 ≤200℃）",
+      "开箱后均匀冷却，避免局部急冷",
+      "重要件：热时效 / 自然时效消除应力",
+      "对称结构设计，避免局部过厚"
+    ],
+    "defects": ["变形", "热裂", "冷裂"]
+  },
+  "reference": {
+    "book": "Complete Casting Handbook",
+    "chapter": "10.9 Rule 9: Reduce residual stress",
+    "author": "John Campbell"
+  },
+  "confidence": "high",
+  "reliability": "A"
+}
