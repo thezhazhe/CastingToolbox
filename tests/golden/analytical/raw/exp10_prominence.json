@@ -1,0 +1,419 @@
+{
+ "experiment": "exp10_prominence",
+ "meta": {
+  "values": [
+   0.35,
+   0.4,
+   0.45,
+   0.5,
+   0.55,
+   0.6
+  ],
+  "elapsedSec": "35.7",
+  "updatedAt": "2026-08-21T06:36:22.685Z"
+ },
+ "records": [
+  {
+   "model": "steppedThickness",
+   "parameter": 0.35,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    0.503
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "steppedThickness",
+   "parameter": 0.4,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    0.503
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "steppedThickness",
+   "parameter": 0.45,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    0.503
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "steppedThickness",
+   "parameter": 0.5,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    0.503
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "steppedThickness",
+   "parameter": 0.55,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "steppedThickness",
+   "parameter": 0.6,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "thickCorner",
+   "parameter": 0.35,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    0.461
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "thickCorner",
+   "parameter": 0.4,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    0.461
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "thickCorner",
+   "parameter": 0.45,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    0.461
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "thickCorner",
+   "parameter": 0.5,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "thickCorner",
+   "parameter": 0.55,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "thickCorner",
+   "parameter": 0.6,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "bossOnPlate",
+   "parameter": 0.35,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "bossOnPlate",
+   "parameter": 0.4,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "bossOnPlate",
+   "parameter": 0.45,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "bossOnPlate",
+   "parameter": 0.5,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "bossOnPlate",
+   "parameter": 0.55,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "bossOnPlate",
+   "parameter": 0.6,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "lShape",
+   "parameter": 0.35,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "lShape",
+   "parameter": 0.4,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "lShape",
+   "parameter": 0.45,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "lShape",
+   "parameter": 0.5,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "lShape",
+   "parameter": 0.55,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "lShape",
+   "parameter": 0.6,
+   "status": "ok",
+   "H": 1,
+   "mainProminence": 1,
+   "extraProminences": [],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "pvpPair",
+   "parameter": 0.35,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    1
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "pvpPair",
+   "parameter": 0.4,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    1
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "pvpPair",
+   "parameter": 0.45,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    1
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "pvpPair",
+   "parameter": 0.5,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    1
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "pvpPair",
+   "parameter": 0.55,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    1
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "pvpPair",
+   "parameter": 0.6,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    1
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "twoHotspots",
+   "parameter": 0.35,
+   "status": "ok",
+   "H": 3,
+   "mainProminence": 1,
+   "extraProminences": [
+    1,
+    0.5
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "twoHotspots",
+   "parameter": 0.4,
+   "status": "ok",
+   "H": 3,
+   "mainProminence": 1,
+   "extraProminences": [
+    1,
+    0.5
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "twoHotspots",
+   "parameter": 0.45,
+   "status": "ok",
+   "H": 3,
+   "mainProminence": 1,
+   "extraProminences": [
+    1,
+    0.5
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "twoHotspots",
+   "parameter": 0.5,
+   "status": "ok",
+   "H": 3,
+   "mainProminence": 1,
+   "extraProminences": [
+    1,
+    0.5
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "twoHotspots",
+   "parameter": 0.55,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    1
+   ],
+   "note": null,
+   "classification": null
+  },
+  {
+   "model": "twoHotspots",
+   "parameter": 0.6,
+   "status": "ok",
+   "H": 2,
+   "mainProminence": 1,
+   "extraProminences": [
+    1
+   ],
+   "note": null,
+   "classification": null
+  }
+ ]
+}

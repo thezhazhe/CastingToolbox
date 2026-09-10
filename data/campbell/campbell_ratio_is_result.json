@@ -1,0 +1,20 @@
+{
+  "id": "campbell_ratio_is_result",
+  "title": "Campbell：浇注系统比例是结果，不是输入",
+  "keywords": ["Campbell", "浇注比例", "结果", "输入", "1:1:n", "1:2:4"],
+  "evidence": "ENGINEERING_REFERENCE",
+  "content": {
+    "rule": "'我从未发现自己用比率来定义充型系统；比率是充型系统设计的自然结果。它们是结果，而不是输入。'",
+    "mechanism": "先算流量与面积（质量流→目标速度→各段截面积），最后读出实际比例；而不是先选 1:2:4 / 1:1:0.8 再往里面填面积。旧 1:2:4/1:4:4 只对直浇道 ≤200mm 成立；传统'按比例设计'被作者判定为错误出发点。",
+    "parameter": {
+      "原文": "Ratio is the result, not the input（13.4）",
+      "产品体现": "速算器 V1 不给'浇注比例'选择框——1:1:n 的 n 直接来自内浇口数量",
+      "出处": "13.4（译稿行 11838）、12.4.4（行 11015-11017）"
+    },
+    "check": [
+      "用户不需要懂'封闭式/开放式'术语即可使用本速算",
+      "想调慢：加大 n（更多内浇口=更小单口速度冲击）或换减速件方案（独立减速卡）"
+    ]
+  },
+  "reference": { "book": "Complete Casting Handbook", "chapter": "13.4 + 12.4.4 Pouring ratios", "author": "John Campbell", "kind": "book", "school": "Campbell", "method": "Campbell Gating" }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "campbell_gating_flow_area",
+  "title": "Campbell：流量与进浇面积（速算核心）",
+  "keywords": ["Campbell", "流量", "内浇口面积", "质量流率", "A=Q/v", "速算", "浇注系统"],
+  "evidence": "ENGINEERING_REFERENCE",
+  "content": {
+    "rule": "浇注系统的本质是流量管理。Casting Toolbox · Campbell V1（65.2 定稿）主方法 = 经验规则：内浇口总面积 A = 质量流率 ṁ × 规则值（轻合金 1000 / 重合金 500 mm² 每 kg/s）；速度法 A=Q/v 为内部工程校验，不作第二套用户结果。",
+    "mechanism": "Campbell 全书以 v=√(2gh) 与 Q=vA 为流量基础（拒绝水力学损失系数逐段累加），快速规则即由 A=Q/v 按密度与临界速度取整而来（书原文：'这一精度已经足够'）。速算器 V1 链：W→t（复用工具箱已验证模型）→ṁ=W/t → A=ṁ×规则值 → 程序内做 v=Q/A 校验（超过目标速度自动放大面积）→ 按 n 均分 → 1:1:n。",
+    "parameter": {
+      "主方法（经验规则）": "轻合金 ~1000 / 重合金 ~500 mm² 每 (kg/s)——V1 用户唯一看到的面积来源",
+      "内部校验（速度法）": "v = Q/A vs 材料目标速度；超过则自动放大（不向用户展示两套面积）",
+      "精算对照（仅说明）": "按 A=Q/v 精算铝 ~800、重 ~360——规则取整留了余量，故常规工况校验即通过",
+      "出处": "Complete Casting Handbook 12.4.3（内浇口总面积，译稿行 11004-11007）"
+    },
+    "check": [
+      "用户界面只显示经验规则的最终推荐面积（含自动放大后的值）与 ✓速度校验",
+      "速度法保留在代码与'计算过程'折叠区供工程研究，不回第二个 UI 结果"
+    ],
+    "notes": "经验规则为工程取整近似（书原文：'这一精度已经足够'）；速度校验保证安全侧。两者分工写入 calcs/campbellGating.js 头注，维护时不得把速度法变回第二个 UI 结果。"
+  },
+  "reference": { "book": "Complete Casting Handbook", "chapter": "12.4.3 Ingates: total area", "author": "John Campbell", "kind": "book", "school": "Campbell", "method": "Campbell Gating" }
+}

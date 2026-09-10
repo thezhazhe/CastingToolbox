@@ -10,14 +10,38 @@ _extract/
 scripts/_books/
 scripts/extract/_extract/
 
-# 测试 / 打包残留
-_edge_profile/
-_qa_profile/
+# 测试 / 打包残留（PHASE 73：浏览器 profile 一律按前缀忽略，避免只漏掉 _edge_profile/ 一个）
+_edge_profile*/
+_qa_profile*/
+_probe*/
+_shot*/
+_p63_*/
 screenshots/
 legacy/
 .ct-server.json
+*.idsig
+*.keystore
 
 # 系统杂项
 *.log
 .DS_Store
 Thumbs.db
+
+# 测试夹具：程序生成的大件 STL（1.4GB，可再生：node scripts/gen_v2_golden.mjs）
+tests/golden/largeThin.stl
+tests/golden/largeThinThick.stl
+tests/golden/thinShell.stl
+tests/golden/adjacentSplit.stl
+tests/golden/adjacentMerge.stl
+tests/golden/hollowThickRing.stl
+tests/golden/mildThick.stl
+tests/golden/twoThick.stl
+tests/golden/thickOnThin.stl
+tests/golden/longBar.stl
+tests/golden/lShape.stl
+tests/golden/*_diag.json
+# 测试夹具：作者真实产品模具模型（不入库）
+tests/real-stl/*.stl
+# 测试夹具：工程级生成模型（858MB，可再生：node tests/engineering-generated/gen_engineering.mjs）
+tests/engineering-generated/models/
+tests/engineering-generated/phase15/data/

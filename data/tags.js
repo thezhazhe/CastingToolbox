@@ -184,7 +184,13 @@ export const TAGS = {
   disa_gating_cup: ['line:垂直线', 'prod:自动线', 'method:砂型'],
   disa_pouring_feeding: ['line:垂直线', 'prod:自动线', 'method:砂型'],
   disa_defects_scabbing: ['line:垂直线', 'prod:自动线', 'method:砂型'],
+  /* ---------- Campbell 浇注系统方法（PHASE 65.1） ---------- */
+  campbell_gating_flow_area: ['calc:campbell_gating'],
+  campbell_speed_critical: ['calc:campbell_gating'],
+  campbell_quick_rule_500_1000: ['calc:campbell_gating'],
+  campbell_ratio_1_1_n: ['calc:campbell_gating'],
+  campbell_runner_sprue: ['calc:campbell_gating'],
+  campbell_continuous_throttle: ['calc:campbell_gating'],
+  campbell_deceleration_independent: ['calc:campbell_gating'],
+  campbell_ratio_is_result: ['calc:campbell_gating'],
 };
-
-/** 允许的标签前缀白名单 */
-export const TAG_PREFIXES = ['mat', 'line', 'prod', 'method', 'calc', 'std', 'kw'];

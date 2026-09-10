@@ -7,6 +7,7 @@
 //   kind 'search'  → 用关键词进入知识搜索 #/search
 // ============================================================
 import { setQuery as setSearchQuery } from './search.js';
+import { t } from '../i18n/index.js';   // PHASE 73：下一步建议接入双语（原先整块中文，英文界面下裸露）
 
 export function renderNextSteps(container, calc) {
   const next = calc?.next || [];
@@ -14,9 +15,9 @@ export function renderNextSteps(container, calc) {
   const strip = document.createElement('div');
   strip.className = 'next-steps';
   strip.innerHTML = `
-    <span class="ns-label">🚀 下一步建议</span>
+    <span class="ns-label">${t('🚀 下一步建议')}</span>
     <div class="ns-items">
-      ${next.map((n, i) => `<button class="ns-btn" data-next="${i}">${n.icon} ${n.label} →</button>`).join('')}
+      ${next.map((n, i) => `<button class="ns-btn" data-next="${i}">${n.icon} ${t(n.label)} →</button>`).join('')}
     </div>
   `;
   strip.querySelectorAll('[data-next]').forEach(b => b.addEventListener('click', () => {

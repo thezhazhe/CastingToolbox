@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>浇注方向示意图 v6 预览（未接入产品）</title>
+<style>
+  body { font-family: system-ui, "Microsoft YaHei"; max-width: 720px; margin: 20px auto; background: #f1f5f9; }
+  .note { font-size: 13px; color: #334155; line-height: 1.8; background: #fff; border-left: 3px solid #2563eb; padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px 14px; margin: 14px 0; }
+  h2 { font-size: 15px; margin: 0 0 8px; }
+  svg { width: 100%; display: block; }
+</style>
+</head>
+<body>
+<h1 style="font-size:18px;margin:0 0 4px">浇注方向示意图 v6（预览审核版）</h1>
+<div class="note">
+  本轮<b>只出图，未接入产品</b>。改动点：<br>
+  1. 沙箱加宽：右线延到图片右缘（宽 280 → 322，右沿 337）；<br>
+  2. Ho 尺寸线做清楚：竖线立在直浇道右侧（沙箱内），从内浇道基准拉到上箱面，标注 Ho；<br>
+  3. 流路：浇口杯 → 直浇道（梯形）→ 横浇道（水平粗条）→ 内浇道（垂直<b>细</b>条，宽 8 < 横浇道厚 12），内浇道移入<b>铸件内部</b>，从横浇道下方垂直垂下；<br>
+  4. 直浇道不截断：穿过横浇道后继续向下延伸一段；<br>
+  5. 图底部加注释：Ho / ph / rh 各自含义。
+</div>
+
+<div class="card">
+  <h2>顶注（内浇道在铸件顶内侧）</h2>
+  <div id="svg_顶注"></div>
+</div>
+<div class="card">
+  <h2>中注（内浇道在铸件中部）</h2>
+  <div id="svg_中注"></div>
+</div>
+<div class="card">
+  <h2>底注（内浇道在铸件底部）</h2>
+  <div id="svg_底注"></div>
+</div>
+
+<script>
+function dimV(x, y1, y2, label, textX, textY, markerId) {
+  return `
+  <line x1="${x - 4}" y1="${y1}" x2="${x + 4}" y2="${y1}" stroke="#64748b" stroke-width="0.9"/>
+  <line x1="${x - 4}" y1="${y2}" x2="${x + 4}" y2="${y2}" stroke="#64748b" stroke-width="0.9"/>
+  <line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="#0f172a" stroke-width="1"
+        marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+  <text x="${textX}" y="${textY}" font-size="10" fill="#0f172a" font-weight="600" dominant-baseline="middle" text-anchor="end">${label}</text>`;
+}
+
+const RUNNER = { '顶注': 84, '中注': 132, '底注': 184 };   // 横浇道顶 y
+const RUNW = 12;                                            // 横浇道高（厚）
+const GATEW = 8;                                            // 内浇道宽（细）
+
+function svg(pos) {
+  const runnerY = RUNNER[pos];
+  const gateY = runnerY + RUNW;           // 内浇道顶 = 横浇道底
+  const gy = gateY + RUNW;                // 内浇道中心（Ho 基准，同 v5：102/150/202）
+  const sBotY = runnerY + RUNW + 4;       // 直浇道底 = 穿过横浇道再下延 4
+  const mid = 'arr_' + pos;
+  return `<svg viewBox="0 0 340 258" width="100%" xmlns="http://www.w3.org/2000/svg" style="background:#fafafa;border:1px solid #e2e8f0;border-radius:8px">
+  <defs>
+    <marker id="${mid}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0f172a"/>
+    </marker>
+  </defs>
+  <style>.cap{font-size:9px;fill:#64748b;paint-order:stroke;stroke:#ffffff;stroke-width:2.5}</style>
+
+  <!-- 浇注方向 -->
+  <line x1="267" y1="2" x2="267" y2="6" stroke="#dc2626" stroke-width="1.6" marker-end="url(#${mid})"/>
+
+  <!-- 浇口杯：倒梯形，在砂箱上方（标签在杯左侧） -->
+  <polygon points="250,7 284,7 275,24 259,24" fill="none" stroke="#334155" stroke-width="1.1"/>
+  <text x="246" y="15" class="cap" text-anchor="end">浇口杯</text>
+
+  <!-- 直浇道：梯形上宽下窄，穿过横浇道后下延一段 -->
+  <polygon points="255,24 279,24 272,${sBotY} 262,${sBotY}" fill="#f1f5f9" stroke="#475569" stroke-width="1"/>
+  <text x="292" y="38" class="cap">直浇道</text>
+
+  <!-- 横浇道：水平粗条（厚12），直浇道底部 → 向左到内浇道上方 -->
+  <rect x="222" y="${runnerY}" width="50" height="${RUNW}" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+  <text x="228" y="${runnerY + 11}" font-size="8" fill="#64748b">横浇道</text>
+
+  <!-- 内浇道：垂直细条（宽8 < 横浇道厚12），从横浇道底垂入铸件内部 -->
+  <rect x="224" y="${gateY}" width="${GATEW}" height="${RUNW}" fill="#bfdbfe" stroke="#334155" stroke-width="1"/>
+  <text x="240" y="${gy}" class="cap">内浇道</text>
+
+  <!-- 砂箱：最宽，包住浇道/内浇道/冒口/铸件（浇口杯在框外） -->
+  <rect x="15" y="25" width="322" height="185" fill="none" stroke="#0f172a" stroke-width="2.2"/>
+  <text x="300" y="19" class="cap">上箱面</text>
+  <text x="300" y="217" class="cap">下箱面</text>
+
+  <!-- 冒口（窄于铸件）：铸件顶(95) → 冒口顶(35) -->
+  <rect x="155" y="35" width="60" height="60" fill="#fef3c7" stroke="#334155" stroke-width="1.2"/>
+  <text x="185" y="68" font-size="10" fill="#0f172a" text-anchor="middle">冒口</text>
+
+  <!-- 铸件：铸件底(200) → 铸件顶(95) -->
+  <rect x="135" y="95" width="100" height="105" fill="#e2e8f0" stroke="#334155" stroke-width="1.2"/>
+  <text x="185" y="150" font-size="10" fill="#0f172a" text-anchor="middle">铸件</text>
+
+  <!-- Ho：内浇道基准(gy) → 上箱面(25)，竖线在直浇道右侧 -->
+  ${dimV(326, gy, 25, 'Ho', 320, (gy + 25) / 2, mid)}
+
+  <!-- rh / ph：贴冒口/铸件左侧，两线错开不重叠 -->
+  ${dimV(144, 35, 95, 'rh', 138, 65, mid)}
+  ${dimV(118, 95, 200, 'ph', 112, 147, mid)}
+
+  <!-- 底部注释：三个输入含义 -->
+  <text x="18" y="228" font-size="9" fill="#64748b">Ho — 内浇道基准到上箱面的垂直距离</text>
+  <text x="18" y="240" font-size="9" fill="#64748b">ph — 铸件浇注方向高度（铸件底 → 铸件顶）</text>
+  <text x="18" y="252" font-size="9" fill="#64748b">rh — 冒口高出铸件顶面的距离（铸件顶 → 冒口顶）</text>
+</svg>`;
+}
+
+for (const p of ['顶注', '中注', '底注']) {
+  document.getElementById('svg_' + p).innerHTML = svg(p);
+}
+</script>
+</body>
+</html>

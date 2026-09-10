@@ -37,30 +37,32 @@ export const SIZE_LARGE = 1000;
 /**
  * 按方向计算收缩推荐。
  * dims = [长, 宽, 高...]，mode = 'free' | 'common' | 'restrained'
- * 返回 { dirs:[{size,rate,amount,pattern}], directional, combined, spread }
+ * 返回 { dirs:[{size,rate,amount,pattern,idx}], directional, combined, spread }
  *   - dirs: 每个有效方向的推荐收缩率（大方向=档位上限，小方向=下限）
+ *           idx = 该方向在 dims 中的原始下标（PHASE 63 P1-7：任一方尺寸为空时
+ *           不允许数组移位 —— 渲染层必须按 idx 对应 长/宽/高）
  *   - directional: 各方向收缩率差 ≥ 0.2 个百分点 → 不推荐综合比例
  *   - combined: 方向均衡时给统一综合比例；directional 时为 null
  *   - spread: 最大/最小推荐率之差（百分点）
  */
 export function calcShrinkageDir(mat, dims, mode) {
   const d = SHRINKAGE[mat] || SHRINKAGE['灰铁(HT)'];
-  const active = dims.filter(v => v > 0);
+  const active = dims.map((v, i) => ({ v, i })).filter(x => x.v > 0);
   if (active.length === 0) return null;
   const band = (MODE_BAND[mode] || MODE_BAND.common)(d);
   const [lo, hi] = band;
-  const dirs = active.map(size => {
+  const dirs = active.map(({ v: size, i }) => {
     // 绝对尺寸锚定：≥1000mm → hi，≤100mm → lo，之间线性（不再以 maxDim 归一，
     // 否则 maxDim=1500 时 10mm 方向也几乎取 hi，看起来"同一比例"）
     const t = Math.min(1, Math.max(0, (size - SIZE_SMALL) / (SIZE_LARGE - SIZE_SMALL)));
     const rate = lo + (hi - lo) * t;
-    return { size, rate, amount: size * rate / 100, pattern: size * (1 + rate / 100) };
+    return { size, rate, amount: size * rate / 100, pattern: size * (1 + rate / 100), idx: i };
   });
   const rates = dirs.map(x => x.rate);
   const spread = Math.max(...rates) - Math.min(...rates);
   const directional = spread >= SPLIT_RATE_DIFF;
   const combined = directional ? null : hi;
-  return { dirs, directional, combined, spread, maxDim: Math.max(...active), mode, range: d.range };
+  return { dirs, directional, combined, spread, maxDim: Math.max(...active.map(x => x.v)), mode, range: d.range };
 }
 
 /** 兼容旧接口：单一档位应用到所有方向 */

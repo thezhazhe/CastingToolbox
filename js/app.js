@@ -6,11 +6,17 @@
 import * as calculatorsView from './views/calculators.js';
 import * as knowledgeView from './views/knowledge.js';
 import * as wizardView from './views/wizard.js';
+import * as designCenterView from './views/designCenter.js';
 import * as homeView from './views/home.js';
+import * as donateView from './views/donateView.js';
 import * as searchView from './views/search.js';
 import * as devmode from './devmode.js';
 import * as context from './context.js';
 import * as liveSearch from './liveSearch.js';
+// PHASE 72（80.txt）：界面语言切换（zh-CN / en-US）——只做显示层，不动项目/计算
+import * as i18n from './i18n/index.js';
+import * as viewState from './i18n/viewState.js';
+import { VERSION_LABEL } from './version.js';   // PHASE 73：版本号唯一来源
 
 const viewEl = document.getElementById('view');
 const navEl = document.getElementById('nav');
@@ -22,6 +28,8 @@ const VIEWS = {
   calculators: calculatorsView,
   knowledge: knowledgeView,
   wizard: wizardView,
+  designCenter: designCenterView,
+  donate: donateView,
   search: searchView,
 };
 
@@ -50,13 +58,16 @@ function parseHash() {
   return { view: VIEWS[view] ? view : 'home', params: { id: rest[0], cat: rest[0] } };
 }
 
-function render() {
+function render(opts = {}) {
   const { view, params } = parseHash();
-  window.scrollTo(0, 0);   // 切换视图回顶部：点搜索结果进详情不再停留在旧滚动位置
+  // PHASE 72：语言切换触发的重渲染保留滚动位置（否则切语言会跳回页首）
+  if (!opts.keepScroll) window.scrollTo(0, 0);   // 切换视图回顶部：点搜索结果进详情不再停留在旧滚动位置
   const activeView = view === 'search' ? 'home' : view;   // 搜索结果页时点亮首页
   document.body.classList.toggle('view-home', view === 'home');   // 首页隐藏顶栏搜索（首页自带大搜索框）
   navEl.querySelectorAll('.nav-item').forEach(el =>
     el.classList.toggle('active', el.dataset.view === activeView));
+  // PHASE 72：进入视图前复位"换语言钩子"——由视图自己声明支持（支持 → 切换语言时重渲染它）
+  viewState.resetViewHooks();
   VIEWS[view].render(viewEl, params);
 }
 
@@ -65,17 +76,26 @@ navEl.addEventListener('click', (e) => {
   const btn = e.target.closest('.nav-item');
   if (!btn) return;
   liveSearch.closeAll();
-  if (btn.dataset.action === 'donate') {   // 侧栏「捐助」→ 弹捐助弹窗（非路由）
-    document.getElementById('donateModal').hidden = false;
-    return;
-  }
   history.pushState(null, '', '#/' + btn.dataset.view);
   render();
 });
 
 /* ---- 前进/后退 & 手动改 hash ---- */
 window.addEventListener('popstate', render);
-window.addEventListener('hashchange', () => { liveSearch.closeAll(); render(); });
+window.addEventListener('hashchange', (e) => {
+  liveSearch.closeAll();
+  // PHASE 65.3：记录知识卡详情的"来源页"——从计算工具/搜索列表点 ⓘ 进 #/search/<id>，
+  //   详情页"← 返回"应回来源处而非首页（defectFinder 原有同类机制，这里做通用层）
+  try {
+    const now = location.hash, isDetail = /^#\/search\/[^/]+$/.test(now);
+    const oldHash = e.oldURL ? new URL(e.oldURL).hash : '';
+    const oldIsDetail = /^#\/search\/[^/]+$/.test(oldHash);
+    if (isDetail && !oldIsDetail && oldHash && oldHash !== now) {
+      sessionStorage.setItem('ct-detail-return', oldHash);
+    }
+  } catch (_) { /* sessionStorage 不可用则忽略 */ }
+  render();
+});
 
 /* ---- 搜索：回车 / 实时下拉（共用 liveSearch.js） ---- */
 function goSearch(q) {
@@ -164,23 +184,60 @@ document.getElementById('aboutModal').addEventListener('click', (e) => {
   if (e.target.closest('[data-close-about]') || e.target === document.getElementById('aboutModal')) document.getElementById('aboutModal').hidden = true;
 });
 
-/* ---- 捐助弹窗 / 二维码放大（打开入口在侧栏「☕ 捐助」，见导航委托） ---- */
-const donateModal = document.getElementById('donateModal');
+/* ---- 二维码放大层（捐助平铺页 #/donate 的收款码由此放大；73.txt 弹窗改平铺后委托绑定） ---- */
 const qrLightbox = document.getElementById('qrLightbox');
-donateModal.addEventListener('click', (e) => {
-  if (e.target.closest('[data-close-modal]') || e.target === donateModal) donateModal.hidden = true;
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-open-lightbox]')) qrLightbox.hidden = false;
 });
-document.querySelector('[data-open-lightbox]').addEventListener('click', () => { qrLightbox.hidden = false; });
 qrLightbox.addEventListener('click', (e) => {
   if (e.target.closest('[data-close-lightbox]') || e.target.tagName !== 'IMG') qrLightbox.hidden = true;
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    qrLightbox.hidden = true; donateModal.hidden = true; devModalEl.hidden = true; ctxModalEl.hidden = true;
+    qrLightbox.hidden = true; devModalEl.hidden = true; ctxModalEl.hidden = true;
     // 计算工具的报告弹窗（每次渲染重建，全局兜底关闭）
     document.querySelectorAll('.modal-overlay').forEach(m => { if (!m.hidden) m.hidden = true; });
   }
 });
+
+/* ============================================================
+   PHASE 72（80.txt §四/§五/§十八）：界面语言切换
+   · 右上角「中文 | English」：当前语言高亮，点击立即切换（不刷新页面）
+   · 切换只做两件事：① 外壳静态文案原地换（applyDom）② 当前视图重渲染换语言
+     —— 视图重渲染前快照表单值、渲染后写回并重算，**计算结果与用户输入完全不变**
+   · 视图没声明支持换语言（非核心工具/知识库）→ 不重渲染，整页保持原状
+   ============================================================ */
+const langSwitchEl = document.getElementById('langSwitch');
+const syncLangSwitch = () => {
+  const cur = i18n.getLocale();
+  langSwitchEl?.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('on', b.dataset.lang === cur));
+};
+const applyTitle = () => {
+  document.title = i18n.isEn() ? 'Casting Toolbox · Foundry Engineering Toolkit' : 'Casting Toolbox · 铸造工具箱';
+};
+i18n.initLocale();
+i18n.applyDom(document);
+syncLangSwitch();
+applyTitle();
+
+langSwitchEl?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-btn');
+  if (btn) i18n.setLocale(btn.dataset.lang);
+});
+i18n.onChange(() => {
+  i18n.applyDom(document);     // 外壳（侧栏/顶栏/弹窗）原地换语言
+  syncLangSwitch();
+  applyTitle();
+  context.renderContextBar();  // 场景条由 JS 渲染，随语言重建（只读 context，不改数据）
+  // 当前视图：支持换语言的 → 快照 + 重渲染 + 还原 + 重算（结果数值不变）
+  viewState.relocalizeView(viewEl, () => render({ keepScroll: true }));
+});
+
+/* ---- PHASE 73：版本号从唯一来源写入侧栏左下角（关于弹窗正文由词条表提供，有测试守卫一致） ---- */
+(function applyVersion() {
+  const a = document.getElementById('appVersion');
+  if (a) a.textContent = VERSION_LABEL;
+})();
 
 /* ---- 启动 ---- */
 devmode.applyNav();

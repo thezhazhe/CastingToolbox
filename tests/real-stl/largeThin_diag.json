@@ -1,0 +1,79 @@
+{
+  "stl": {
+    "file": "largeThin.stl",
+    "triCount": 900064,
+    "size": [
+      600,
+      400,
+      120
+    ],
+    "bounds": {
+      "min": [
+        -300,
+        -200,
+        -60
+      ],
+      "max": [
+        300,
+        200,
+        60
+      ],
+      "size": [
+        600,
+        400,
+        120
+      ],
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "diagonal": 731.0266752998826
+    },
+    "volumeCm3": 5474.2,
+    "areaMm2": 1363557,
+    "closed": true,
+    "issues": []
+  },
+  "v3": {
+    "status": "NO_HOTSPOT",
+    "reason": "no_candidate",
+    "elapsedMs": 3656,
+    "hotspots": [],
+    "debug": {
+      "coarse": {
+        "gs": 128,
+        "vs": 4.6875,
+        "estMinWall": 4,
+        "pts": 7814,
+        "stride": 2,
+        "maxM": 1.410967950569368,
+        "meanM": 0.861303971077126,
+        "peaks": 3,
+        "uniform": true,
+        "scanMs": 288,
+        "fieldMs": 3
+      },
+      "elapsedMs": 3656
+    },
+    "audit": []
+  },
+  "v2": {
+    "status": "ok",
+    "reason": null,
+    "elapsedMs": 2631,
+    "hotspots": [
+      {
+        "id": 1,
+        "position": [
+          -294.48955268445224,
+          -193.75,
+          -54.48955268445222
+        ],
+        "mc": 5.510447315547765,
+        "confidence": 0.771,
+        "regionVolumeCm3": 30.85
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "campbell_quick_rule_500_1000",
+  "title": "Campbell：500 / 1000 mm² 每 (kg/s) 快速规则",
+  "keywords": ["Campbell", "快速规则", "500", "1000", "mm²/(kg/s)", "内浇口面积", "校核"],
+  "evidence": "ENGINEERING_REFERENCE",
+  "content": {
+    "rule": "记住两个数（Casting Toolbox · Campbell V1 主方法）：轻合金 ~1000、重合金 ~500 mm² 内浇口面积 每 (kg/s) 浇注速率。",
+    "mechanism": "由 A=Q/v=ṁ/(ρv) 按密度与临界速度粗算取整：铝 ρ≈2500 kg/m³ @0.5 m/s → ~800 mm² 取整 1000；铁/钢/铜 ρ≈7500 @0.4~0.45 → ~357-446 取整 500（书原文：'这一精度已经足够'）。",
+    "parameter": {
+      "轻合金": "约 1000 mm² 每 (kg/s)（铝系；临界 0.5 m/s 基准）",
+      "重合金": "约 500 mm² 每 (kg/s)（灰铁/球铁/钢/铜；临界 ≈0.4 m/s 基准）",
+      "精算对照": "铝 800 / 重 357~446（未取整值，说明取整余量——常规工况校验天然通过的原因）",
+      "材料映射": "灰铁/球铁/铸钢/铜 500；铝 1000（65.2 显式映射，未知材料 fallback 500 保守侧）",
+      "出处": "12.4.3（译稿行 11004-11007）"
+    },
+    "check": [
+      "V1 主计算 = 该经验规则（A=ṁ×规则值）；速度法只作程序内部校验",
+      "速度校验超目标时程序自动放大面积——用户始终只看到一个最终推荐结果"
+    ]
+  },
+  "reference": { "book": "Complete Casting Handbook", "chapter": "12.4.3 Ingates: total area", "author": "John Campbell", "kind": "book", "school": "Campbell", "method": "Campbell Gating" }
+}

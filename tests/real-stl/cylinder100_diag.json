@@ -1,0 +1,100 @@
+{
+  "stl": {
+    "file": "cylinder100.stl",
+    "triCount": 256,
+    "size": [
+      100,
+      50,
+      100
+    ],
+    "bounds": {
+      "min": [
+        -50,
+        -25,
+        -50
+      ],
+      "max": [
+        50,
+        25,
+        50
+      ],
+      "size": [
+        100,
+        50,
+        100
+      ],
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "diagonal": 150
+    },
+    "volumeCm3": 392.1,
+    "areaMm2": 31384,
+    "closed": true,
+    "issues": []
+  },
+  "v3": {
+    "status": "NO_HOTSPOT",
+    "reason": "rejected",
+    "elapsedMs": 322,
+    "hotspots": [],
+    "debug": {
+      "coarse": {
+        "gs": 34,
+        "vs": 2.9678986826565232,
+        "estMinWall": 5.9357973653130465,
+        "pts": 15164,
+        "stride": 1,
+        "maxM": 8.25762039913985,
+        "meanM": 2.9234692390113053,
+        "peaks": 1,
+        "scanMs": 45,
+        "fieldMs": 88
+      },
+      "refine": [
+        {
+          "region": [
+            -24.77286119741955,
+            0.22713880258044838,
+            -3.9975704188238907
+          ],
+          "gs": 32,
+          "vs": 2.9678986826565232,
+          "pts": 1908,
+          "scanMs": 9,
+          "fieldMs": 12,
+          "maxM": 8.25762039913985,
+          "peaks": [
+            {
+              "M": 8.25762039913985,
+              "pt": [
+                -24.77286119741955,
+                0.22713880258044838,
+                -1.0296717361673657
+              ]
+            }
+          ]
+        }
+      ],
+      "elapsedMs": 322
+    },
+    "audit": [
+      {
+        "hotspotId": 1,
+        "reason": "global_vertex",
+        "M": 8.25762039913985,
+        "R": 49.5,
+        "cap": 50,
+        "volume": 2117.542970016224
+      }
+    ]
+  },
+  "v2": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "elapsedMs": 140,
+    "hotspots": []
+  }
+}

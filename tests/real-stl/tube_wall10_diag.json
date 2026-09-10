@@ -1,0 +1,90 @@
+{
+  "stl": {
+    "file": "tube_wall10.stl",
+    "triCount": 512,
+    "size": [
+      100,
+      50,
+      100
+    ],
+    "bounds": {
+      "min": [
+        -50,
+        -25,
+        -50
+      ],
+      "max": [
+        50,
+        25,
+        50
+      ],
+      "size": [
+        100,
+        50,
+        100
+      ],
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "diagonal": 150
+    },
+    "volumeCm3": 141.1,
+    "areaMm2": 33909,
+    "closed": true,
+    "issues": []
+  },
+  "v3": {
+    "status": "NO_HOTSPOT",
+    "reason": "no_candidate",
+    "elapsedMs": 405,
+    "hotspots": [],
+    "debug": {
+      "coarse": {
+        "gs": 50,
+        "vs": 2,
+        "estMinWall": 4,
+        "pts": 17600,
+        "stride": 1,
+        "maxM": 1.6483031217225173,
+        "meanM": 0.7823907506957869,
+        "peaks": 59,
+        "uniform": true,
+        "scanMs": 39,
+        "fieldMs": 17
+      },
+      "elapsedMs": 405
+    },
+    "audit": []
+  },
+  "v2": {
+    "status": "ok",
+    "reason": null,
+    "elapsedMs": 68,
+    "hotspots": [
+      {
+        "id": 1,
+        "position": [
+          -42.45081159803602,
+          -12.769101460774733,
+          -14.829275343153212
+        ],
+        "mc": 4.974630301629069,
+        "confidence": 0.722,
+        "regionVolumeCm3": 6.16
+      },
+      {
+        "id": 2,
+        "position": [
+          -44.0113816437898,
+          -12.769101460774731,
+          -8.58699516013817
+        ],
+        "mc": 4.960865090423716,
+        "confidence": 0.72,
+        "regionVolumeCm3": 6.16
+      }
+    ]
+  }
+}

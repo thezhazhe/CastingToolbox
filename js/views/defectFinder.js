@@ -47,7 +47,7 @@ export async function renderDefectFinder(container, calc) {
             <div class="f-row"><select class="field-select" id="df_mat"><option value="">全部材质</option>${FAMILIES.map(f => `<option>${f}</option>`).join('')}</select></div>
           </div>
           <div class="field">
-            <label class="field-label">🗂 按分类过滤（GB/T 5611 八大类）</label>
+            <label class="field-label">🗂 按分类过滤（GB/T 5611-2017《铸造术语》八大类）</label>
             <div class="df-chips" id="df_chips"></div>
           </div>
         </div>
@@ -64,8 +64,8 @@ export async function renderDefectFinder(container, calc) {
           <div class="field-hint" style="line-height:1.8">
             · <b>怎么用</b>：输入缺陷名（缩松/气孔）、俗称（呛火/砂眼）或症状（"上表面 圆形孔洞"）即可定位；也可直接按分类 / 材质浏览。<br>
             · <b>看对策</b>：点击命中条目打开<b>完整工艺卡片</b>，内含 特征·原因·对策·检验方法，以及<b>相关标准 / 相关计算工具 / 相关知识</b>。<br>
-            · <b>分类依据</b>：GB/T 5611《铸造术语》八大类；材质过滤按知识库标签匹配。<br>
-            · <b>数据可信度</b>：每条对策带置信度（🟢 一手/官方 · 🟡 标准成熟值 · 🟠 二手整理），出处见卡片「📌 出处」。
+            · <b>分类依据</b>：GB/T 5611-2017《铸造术语》（现行，2023-12 复审继续有效）八大类；材质过滤按知识库标签匹配。<br>
+            · <b>数据可信度</b>：每条带分级徽标（🟢 依据较强 · 🟡 依据中等 · 🟠 依据较弱），由数据维护时人工评定——本库条目均整理自出版物（权威专著/手册，书+章节见「📌 出处」），并非"一手/官方原始文件"之别，正式引用请核对原书页码。
           </div>
         </div>
       </div>
@@ -131,7 +131,7 @@ export async function renderDefectFinder(container, calc) {
           <div class="kb-item-title">${esc(doc.title)}
             <span class="chip" style="margin-left:6px">${CAT_NAME(doc.id)}</span>${confText(doc.confidence)}</div>
           ${sym ? `<div class="kb-item-summary">典型现象：${esc(sym)}</div>` : ''}
-          <div class="kb-item-meta">${esc(doc.reference?.book || '')} · 原因 ${causes} 条 · 对策 ${prevents} 条${doc.how ? ` · <span class="df-how">${esc(doc.how)}</span>` : ''}</div>
+          <div class="kb-item-meta">${esc(doc.reference?.book || '')}${doc.reference?.chapter ? ` · ${esc(doc.reference.chapter)}` : ''} · 原因 ${causes} 条 · 对策 ${prevents} 条${doc.how ? ` · <span class="df-how">${esc(doc.how)}</span>` : ''}</div>
         </div>
         <div class="kb-item-right"><span class="kb-arrow">›</span></div>
       </div>`;

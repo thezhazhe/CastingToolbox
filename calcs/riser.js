@@ -4,11 +4,14 @@
 // ============================================================
 
 // ---- 材料（体收缩率 = 凝固收缩率，冒口补缩用；非线收缩率） ----
+// PHASE 28.6（43.txt A P0-3 审计）：rho 语义=固态密度（铸件体积 Vc=重量/ρ 换算、冒口体积校验用）。
+// PHASE 28.7-A（44.txt）：**已人工批准定稿**——球铁 6.9→7.1、铝 2.6→2.7（其余保持）。
+//   注意：与 gating.js MATERIALS（液态，球铁 6.9/铝 2.6 保持企业值）同材料不同值——液态/固态语义分开，勿合并。
 export const RISER_MATERIALS = {
   灰铁:   { rho: 7.0, shrink: 0.02,  neck_k: 0.75, name: '灰铁(HT)' },
-  球铁:   { rho: 6.9, shrink: 0.03,  neck_k: 1.0,  name: '球铁(QT)' },
+  球铁:   { rho: 7.1, shrink: 0.03,  neck_k: 1.0,  name: '球铁(QT)' },
   铸钢:   { rho: 7.8, shrink: 0.045, neck_k: 1.1,  name: '铸钢(ZG)' },
-  铝合金: { rho: 2.6, shrink: 0.045, neck_k: 1.0,  name: '铝合金(Al)' },
+  铝合金: { rho: 2.7, shrink: 0.045, neck_k: 1.0,  name: '铝合金(Al)' },
   铜合金: { rho: 8.4, shrink: 0.045, neck_k: 1.0,  name: '铜合金(Cu)' },
 };
 
@@ -73,7 +76,11 @@ export function calcMc(mode, v) {
 
 // ---- 主计算：自动迭代至全部校核通过 ----
 export function runRiser(input) {
+  // PHASE 28.6（P0-3）：密度接线——input.rho 显式覆盖（manifest 层在项目 solidDensity 为
+  //   USER_OVERRIDE 时传入）；默认仍用内部表。未知材料不再静默：mdFellBack 标记。
   const md = RISER_MATERIALS[input.mat] || RISER_MATERIALS.球铁;
+  const rhoUsed = input.rho ?? md.rho;
+  const mdFellBack = !RISER_MATERIALS[input.mat];
   const Mc = calcMc(input.mc_mode, input);
   const sd = RISER_SHAPES[input.shape];
   const hd = parseFloat(input.hd_ratio) || 1.0;
@@ -90,14 +97,16 @@ export function runRiser(input) {
     D = Math.round(D);
     if (input.shape === 'sphere_head') { const r = D / 2; if (H < r) H = Math.round(r); }
     if (input.shape === 'sphere') H = D;
-    Mr_act = sd.M(D, H);
+    // PHASE 73 防御（除零守卫，不改任何公式）：Mc 极小时 DfromM 迭代后 D/H 会取整到 0，
+    //   形状模数 M(0,0) = 0/0 → NaN。合法输入下 D、H 恒 > 0，本分支永不触发，数值结果零影响。
+    Mr_act = (D > 0 && H > 0) ? sd.M(D, H) : 0;
     Vr = sd.V(D, H);
     effV = Vr * eff;
     final_f = f;
     const modOk = Mr_act >= Mr_need * 0.99;   // 取整误差允许1%
     let volOk = true;
     if (cw > 0) {
-      const Vc = cw * 1000000 / md.rho;
+      const Vc = cw * 1000000 / rhoUsed;
       volOk = effV >= Vc * md.shrink;
     }
     if (modOk && volOk) break;
@@ -109,14 +118,14 @@ export function runRiser(input) {
   const M_neck = Mc * neck_k;
   const d_neck = Math.round(M_neck * 4);   // 圆颈 M=d/4 → d=4M
 
-  // 体积校验相关
-  const Vc = cw > 0 ? cw * 1000000 / md.rho : 0;
+  // 体积校验相关（PHASE 28.6：Vc 换算用 rhoUsed——支持用户显式固态密度覆盖）
+  const Vc = cw > 0 ? cw * 1000000 / rhoUsed : 0;
   const needVol = Vc * md.shrink;
   const modOk = Mr_act >= Mr_need * 0.99;
   const volOk = cw > 0 ? effV >= needVol : true;
   const yieldPct = Vc > 0 ? Vc / (Vc + Vr) * 100 : null;
 
-  return { matKey: input.mat, md, Mc, shapeKey: input.shape, sd, hd, eff,
+  return { matKey: input.mat, md, rhoUsed, mdFellBack, Mc, shapeKey: input.shape, sd, hd, eff,
     D, H, Mr_act, Vr, effV, Mr_need, final_f,
     d_neck, neck_k, M_neck, cw, Vc, needVol, modOk, volOk, yieldPct,
     dimLabel: input.shape === 'sphere' ? '球直径' : input.shape === 'square' ? '边长 a' : '直径 D' };

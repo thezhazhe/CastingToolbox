@@ -6,9 +6,19 @@
 # ============================================================
 $ErrorActionPreference = 'Stop'
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
-$SDK  = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
-$BT   = Join-Path $SDK 'build-tools\34.0.0'
-$PLAT = Join-Path $SDK 'platforms\android-34\android.jar'
+$SDK  = if ($env:ANDROID_SDK_ROOT) { $env:ANDROID_SDK_ROOT } elseif ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $env:LOCALAPPDATA 'Android\Sdk' }
+# PHASE 73：不再写死 build-tools/34.0.0 与 android-34（本机只装了 36.x）——
+#   自动挑可用的最高版本，缺哪个版本都能构建；可用环境变量 BT_VER / PLAT_VER 覆盖。
+function Pick-Dir($parent, $filter) {
+  if (-not (Test-Path $parent)) { return $null }
+  $d = Get-ChildItem $parent -Directory -ErrorAction SilentlyContinue |
+       Where-Object { $_.Name -like $filter } |
+       Sort-Object { try { [version]($_.Name -replace '[^0-9.]', '') } catch { [version]'0.0' } } -Descending
+  if ($d) { return $d[0].FullName } else { return $null }
+}
+$BT = if ($env:BT_VER) { Join-Path $SDK "build-tools\$env:BT_VER" } else { Pick-Dir (Join-Path $SDK 'build-tools') '*' }
+$platDir = if ($env:PLAT_VER) { Join-Path $SDK "platforms\android-$env:PLAT_VER" } else { Pick-Dir (Join-Path $SDK 'platforms') 'android-*' }
+$PLAT = if ($platDir) { Join-Path $platDir 'android.jar' } else { $null }
 $PROJ = Join-Path $ROOT 'dist\apk\project'
 $BLD  = Join-Path $ROOT 'dist\apk\build'
 $APK  = Join-Path $ROOT 'dist\apk'
@@ -28,7 +38,9 @@ $www = Join-Path $PROJ 'assets\www'
 if (Test-Path $www) { Remove-Item $www -Recurse -Force }
 $null = New-Item -ItemType Directory -Force $www
 foreach ($f in @('index.html', 'favicon.svg')) { Copy-Item (Join-Path $ROOT $f) $www }
-foreach ($d in @('css', 'js', 'calcs', 'data', 'assets')) { Copy-Item (Join-Path $ROOT $d) $www -Recurse }
+# vendor = three.js / mesh-bvh 本地模块（设计中心 3D 视图靠 importmap 解析 'three'）——必须一起打包，
+#   否则 Android 上进设计中心会因解析不到模块而白屏（PHASE 73 审计发现：旧 APK 缺 vendor）。
+foreach ($d in @('css', 'js', 'calcs', 'data', 'assets', 'vendor')) { Copy-Item (Join-Path $ROOT $d) $www -Recurse }
 
 Write-Host '[3/6] aapt2 compile + link...' -ForegroundColor Cyan
 & "$BT\aapt2.exe" compile --dir "$PROJ\res" -o "$BLD\res.zip"

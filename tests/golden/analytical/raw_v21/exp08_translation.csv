@@ -1,0 +1,6 @@
+model,status,rotErr,transErr,scaleErr,positionError,confidence,note
+trans_base,ok,,0,,11.796,0.77,
+trans_1,ok,,0,,92.046,0.77,位移 100,0,0 vs 理论 100,0,0 → 0.00mm
+trans_2,ok,,0,,92.046,0.77,位移 0,100,0 vs 理论 0,100,0 → 0.00mm
+trans_3,ok,,0,,100.196,0.77,位移 0,0,100 vs 理论 0,0,100 → 0.00mm
+trans_4,ok,,0,,613.682,0.77,位移 500,-300,200 vs 理论 500,-300,200 → 0.00mm

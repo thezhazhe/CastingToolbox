@@ -1,0 +1,3 @@
+model,triCount,runtime,buildMs,dfMs,candRefineMs,status,budgetOk,vs,insidePoints,candidates
+perf_10万,291600,94313,48,93844,469,ok,false,8.33,54755,83
+perf_20万,608400,211397,57,209783,1614,ok,false,8.33,55430,75

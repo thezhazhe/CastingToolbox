@@ -1,0 +1,67 @@
+{
+  "stl": {
+    "file": "plate20.stl",
+    "triCount": 12,
+    "size": [
+      200,
+      20,
+      200
+    ],
+    "bounds": {
+      "min": [
+        -100,
+        -10,
+        -100
+      ],
+      "max": [
+        100,
+        10,
+        100
+      ],
+      "size": [
+        200,
+        20,
+        200
+      ],
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "diagonal": 283.5489375751565
+    },
+    "volumeCm3": 800,
+    "areaMm2": 96000,
+    "closed": true,
+    "issues": []
+  },
+  "v3": {
+    "status": "NO_HOTSPOT",
+    "reason": "no_candidate",
+    "elapsedMs": 690,
+    "hotspots": [],
+    "debug": {
+      "coarse": {
+        "gs": 100,
+        "vs": 2,
+        "estMinWall": 4,
+        "pts": 12500,
+        "stride": 2,
+        "maxM": 3,
+        "meanM": 1.5626666666666582,
+        "peaks": 64,
+        "uniform": true,
+        "scanMs": 69,
+        "fieldMs": 32
+      },
+      "elapsedMs": 690
+    },
+    "audit": []
+  },
+  "v2": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "elapsedMs": 138,
+    "hotspots": []
+  }
+}

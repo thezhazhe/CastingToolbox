@@ -175,6 +175,17 @@ export const DATA_INDEX = {
     'rule_09_residual_stress.json',
     'rule_10_location.json',
   ],
+  // PHASE 65.1：Campbell 浇注系统方法 8 卡（evidence=ENGINEERING_REFERENCE；reference.school/method/kind）
+  campbell: [
+    'campbell_gating_flow_area.json',
+    'campbell_speed_critical.json',
+    'campbell_quick_rule_500_1000.json',
+    'campbell_ratio_1_1_n.json',
+    'campbell_runner_sprue.json',
+    'campbell_continuous_throttle.json',
+    'campbell_deceleration_independent.json',
+    'campbell_ratio_is_result.json',
+  ],
   disa: [
     'disa_overview.json',
     'disa_sand_compactability.json',

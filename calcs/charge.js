@@ -7,10 +7,11 @@ import { CHARGE_TARGETS, CHARGE_MATERIALS, CHARGE_DEFAULTS, returnComposition, c
 
 const ELEMS = ['C', 'Si', 'Mn', 'P', 'S'];
 
-/** 默认配方：按牌号族生成比例 → kg（合金/处理剂为 0） */
+/** 默认配方：按牌号族生成比例 → kg（合金/处理剂为 0）；牌号不在数据表 → null（调用方明确提示，不抛错） */
 export function defaultCharge(grade, totalWt = 1000) {
   const d = CHARGE_DEFAULTS[chargeFamily(grade)];
   const t = CHARGE_TARGETS[grade];
+  if (!t) return null;
   return {
     grade, totalWt,
     pigKey: d.pig, scrapKey: d.scrap,

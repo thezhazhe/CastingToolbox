@@ -88,6 +88,7 @@ export const TAXONOMY = [
     desc: 'Campbell《Complete Casting Handbook》铸造十规则：金属液质量 · 临界速度 · 补缩 · 应力 · 定位（缺陷诊断的底层机理）',
     children: [
       { name: 'Campbell 十规则', items: ['rule_01_melt', 'rule_02_critical_velocity', 'rule_03_laminar', 'rule_04_bubble', 'rule_05_core_blow', 'rule_06_shrinkage', 'rule_07_convection', 'rule_08_segregation', 'rule_09_residual_stress', 'rule_10_location'] },
+      { name: 'Campbell 浇注系统方法', items: ['campbell_gating_flow_area', 'campbell_speed_critical', 'campbell_quick_rule_500_1000', 'campbell_ratio_1_1_n', 'campbell_runner_sprue', 'campbell_continuous_throttle', 'campbell_deceleration_independent', 'campbell_ratio_is_result'] },
     ],
   },
   {

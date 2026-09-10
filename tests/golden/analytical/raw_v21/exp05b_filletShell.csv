@@ -1,0 +1,9 @@
+model,R,status,H,cornerD,confidence,prominenceScore
+shellFillet_R0,0,ok,1,5.33,0.72,1
+shellFillet_R0.5,0.5,ok,1,6.015,0.72,1
+shellFillet_R1,1,NO_HOTSPOT,0,NaN,,
+shellFillet_R1.5,1.5,NO_HOTSPOT,0,NaN,,
+shellFillet_R2,2,ok,1,6.21,0.808,1
+shellFillet_R3,3,ok,3,6.215,0.808,1
+shellFillet_R5,5,ok,7,6.215,0.808,1
+shellFillet_R10,10,ok,7,9.8,0.658,1

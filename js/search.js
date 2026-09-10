@@ -32,7 +32,8 @@ export function getReadyCalcs() {
 }
 
 function flatText(doc) {
-  return JSON.stringify(doc.content).toLowerCase();
+  // PHASE 65.1：索引并入 reference（book/chapter/author/school/method）——可按 "Campbell/1:1:n" 搜到来源与方法元数据
+  return JSON.stringify({ c: doc.content, r: doc.reference }).toLowerCase();
 }
 
 /** 搜索知识库，返回 [{doc, score, cat, snippet}] */

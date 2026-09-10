@@ -58,6 +58,12 @@
 .version { font-size: .7rem; color: var(--text-muted); }
 .version b { color: var(--text-secondary); font-weight: 500; }
 
+/* 侧栏底部「关于」信息块（73.txt：作者/邮箱/QQ 群/开源声明，随 4 个导航专栏常显） */
+.sf-about { margin-top: 6px; padding: 6px 2px 2px; border-top: 1px dashed var(--border); font-size: .68rem; line-height: 1.8; color: var(--text-muted); }
+.sf-about a { color: var(--text-secondary); text-decoration: none; }
+.sf-about a:hover { color: var(--primary); text-decoration: underline; }
+.sf-lite { opacity: .8; }
+
 /* 开发者模式 */
 .nav-item[hidden] { display: none; }
 .dev-badge {
@@ -457,6 +463,19 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .field-hint { font-size: .7rem; color: var(--text-muted); }
 .field-error { font-size: .7rem; color: var(--danger); }
 
+/* 59.txt 工程原则/提示卡（gating 结果区；浅底深字，深浅主题均清晰） */
+.eng-note {
+  margin: 2px 0 10px;
+  padding: 8px 12px;
+  background: #EEF4FC;
+  border: 1px solid #CFDEF2;
+  border-left: 3px solid #4F8CFF;
+  border-radius: 6px;
+  font-size: .76rem;
+  line-height: 1.6;
+  color: #24344D;
+}
+
 /* ============================================================
    计算器详情（表单 + 结果 + 判定 + 报告）
    ============================================================ */
@@ -489,9 +508,13 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .f-row { display: flex; align-items: center; gap: 8px; }
 .f-row .field-input, .f-row .field-select { flex: 1; min-width: 0; }
 .f-unit { font-size: .72rem; color: var(--text-muted); white-space: nowrap; width: 34px; flex-shrink: 0; text-align: right; }
-.field-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* PHASE 78（78.txt 十）：`1fr` 的最小尺寸是 min-content —— 输入框 intrinsic 宽度会把栅格撑破
+   （线收缩率工具的方向 Z 输入框溢出卡片外，实测 scrollWidth 858 > clientWidth 718）。
+   改用 minmax(0, 1fr) + 子项 min-width:0（栅格项默认 min-width:auto）。 */
+.field-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 560px) { .field-grid2 { grid-template-columns: 1fr; } }
-.field-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.field-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.field-grid2 > .field, .field-grid3 > .field { min-width: 0; }
 
 /* 结果行 */
 .results { display: flex; flex-direction: column; gap: 6px; }
@@ -515,6 +538,7 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 
 .judge { padding: 12px 14px; border-radius: var(--radius-sm); font-size: .9rem; font-weight: 700; text-align: center; }
 .judge.ok  { background: var(--success-soft); color: var(--success); }
+.judge.warn { background: var(--warning-soft); color: var(--warning); }
 .judge.bad { background: var(--danger-soft);  color: var(--danger); }
 .suggestion { padding: 7px 12px; margin: 5px 0; background: var(--warning-soft); color: var(--warning); border-radius: var(--radius-xs); font-size: .8rem; border-left: 3px solid var(--warning); }
 
@@ -820,3 +844,456 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .ss-v { font-size: .8rem; font-weight: 600; color: var(--text); }
 .ss-tips { margin: 8px 0 0; padding-left: 18px; }
 .ss-tips li { font-size: .8rem; color: var(--text-secondary); line-height: 1.8; }
+
+/* ============================================================
+   铸造工艺设计中心（designCenter）
+   ============================================================ */
+.dc-import-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 26px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  transition: border-color .2s, background .2s;
+  cursor: pointer;
+}
+.dc-import-zone:hover { border-color: var(--primary); background: var(--primary-soft); }
+.dc-import-icon { font-size: 1.6rem; margin-bottom: 6px; }
+.dc-validate { margin-top: 12px; font-size: .8rem; line-height: 1.7; }
+.dc-validate ul { margin: 4px 0 0 18px; }
+.dc-ok { color: var(--success); }
+.dc-warn { color: var(--warning); }
+.dc-view3d { margin-top: 12px; }
+.dc-view3d-box { position: relative; height: 300px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: #0b0f1a; }
+.dc-view-reset {
+  position: absolute; right: 10px; bottom: 10px; z-index: 5;
+  padding: 5px 10px; font-size: .72rem; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.18); border-radius: 6px;
+  background: rgba(11,15,26,.72); color: rgba(255,255,255,.82);
+  backdrop-filter: blur(4px); transition: background .15s;
+}
+.dc-view-reset:hover { background: rgba(11,15,26,.95); color: #fff; }
+.dc-meta-chip { margin-left: 6px !important; font-variant-numeric: tabular-nums; }
+
+.dc-analysis-hint { padding: 18px; text-align: center; color: var(--text-secondary); font-size: .85rem; }
+/* PHASE 22 分析进度条（30.txt 十三：分阶段真实进度，不伪造百分比） */
+.dc-progress {
+  margin-top: 10px; padding: 10px 14px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.dc-progress-bar { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.dc-progress-fill {
+  height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), #38bdf8);
+  transition: width .25s ease;
+}
+/* 无法报告真实进度的阶段：流动条（indeterminate），不假装数字增长 */
+.dc-progress-fill.indeterminate {
+  width: 40% !important;
+  animation: dc-progress-slide 1.2s ease-in-out infinite;
+  background: linear-gradient(90deg, var(--primary) 20%, #38bdf8 50%, var(--primary) 80%);
+  background-size: 200% 100%;
+}
+@keyframes dc-progress-slide { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+.dc-progress-text { margin-top: 6px; font-size: .76rem; color: var(--text-secondary); }
+
+/* PHASE 22 分析结果概览卡（30.txt 十五 ②） */
+.dc-overview-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.dc-overview-grid > div {
+  background: var(--bg-card-hi); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; min-width: 0;
+}
+.dc-overview-grid span { display: block; font-size: .68rem; color: var(--text-muted); }
+.dc-overview-grid b { font-size: .82rem; color: var(--text); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+
+.dc-hs-badge { margin-top: 10px; padding: 8px 12px; border-radius: var(--radius-xs); font-size: .8rem; line-height: 1.6; }
+.dc-hs-badge.ok { background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary); }
+.dc-hs-badge.none { background: var(--bg-card-hi); color: var(--text-secondary); border: 1px solid var(--border); }
+.dc-hs-badge.dbg { background: #3a2f14; color: #ffd54f; border: 1px dashed #ffd54f; }
+.dc-hs-badge.warn { background: #3a3013; color: #ffc94f; border: 1px solid #ffc94f; }
+.dc-import-alt { margin-top: 10px; text-align: center; }
+
+/* 工作台布局（命令文件：3D 主视图 70% + 右侧 Analysis Panel 30%） */
+.dc-ws { display: flex; flex-direction: column; gap: 12px; }
+.dc-topbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+}
+.dc-topbar-spacer { flex: 1; }
+/* PHASE 78（78.txt 一）：**始终单列**——原先宽屏（>1100px）会切成 STL 左 / 参数右两栏，
+   用户全屏后布局突变、左右来回看很麻烦。现在无论窗口多宽都按"没放大时"的样子从上到下一列排。 */
+.dc-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }
+.dc-stage { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dc-view3d .dc-view3d-box { height: min(64vh, 720px); }   /* 10.txt 六：全屏时 3D 区域过小 → 上限放宽（最小处理） */
+.dc-view-controls {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 10px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+}
+.dc-disp-mode {
+  background: var(--bg-card-hi); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 8px; font-size: .78rem; cursor: pointer;
+}
+.dc-view-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.dc-view-btns button {
+  padding: 5px 9px; font-size: .72rem; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg-card-hi); color: var(--text-secondary); transition: all .15s;
+}
+.dc-view-btns button:hover { border-color: var(--primary); color: var(--primary); }
+/* 右侧 Analysis Panel */
+.dc-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.dc-panel-sec {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 12px 14px;
+  min-width: 0;   /* PHASE 22：面板节 min-width:0，防内部网格把父容器撑爆（30.txt 十六） */
+}
+.dc-panel-title {
+  font-size: .76rem; font-weight: 700; color: var(--text); letter-spacing: .4px;
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer;
+  user-select: none;
+}
+.dc-panel-title.folded::after { content: '▸'; margin-left: auto; color: var(--text-muted); }
+.dc-panel-title::after { content: '▾'; margin-left: auto; color: var(--text-muted); }
+/* 热结列表（H1/H2，点击 ↔ 3D 联动） */
+.dc-hs-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 8px 10px; margin-bottom: 6px; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-card-hi); color: var(--text-secondary);
+  font-size: .78rem; transition: all .15s; text-align: left;
+}
+.dc-hs-item:hover { border-color: var(--primary); }
+.dc-hs-item.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.dc-hs-id {
+  min-width: 30px; text-align: center; padding: 3px 6px; border-radius: 6px;
+  background: #ff5252; color: #fff; font-weight: 700; font-size: .74rem;
+}
+.dc-hs-main { flex: 1; }
+.dc-hs-sub { color: var(--text-muted); font-size: .72rem; }
+/* 模型信息（GeometryResult 展示） */
+.dc-geom-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.dc-geom-grid > div {
+  background: var(--bg-card-hi); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; min-width: 0;
+}
+.dc-geom-grid span { display: block; font-size: .68rem; color: var(--text-muted); }
+.dc-geom-grid b { font-size: .82rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.dc-tasks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.dc-task {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 14px; border-radius: var(--radius-xs);
+  border: 1px solid var(--border); background: var(--bg-card);
+  cursor: pointer; font-size: .82rem; color: var(--text-secondary);
+  transition: all .15s; user-select: none;
+}
+.dc-task:hover { border-color: var(--primary); color: var(--text); }
+.dc-task.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+.dc-task.on:hover { color: var(--primary); }
+.dc-task-icon { font-size: .95rem; }
+
+/* 16-C：模块分组导航 + 状态徽标（19.txt 二/四） */
+.dc-module-group { margin-bottom: 10px; }
+.dc-module-group-label { font-size: .72rem; font-weight: 700; color: var(--text-muted); margin: 6px 0 2px; letter-spacing: .04em; }
+.dc-task-status { font-size: .78rem; line-height: 1; opacity: .9; }
+.dc-task-status.done { color: #059669; }
+.dc-task-status.stale { color: #d97706; }
+.dc-task-status.wait { color: var(--text-muted); }
+
+/* 16-C：铸件信息卡（19.txt 三） */
+.dc-cast-card {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  background: var(--bg-card-hi); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; margin: 10px 0 4px;
+}
+.dc-cast-name { font-weight: 700; font-size: .85rem; color: var(--text); }
+.dc-cast-stats { font-size: .76rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dc-cast-stats .chip-ok { background: #059669; color: #fff; }
+.dc-cast-stats .dc-chip-warn { background: #d97706; color: #fff; }   /* PHASE 17：🟡 局部薄特征 */
+.dc-overview-grid .chip-ok { background: #059669; color: #fff; }
+.dc-overview-grid .dc-chip-warn { background: #d97706; color: #fff; }
+.dc-overview-grid .dc-chip-bad { background: var(--danger, #c0392b); color: #fff; }
+
+/* 16-C：参数来源徽章（19.txt 五：🟢🔵🟡🟠） */
+.dc-src-badge {
+  font-size: .68rem; color: var(--text-secondary); white-space: nowrap;
+  border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; background: var(--surface-2);
+  margin-left: 6px;
+}
+
+/* 16-C：三方向尺寸输入（线收缩率） */
+.dims3-row { gap: 6px; flex-wrap: wrap; }
+.dims3-item { display: inline-flex; align-items: center; gap: 3px; }
+.dims3-item .field-input { width: 74px; }
+
+/* 16-C：结果导航（19.txt 八：不全部平铺） */
+.dc-result-nav { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.dc-result-nav-btn {
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text-secondary); font-size: .78rem; cursor: pointer;
+}
+.dc-result-nav-btn.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+
+.dc-params-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; margin-top: 4px; }
+/* V2.3.1 STL 诊断面板（命令 10.txt 第一节） */
+.dc-diag { margin-top: 10px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; background: var(--surface-2); }
+.dc-diag-line { display: flex; align-items: baseline; gap: 6px; font-size: .76rem; margin: 3px 0; flex-wrap: wrap; }
+.dc-diag-line span { color: var(--text-secondary); min-width: 72px; flex-shrink: 0; }
+.dc-diag-line b { font-weight: 600; }
+.dc-diag-bad { color: var(--danger, #c0392b); }
+.dc-chip-bad { background: var(--danger, #c0392b); color: #fff; }
+
+/* V2.3 分页步骤条（命令 9.txt STEP 4） */
+.dc-steps { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.dc-step { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text-secondary);
+  padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); }
+.dc-step span { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--border); color: var(--text-secondary); font-size: .68rem; font-weight: 700; }
+.dc-step.done { border-color: var(--primary); color: var(--primary); }
+.dc-step.done span { background: var(--primary); color: var(--surface); }
+@media (max-width: 760px) { .dc-params-grid { grid-template-columns: 1fr; } }
+/* PHASE 29（P1-40）：高级参数折叠区（设计中心 optionalInputs 生命周期落点） */
+.dc-advanced { margin-top: 12px; border: 1px dashed var(--border); border-radius: 8px; padding: 8px 10px; }
+.dc-advanced summary { cursor: pointer; font-size: .78rem; font-weight: 700; color: var(--text-secondary); user-select: none; }
+.dc-advanced-grid { margin-top: 10px; }
+.dc-blocked { background: var(--bg-warn, #fff8e6); border: 1px solid var(--warn, #e2b93b); color: var(--text); border-radius: 8px; padding: 10px 12px; font-size: .82rem; margin-bottom: 8px; }
+.dc-sec-title { font-size: .8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.dc-field { margin-bottom: 10px; }
+.dc-required { color: var(--danger, #f87171); }
+
+.dc-result-sec { margin-top: 16px; }
+.dc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 4px 0 10px; }
+.dc-stat { background: var(--bg-card-hi); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 10px 12px; text-align: center; }
+.dc-stat div:first-child { font-size: .68rem; color: var(--text-muted); }
+.dc-stat-v { font-size: .92rem; font-weight: 700; color: var(--text); margin-top: 2px; }
+.dc-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.dc-table th, .dc-table td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+.dc-table td:first-child { color: var(--text-muted); width: 34%; }
+.dc-table td:last-child { font-weight: 600; }
+.dc-links { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* P51 收尾（美学统一）：组元尺寸输出改为"小卡网格"——label 上/数值下，
+   与结果摘要卡同款（grid auto-fit + 浅底 + 圆角），仅显示层 */
+.calc-single .results.gcards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 8px;
+}
+.calc-single .results.gcards .rrow {
+  flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px;
+  border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 12px; margin: 0; min-width: 0;
+}
+.calc-single .results.gcards .rrow:not(.ok):not(.warn):not(.bad) { background: #f8fafc; }
+.calc-single .results.gcards .rrow .rl { font-size: .72rem; color: #64748b; }
+.calc-single .results.gcards .rrow .rv { font-size: 1rem; font-weight: 700; color: #0f172a; text-align: left; }
+.calc-single .results.gcards .rrow .rf { text-align: left; font-size: .66rem; }
+.calc-single .results.gcards .rrow .ru { font-size: .7rem; }
+.calc-single .results.gcards .rrow.ok .rv { color: var(--success); }
+.calc-single .results.gcards .rrow.warn .rv { color: var(--warning); }
+.calc-single .results.gcards .rrow.bad .rv { color: var(--danger); }
+
+/* ===== PHASE 63 · P1-2 示例默认值标识 ===== */
+.tag-example {
+  display: inline-block; flex: none;
+  margin-left: 6px; padding: 1px 7px;
+  font-size: .68rem; line-height: 1.5;
+  color: #b45309; background: #fffbeb;
+  border: 1px solid #fcd34d; border-radius: 999px;
+  white-space: nowrap; vertical-align: middle;
+}
+.ex-note {
+  margin: 0 0 8px; padding: 7px 10px;
+  font-size: .78rem; line-height: 1.6;
+  color: #92400e; background: #fffbeb;
+  border: 1px dashed #fbbf24; border-radius: 8px;
+}
+
+/* ===== PHASE 65.1 Campbell 速算 · 知识卡跳转 chip ===== */
+.kb-chip { display:inline-block; margin: 0 2px; padding: 1px 8px; font-size:.68rem; border:1px solid #bbf7d0; background:#f0fdf4; color:#15803d; border-radius:999px; cursor:pointer; white-space:nowrap; }
+.kb-chip:hover { background:#dcfce7; }
+.kb-chip-label { font-size:.72rem; color:#64748b; }
+
+/* ===== PHASE 65.1 evidence 三态徽章 ===== */
+.ev-verified { background:#ecfdf5 !important; color:#047857 !important; border:1px solid #6ee7b7; }
+.ev-er { background:#fffbeb !important; color:#b45309 !important; border:1px solid #fcd34d; }
+.ev-uncertain { background:#fef2f2 !important; color:#b91c1c !important; border:1px solid #fecaca; }
+
+/* ================= PHASE 71.5（75.txt）：统一输入区 + Page1 铸件工艺分析样式 ================= */
+/* ---- 输入区来源图例（§十四：颜色 + 文字，双通道） ---- */
+.dc-src-legend { font-size: .66rem; color: var(--txt-dim, #64748b); line-height: 1.7; margin: 2px 0 8px; padding: 4px 8px; background: var(--bg-soft, rgba(127,127,127,.06)); border-radius: 6px; }
+.dc-group { margin-bottom: 10px; }
+.dc-group-title { font-size: .8rem; font-weight: 700; margin: 8px 0 4px; display: flex; align-items: center; gap: 6px; }
+.dc-group-title .chip { font-weight: 500; }
+/* 覆盖自动值的 ↺ 恢复锚点（§八：STL原始值 / 当前采用值） */
+/* PHASE 73：↺ 恢复按钮原来只有 12px 高，手机端点不中 → 给足触摸高度（桌面观感不变） */
+.dc-reset-orig {
+  border: none; background: transparent; cursor: pointer; font-size: .78rem; line-height: 1;
+  color: var(--primary, #2563eb); border-radius: 4px;
+  min-width: 22px; min-height: 22px; padding: 0 2px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.dc-reset-orig:hover { background: rgba(37,99,235,.12); }
+/* 窄屏或触摸设备（手机横屏时宽度可能 >720px，仍要点得中）→ 放大到 30px */
+@media (max-width: 720px), (pointer: coarse) { .dc-reset-orig { min-width: 30px; min-height: 30px; } }
+
+/* ---- 来源标签（板块 A/B 行尾 chip；颜色 + 文字） ---- */
+.dc-src-tag { display: inline-flex; align-items: center; font-size: .62rem; line-height: 1; padding: 2px 5px; border-radius: 4px; font-weight: 600; white-space: nowrap; cursor: default; }
+.dc-src-tag.stl { background: #dcfce7; color: #15803d; }          /* 🟢 STL 自动 */
+.dc-src-tag.cal { background: #dbeafe; color: #1d4ed8; }          /* 🔵 自动计算 */
+.dc-src-tag.usr { background: #fef9c3; color: #a16207; }          /* 🟡 用户输入/场景 */
+.dc-src-tag.ovr { background: #ffedd5; color: #c2410c; }          /* 🟠 用户修改 */
+.dc-src-tag.dft { background: #f1f5f9; color: #64748b; }          /* 系统默认 */
+
+/* ---- Page1：板块分隔 + 风险条 ---- */
+.dc-p1-parthead { font-size: .8rem; font-weight: 700; margin: 4px 0 6px; display: flex; align-items: center; gap: 6px; }
+.dc-p1-risks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.dc-p1-agrid { display: grid; grid-template-columns: 1fr; gap: 2px 0; }
+.dc-p1-arow { display: grid; grid-template-columns: minmax(120px, 34%) 1fr auto; align-items: center; gap: 6px; padding: 3px 2px; border-bottom: 1px dashed rgba(127,127,127,.18); font-size: .78rem; }
+.dc-p1-arow .dc-p1-ak { color: var(--txt-dim, #64748b); }
+.dc-p1-arow .dc-p1-av { font-weight: 600; }
+.dc-p1-arow .dc-p1-av.dc-p1-bad { color: #dc2626; }
+.dc-p1-arow .dc-p1-av.dc-p1-good { color: #15803d; }
+.dc-p1-anote { cursor: help; opacity: .6; margin-left: 2px; }
+.dc-p1-bgrid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+@media (min-width: 760px) { .dc-p1-bgrid { grid-template-columns: 1fr 1fr; } }
+.dc-p1-bcard { border: 1px solid rgba(127,127,127,.22); border-radius: 8px; padding: 7px 9px; background: var(--bg-soft, rgba(127,127,127,.05)); }
+.dc-p1-bhead { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: .78rem; margin-bottom: 4px; }
+.dc-p1-bline { font-size: .74rem; line-height: 1.55; color: var(--txt-dim, #475569); }
+.dc-p1-bline.warn { color: #b91c1c; }
+.dc-p1-bline.ok { color: #166534; }
+.dc-p1-tip { font-size: .74rem; margin-top: 8px; padding: 6px 9px; background: #fef9c3; border-radius: 6px; color: #713f12; }
+.dc-p1-notes { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+[data-theme="dark"] .dc-p1-tip { background: rgba(254,249,195,.12); color: #fde68a; }
+.dc-p1-diag { max-width: 420px; margin: 0 auto; }
+
+/* ---- PHASE 71.6：冒口结果来源行 / 结果出处行 ---- */
+.dc-hint-line { font-size: .78rem; line-height: 1.6; margin: 2px 0 8px; padding: 5px 9px; background: var(--bg-soft, rgba(127,127,127,.06)); border-radius: 6px; }
+.dc-src-line { font-size: .68rem; color: var(--txt-dim, #64748b); margin-top: 8px; padding-top: 5px; border-top: 1px dashed rgba(127,127,127,.25); }
+
+/* ---- PHASE 71.7（77.txt）：概览枢纽 / 参数分组 / 热结选择 / 内浇道推荐 / 浇注示意图 ---- */
+.dc-overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; font-size: .76rem; }
+.dc-overview-grid > div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px dashed rgba(127,127,127,.18); }
+.dc-overview-grid span { color: var(--txt-dim, #64748b); }
+.dc-overview-grid b { font-weight: 600; text-align: right; }
+.dc-gating-diagram { max-width: 330px; margin: 4px auto 2px; }
+.dc-gating-diagram svg { width: 100%; height: auto; }
+.dc-rec-box { margin-top: 6px; padding: 6px 9px; background: var(--bg-soft, rgba(127,127,127,.06)); border: 1px dashed var(--border, rgba(127,127,127,.3)); border-radius: 6px; font-size: .74rem; line-height: 1.6; }
+/* PHASE 79（79.txt 一）：参数联动提示（改了材料/造型线/铸造方法，哪些值随动） */
+.dc-link-hint {
+  margin-top: 8px; padding: 7px 10px; border-radius: 8px; font-size: .73rem; line-height: 1.7;
+  background: var(--info-soft, rgba(79,140,255,.08)); border: 1px solid rgba(79,140,255,.28);
+  color: var(--text-secondary);
+}
+.dc-link-hint b { color: var(--primary); font-variant-numeric: tabular-nums; }
+.dc-rec-title { font-weight: 700; margin-bottom: 2px; }
+.dc-rec-line b { color: var(--primary, #2563eb); }
+.dc-rec-dim { color: var(--txt-dim, #64748b); }
+.dc-hsp-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.dc-hsp { display: flex; align-items: center; gap: 6px; padding: 4px 7px; border: 1px solid var(--border, rgba(127,127,127,.28)); border-radius: 6px; font-size: .76rem; }
+.dc-hsp.on { border-color: var(--primary, #2563eb); background: rgba(37,99,235,.07); }
+.dc-hsp-main { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; }
+.dc-hsp-id { font-weight: 700; color: var(--primary, #2563eb); }
+.dc-hsp-sub { color: var(--txt-dim, #64748b); font-size: .7rem; }
+.dc-hsp-edit { border: 1px solid var(--border, rgba(127,127,127,.3)); background: transparent; color: var(--txt, inherit); border-radius: 5px; font-size: .7rem; padding: 2px 6px; cursor: pointer; }
+.dc-hsp-edit:hover { background: var(--bg-hover, rgba(127,127,127,.12)); }
+.dc-p1-cval { font-size: 1.05rem; font-weight: 700; color: var(--primary, #2563eb); margin: 2px 0 4px; }
+
+/* ---- PHASE 78（78.txt 九）：概览卡片分组（几何 / 重量与壁厚 / 分析结果） ---- */
+.dc-ov-group { margin-bottom: 8px; }
+.dc-ov-group:last-of-type { margin-bottom: 2px; }
+.dc-ov-gtitle { font-size: .7rem; font-weight: 700; color: var(--text-muted); letter-spacing: .4px; margin: 0 0 4px; }
+.dc-ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 6px; }
+.dc-ov-card {
+  background: var(--bg-card-hi); border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 10px; min-width: 0;
+}
+.dc-ov-card span { display: block; font-size: .66rem; color: var(--text-muted); margin-bottom: 2px; }
+.dc-ov-card b { display: block; font-size: .84rem; color: var(--text); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dc-ov-card .chip { font-size: .68rem; }
+
+/* ---- PHASE 78（78.txt 三/五/七/八）：结果页内联参数与子页签 ---- */
+.dc-shape-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 2px 0 10px; }
+.dc-shape-label { font-size: .76rem; font-weight: 700; color: var(--text-secondary); }
+.dc-inline-sel {
+  background: var(--bg-card-hi); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 8px; font-size: .78rem; cursor: pointer; min-width: 120px;
+}
+.dc-hs-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 2px 0 8px; }
+.dc-hs-tab {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  padding: 6px 12px; border-radius: 999px; font-size: .78rem;
+  border: 1px solid var(--border); background: var(--bg-card-hi); color: var(--text-secondary);
+  transition: all .15s;
+}
+.dc-hs-tab:hover { border-color: var(--primary); color: var(--text); }
+.dc-hs-tab.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+.dc-hs-tab-mc { font-size: .7rem; opacity: .8; }
+.dc-hs-pane { animation: dc-fade .18s ease; }
+@keyframes dc-fade { from { opacity: .3 } to { opacity: 1 } }
+.dc-edit-box {
+  margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+  background: var(--bg-card-hi); border: 1px solid var(--border); border-left: 3px solid var(--primary);
+}
+.dc-edit-head { font-size: .78rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.dc-edit-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.dc-edit-fld { display: inline-flex; align-items: center; gap: 5px; font-size: .76rem; color: var(--text-secondary); }
+.dc-edit-inp {
+  width: 72px; padding: 5px 8px; font-size: .82rem; text-align: right;
+  background: var(--bg-card); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.dc-edit-inp:focus { outline: none; border-color: var(--primary); }
+.dc-edit-unit { font-size: .72rem; color: var(--text-muted); }
+.dc-edit-res { font-size: .78rem; color: var(--text-secondary); }
+.dc-edit-res b { color: var(--primary); font-variant-numeric: tabular-nums; }
+.dc-edit-hint { margin-top: 6px; font-size: .72rem; color: var(--text-muted); line-height: 1.6; }
+.dc-mini-btn {
+  margin-left: 4px; padding: 2px 8px; font-size: .7rem; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 5px; background: transparent; color: var(--primary);
+}
+.dc-mini-btn:hover { background: var(--primary-soft); }
+
+/* 小计算器：结果区折叠块（PHASE 78·线收缩率"按方向细分"） */
+.sc-fold { margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card-hi); }
+.sc-fold > summary {
+  cursor: pointer; padding: 8px 12px; font-size: .76rem; font-weight: 600; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 8px; list-style: none;
+}
+.sc-fold > summary::-webkit-details-marker { display: none; }
+.sc-fold > summary::after { content: '▾'; margin-left: auto; color: var(--text-muted); }
+.sc-fold[open] > summary::after { content: '▴'; }
+.sc-fold > div, .sc-fold > .field-hint { padding: 0 10px 8px; }
+
+/* 工具分类分组（PHASE 78 · 78.txt 十一）：计算工具页 / 首页常用工具 */
+.calc-cat { margin-bottom: 22px; }
+.calc-cat-head {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 0 2px 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.calc-cat-icon { font-size: 1rem; }
+.calc-cat-name { font-size: .92rem; font-weight: 700; color: var(--text); }
+.calc-cat-desc { font-size: .74rem; color: var(--text-muted); }
+.calc-cat-n { margin-left: auto; font-size: .72rem; color: var(--text-muted); }
+
+/* ============================================================
+   PHASE 72：界面语言切换器（zh-CN / en-US）
+   顶栏右上角分段控件：当前语言高亮，点击立即切换（不刷新、不动数据）
+   ============================================================ */
+.lang-switch {
+  display: inline-flex; align-items: stretch; gap: 2px;
+  padding: 3px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg-input);
+}
+.lang-btn {
+  border: none; background: transparent; cursor: pointer;
+  padding: 0 10px; min-height: 28px; border-radius: 999px;
+  font-family: inherit; font-size: .74rem; font-weight: 600; line-height: 1;
+  color: var(--text-muted); transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.lang-btn:hover { color: var(--text); background: var(--bg-hover); }
+.lang-btn.on { color: var(--primary); background: var(--primary-soft); }
+@media (max-width: 720px) {
+  .lang-btn { padding: 0 8px; min-height: 34px; font-size: .72rem; }
+}

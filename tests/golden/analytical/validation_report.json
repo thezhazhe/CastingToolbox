@@ -1,0 +1,461 @@
+{
+ "classification": {
+  "PASS": 17,
+  "TEST_ARTIFACT": 2,
+  "FAIL": 3,
+  "EXPECTED": 1
+ },
+ "positionGrades": {
+  "EXCELLENT": 124,
+  "ACCEPTABLE": 20,
+  "WARNING": 33,
+  "GOOD": 46,
+  "FAIL": 82
+ },
+ "positionCount": 305,
+ "positionWorst": [
+  "trans_4: 616.279mm (FAIL)",
+  "g10_20_h10: 163.287mm (FAIL)",
+  "g10_40_h10: 163.287mm (FAIL)",
+  "scale_5: 133.5mm (FAIL)",
+  "size_200_10: 128.573mm (FAIL)",
+  "pvp_40_60_v5: 110.418mm (FAIL)",
+  "pvp_40_60_v10: 110.418mm (FAIL)",
+  "pvp_40_60_v12: 110.418mm (FAIL)",
+  "pvp_40_60_v15: 110.418mm (FAIL)",
+  "pvp_30_40_v5: 110.417mm (FAIL)"
+ ],
+ "states": {
+  "NO_HOTSPOT": 29,
+  "ok": 355,
+  "INSUFFICIENT_RESOLUTION": 20,
+  "LOW_CONFIDENCE": 7
+ },
+ "byExperiment": {
+  "exp00_core": 35,
+  "exp01_gradient": 22,
+  "exp02_position": 110,
+  "exp03_size": 56,
+  "exp04_thinWall": 60,
+  "exp05_fillet": 16,
+  "exp06_pvp": 63,
+  "exp07_multi": 6,
+  "exp08_rotation": 12,
+  "exp08_translation": 5,
+  "exp08_scale": 4,
+  "exp08_determinism": 20,
+  "exp09_perf": 2
+ },
+ "totalRecords": 411,
+ "posErrorVsDist": {
+  "150-200": {
+   "n": 20,
+   "avg": 0.5,
+   "max": 0.5
+  },
+  "100-150": {
+   "n": 40,
+   "avg": 0.5,
+   "max": 0.5
+  },
+  "50-100": {
+   "n": 44,
+   "avg": 0.5,
+   "max": 0.5
+  },
+  "0-50": {
+   "n": 6,
+   "avg": 0.5,
+   "max": 0.5
+  }
+ },
+ "gradient": [
+  {
+   "ratio": 1,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.72,
+   "prom": 1
+  },
+  {
+   "ratio": 1.2,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.738,
+   "prom": 1
+  },
+  {
+   "ratio": 1.4,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.74,
+   "prom": 1
+  },
+  {
+   "ratio": 1.6,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.73,
+   "prom": 1
+  },
+  {
+   "ratio": 1.8,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.766,
+   "prom": 1
+  },
+  {
+   "ratio": 2,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.74,
+   "prom": 1
+  },
+  {
+   "ratio": 1,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.72,
+   "prom": 1
+  },
+  {
+   "ratio": 1.5,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.74,
+   "prom": 1
+  },
+  {
+   "ratio": 2,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.74,
+   "prom": 1
+  },
+  {
+   "ratio": 3,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.72,
+   "prom": 1
+  },
+  {
+   "ratio": 4,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.72,
+   "prom": 1
+  },
+  {
+   "ratio": 1,
+   "cand": true,
+   "HS": false,
+   "status": "NO_HOTSPOT",
+   "conf": null,
+   "prom": null
+  },
+  {
+   "ratio": 1.2,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.738,
+   "prom": 1
+  },
+  {
+   "ratio": 1.4,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.74,
+   "prom": 1
+  },
+  {
+   "ratio": 1.6,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.73,
+   "prom": 1
+  },
+  {
+   "ratio": 1.8,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.766,
+   "prom": 1
+  },
+  {
+   "ratio": 2,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.74,
+   "prom": 1
+  },
+  {
+   "ratio": 1,
+   "cand": true,
+   "HS": false,
+   "status": "NO_HOTSPOT",
+   "conf": null,
+   "prom": null
+  },
+  {
+   "ratio": 1.5,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.74,
+   "prom": 1
+  },
+  {
+   "ratio": 2,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.74,
+   "prom": 1
+  },
+  {
+   "ratio": 3,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.72,
+   "prom": 1
+  },
+  {
+   "ratio": 4,
+   "cand": true,
+   "HS": true,
+   "status": "ok",
+   "conf": 0.72,
+   "prom": 1
+  }
+ ],
+ "pvp": {
+  "total": 63,
+  "mismatches": [
+   "30/28 v=24 theory=0.143 actual=0.152",
+   "30/40 v=26 theory=0.133 actual=0.151"
+  ],
+  "actualDepthRange": [
+   0.165,
+   0.196,
+   0.186,
+   0.161,
+   0.15,
+   0.151,
+   0.188,
+   0.179,
+   0.16,
+   0.212,
+   0.185,
+   0.156,
+   0.161,
+   0.171,
+   0.157,
+   0.151,
+   0.165,
+   0.161,
+   0.159,
+   0.152,
+   0.16,
+   0.184,
+   0.162,
+   0.156,
+   0.151,
+   0.169,
+   0.161,
+   0.151,
+   0.16,
+   0.169,
+   0.152
+  ]
+ },
+ "perf": [
+  {
+   "faces": 291600,
+   "totalMs": 94313,
+   "dfMs": 93844,
+   "candRefineMs": 469,
+   "budgetOk": false,
+   "vs": 8.333333333333334
+  },
+  {
+   "faces": 608400,
+   "totalMs": 211397,
+   "dfMs": 209783,
+   "candRefineMs": 1614,
+   "budgetOk": false,
+   "vs": 8.333333333333334
+  }
+ ],
+ "rotation": [
+  "lShape_rot_r0: 0mm",
+  "lShape_rot_rx90: 0mm",
+  "lShape_rot_ry90: 0mm",
+  "lShape_rot_rz90: 0mm",
+  "lShape_rot_r45: 1.743mm",
+  "lShape_rot_comb: 1.743mm",
+  "bossOnPlate_rot_r0: 0mm",
+  "bossOnPlate_rot_rx90: 1.333mm",
+  "bossOnPlate_rot_ry90: 0mm",
+  "bossOnPlate_rot_rz90: 0mm",
+  "bossOnPlate_rot_r45: 77.883mm",
+  "bossOnPlate_rot_comb: 77.883mm"
+ ],
+ "translation": [
+  "trans_base: 0mm",
+  "trans_1: 0mm",
+  "trans_2: 0mm",
+  "trans_3: 0mm",
+  "trans_4: 0mm"
+ ],
+ "scale": [
+  "scale0.5: 0mm",
+  "scale1: 0mm",
+  "scale2: 0mm",
+  "scale5: 0mm"
+ ],
+ "determinism": true,
+ "thinWall": {
+  "total": 60,
+  "byState": {
+   "INSUFFICIENT_RESOLUTION": 20,
+   "NO_HOTSPOT": 7,
+   "ok": 26,
+   "LOW_CONFIDENCE": 7
+  },
+  "belowMcStep": 19,
+  "smallestReliable": "shell_800_5"
+ },
+ "fillet": [
+  {
+   "R": 0,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 0.5,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 1,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 1.5,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 2,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 3,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 5,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 10,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 0,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 0.5,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 1,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 1.5,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 2,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 3,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 5,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  },
+  {
+   "R": 10,
+   "status": "NO_HOTSPOT",
+   "H": 0,
+   "conf": null,
+   "cornerD": null
+  }
+ ]
+}

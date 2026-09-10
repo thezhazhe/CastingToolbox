@@ -1,0 +1,12 @@
+model,thicknessRatio,distFromCenter,bossSize,bossH,status,positionError,positionGrade,confidence,prominenceScore,classification
+g10_20_h10,1,,,,NO_HOTSPOT,,,,,
+g10_20_h12,1.2,,,,ok,23.416,FAIL,0.738,1,
+g10_20_h14,1.4,,,,ok,22.129,FAIL,0.74,1,
+g10_20_h16,1.6,,,,ok,18.802,FAIL,0.73,1,
+g10_20_h18,1.8,,,,ok,27.127,FAIL,0.766,1,
+g10_20_h20,2,,,,ok,14.309,FAIL,0.74,1,
+g10_40_h10,1,,,,NO_HOTSPOT,,,,,
+g10_40_h15,1.5,,,,ok,19.241,FAIL,0.74,1,
+g10_40_h20,2,,,,ok,14.309,FAIL,0.74,1,
+g10_40_h30,3,,,,ok,4.032,ACCEPTABLE,0.72,1,
+g10_40_h40,4,,,,ok,3.163,ACCEPTABLE,0.72,1,

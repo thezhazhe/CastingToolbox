@@ -27,7 +27,7 @@ export const SCENARIOS = {
       '壁厚悬殊件注意均衡凝固与冷铁，复杂薄壁件保证平稳充型',
     ],
     defects: ['air_hole', 'sand_inclusion', 'slag_inclusion', 'white_iron', 'swell'],
-    standards: ['GB/T 9439 灰铸铁件', 'GB/T 6414 铸件尺寸公差 毛坯加工余量'],
+    standards: ['GB/T 9439 灰铸铁件', 'GB/T 42124.3-2025 铸件尺寸公差与加工余量（原 GB/T 6414）'],
   },
 
   球铁: {
@@ -39,7 +39,7 @@ export const SCENARIOS = {
       '冒口补缩 + 石墨化膨胀双保障，配合冷铁引导顺序凝固',
     ],
     defects: ['shrinkage_defect', 'slag_inclusion', 'graphite_flotation', 'nodularity_failure', 'air_hole'],
-    standards: ['GB/T 1348 球墨铸铁件', 'GB/T 6414 铸件尺寸公差 毛坯加工余量'],
+    standards: ['GB/T 1348 球墨铸铁件', 'GB/T 42124.3-2025 铸件尺寸公差与加工余量（原 GB/T 6414）'],
   },
 
   铸钢: {
@@ -51,7 +51,7 @@ export const SCENARIOS = {
       '易热裂，注意铸造圆角、减少内应力与热节集中',
     ],
     defects: ['shrinkage_defect', 'hot_crack', 'cold_crack', 'sand_inclusion', 'segregation'],
-    standards: ['GB/T 11352 一般工程用铸造碳钢件', 'GB/T 6414 铸件尺寸公差 毛坯加工余量'],
+    standards: ['GB/T 11352 一般工程用铸造碳钢件', 'GB/T 42124.3-2025 铸件尺寸公差与加工余量（原 GB/T 6414）'],
   },
 
   铝合金: {
@@ -63,7 +63,7 @@ export const SCENARIOS = {
       '常用 T6 固溶+时效热处理获得最佳力学性能',
     ],
     defects: ['pinhole', 'shrinkage_defect', 'hot_crack', 'cold_shut', 'air_hole'],
-    standards: ['GB/T 1173 铸造铝合金', 'GB/T 6414 铸件尺寸公差 毛坯加工余量'],
+    standards: ['GB/T 1173 铸造铝合金', 'GB/T 42124.3-2025 铸件尺寸公差与加工余量（原 GB/T 6414）'],
   },
 
   铜合金: {
@@ -75,7 +75,7 @@ export const SCENARIOS = {
       '耐磨/耐蚀/气密件注意补缩与致密度',
     ],
     defects: ['shrinkage_defect', 'air_hole', 'leakage', 'segregation'],
-    standards: ['GB/T 1176 铸造铜合金', 'GB/T 6414 铸件尺寸公差 毛坯加工余量'],
+    standards: ['GB/T 1176 铸造铜合金', 'GB/T 42124.3-2025 铸件尺寸公差与加工余量（原 GB/T 6414）'],
   },
 };
 

@@ -1,0 +1,9 @@
+model,R,status,H,cornerD,confidence,prominenceScore
+fillet_R0,0,NO_HOTSPOT,0,,,
+fillet_R0.5,0.5,NO_HOTSPOT,0,NaN,,
+fillet_R1,1,NO_HOTSPOT,0,NaN,,
+fillet_R1.5,1.5,NO_HOTSPOT,0,NaN,,
+fillet_R2,2,NO_HOTSPOT,0,NaN,,
+fillet_R3,3,NO_HOTSPOT,0,NaN,,
+fillet_R5,5,NO_HOTSPOT,0,NaN,,
+fillet_R10,10,NO_HOTSPOT,0,NaN,,

@@ -1,0 +1,417 @@
+{
+ "experiment": "exp05_fillet",
+ "meta": {
+  "elapsedSec": "551.0",
+  "updatedAt": "2026-08-21T05:34:42.967Z"
+ },
+ "records": [
+  {
+   "model": "fillet_R0",
+   "parameters": {
+    "R": 0
+   },
+   "expected": {
+    "uniform": true,
+    "hotspots": []
+   },
+   "detected": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "hotspots": []
+   },
+   "status": "NO_HOTSPOT",
+   "positionError": null,
+   "positionGrade": null,
+   "thicknessError": null,
+   "thicknessErrorPct": null,
+   "mcError": null,
+   "mcErrorPct": null,
+   "confidence": null,
+   "resolutionScore": null,
+   "prominenceScore": null,
+   "validationScore": null,
+   "coarseError": null,
+   "refineError": null,
+   "finalError": null,
+   "runtime": 1088,
+   "triCount": null,
+   "debug": {
+    "gs": 48,
+    "vs": 4.166666666666667,
+    "insidePoints": 110592,
+    "candidates": 1,
+    "regions": 0,
+    "peaks": 0
+   },
+   "radial": null,
+   "audit": [
+    {
+     "merged": null,
+     "split": null,
+     "rejected": "uniform: 无第二显著结构（模型壁厚均匀）"
+    }
+   ],
+   "classification": null,
+   "note": null,
+   "R": 0,
+   "cornerD": null
+  },
+  {
+   "model": "fillet_R0.5",
+   "parameters": {
+    "R": 0.5
+   },
+   "expected": {
+    "uniform": false,
+    "hotspots": []
+   },
+   "detected": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "hotspots": []
+   },
+   "status": "NO_HOTSPOT",
+   "positionError": null,
+   "positionGrade": null,
+   "thicknessError": null,
+   "thicknessErrorPct": null,
+   "mcError": null,
+   "mcErrorPct": null,
+   "confidence": null,
+   "resolutionScore": null,
+   "prominenceScore": null,
+   "validationScore": null,
+   "coarseError": null,
+   "refineError": null,
+   "finalError": null,
+   "runtime": 1133,
+   "triCount": null,
+   "debug": {
+    "gs": 48,
+    "vs": 4.172781944274902,
+    "insidePoints": 55296,
+    "candidates": 64,
+    "regions": 0,
+    "peaks": 0
+   },
+   "radial": null,
+   "audit": [
+    {
+     "merged": null,
+     "split": null,
+     "rejected": "uniform: 无第二显著结构（模型壁厚均匀）"
+    }
+   ],
+   "classification": null,
+   "note": null,
+   "R": 0.5,
+   "cornerD": null
+  },
+  {
+   "model": "fillet_R1",
+   "parameters": {
+    "R": 1
+   },
+   "expected": {
+    "uniform": false,
+    "hotspots": []
+   },
+   "detected": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "hotspots": []
+   },
+   "status": "NO_HOTSPOT",
+   "positionError": null,
+   "positionGrade": null,
+   "thicknessError": null,
+   "thicknessErrorPct": null,
+   "mcError": null,
+   "mcErrorPct": null,
+   "confidence": null,
+   "resolutionScore": null,
+   "prominenceScore": null,
+   "validationScore": null,
+   "coarseError": null,
+   "refineError": null,
+   "finalError": null,
+   "runtime": 1315,
+   "triCount": null,
+   "debug": {
+    "gs": 48,
+    "vs": 4.183477401733398,
+    "insidePoints": 55296,
+    "candidates": 64,
+    "regions": 0,
+    "peaks": 0
+   },
+   "radial": null,
+   "audit": [
+    {
+     "merged": null,
+     "split": null,
+     "rejected": "uniform: 无第二显著结构（模型壁厚均匀）"
+    }
+   ],
+   "classification": null,
+   "note": null,
+   "R": 1,
+   "cornerD": null
+  },
+  {
+   "model": "fillet_R1.5",
+   "parameters": {
+    "R": 1.5
+   },
+   "expected": {
+    "uniform": false,
+    "hotspots": []
+   },
+   "detected": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "hotspots": []
+   },
+   "status": "NO_HOTSPOT",
+   "positionError": null,
+   "positionGrade": null,
+   "thicknessError": null,
+   "thicknessErrorPct": null,
+   "mcError": null,
+   "mcErrorPct": null,
+   "confidence": null,
+   "resolutionScore": null,
+   "prominenceScore": null,
+   "validationScore": null,
+   "coarseError": null,
+   "refineError": null,
+   "finalError": null,
+   "runtime": 1069,
+   "triCount": null,
+   "debug": {
+    "gs": 48,
+    "vs": 4.20176378885905,
+    "insidePoints": 55296,
+    "candidates": 64,
+    "regions": 0,
+    "peaks": 0
+   },
+   "radial": null,
+   "audit": [
+    {
+     "merged": null,
+     "split": null,
+     "rejected": "uniform: 无第二显著结构（模型壁厚均匀）"
+    }
+   ],
+   "classification": null,
+   "note": null,
+   "R": 1.5,
+   "cornerD": null
+  },
+  {
+   "model": "fillet_R2",
+   "parameters": {
+    "R": 2
+   },
+   "expected": {
+    "uniform": false,
+    "hotspots": []
+   },
+   "detected": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "hotspots": []
+   },
+   "status": "NO_HOTSPOT",
+   "positionError": null,
+   "positionGrade": null,
+   "thicknessError": null,
+   "thicknessErrorPct": null,
+   "mcError": null,
+   "mcErrorPct": null,
+   "confidence": null,
+   "resolutionScore": null,
+   "prominenceScore": null,
+   "validationScore": null,
+   "coarseError": null,
+   "refineError": null,
+   "finalError": null,
+   "runtime": 961,
+   "triCount": null,
+   "debug": {
+    "gs": 48,
+    "vs": 4.241677284240723,
+    "insidePoints": 55296,
+    "candidates": 64,
+    "regions": 0,
+    "peaks": 0
+   },
+   "radial": null,
+   "audit": [
+    {
+     "merged": null,
+     "split": null,
+     "rejected": "uniform: 无第二显著结构（模型壁厚均匀）"
+    }
+   ],
+   "classification": null,
+   "note": null,
+   "R": 2,
+   "cornerD": null
+  },
+  {
+   "model": "fillet_R3",
+   "parameters": {
+    "R": 3
+   },
+   "expected": {
+    "uniform": false,
+    "hotspots": []
+   },
+   "detected": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "hotspots": []
+   },
+   "status": "NO_HOTSPOT",
+   "positionError": null,
+   "positionGrade": null,
+   "thicknessError": null,
+   "thicknessErrorPct": null,
+   "mcError": null,
+   "mcErrorPct": null,
+   "confidence": null,
+   "resolutionScore": null,
+   "prominenceScore": null,
+   "validationScore": null,
+   "coarseError": null,
+   "refineError": null,
+   "finalError": null,
+   "runtime": 1003,
+   "triCount": null,
+   "debug": {
+    "gs": 48,
+    "vs": 4.25,
+    "insidePoints": 46556,
+    "candidates": 64,
+    "regions": 0,
+    "peaks": 0
+   },
+   "radial": null,
+   "audit": [
+    {
+     "merged": null,
+     "split": null,
+     "rejected": "uniform: 无第二显著结构（模型壁厚均匀）"
+    }
+   ],
+   "classification": null,
+   "note": null,
+   "R": 3,
+   "cornerD": null
+  },
+  {
+   "model": "fillet_R5",
+   "parameters": {
+    "R": 5
+   },
+   "expected": {
+    "uniform": false,
+    "hotspots": []
+   },
+   "detected": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "hotspots": []
+   },
+   "status": "NO_HOTSPOT",
+   "positionError": null,
+   "positionGrade": null,
+   "thicknessError": null,
+   "thicknessErrorPct": null,
+   "mcError": null,
+   "mcErrorPct": null,
+   "confidence": null,
+   "resolutionScore": null,
+   "prominenceScore": null,
+   "validationScore": null,
+   "coarseError": null,
+   "refineError": null,
+   "finalError": null,
+   "runtime": 735,
+   "triCount": null,
+   "debug": {
+    "gs": 48,
+    "vs": 4.25,
+    "insidePoints": 40688,
+    "candidates": 64,
+    "regions": 0,
+    "peaks": 0
+   },
+   "radial": null,
+   "audit": [
+    {
+     "merged": null,
+     "split": null,
+     "rejected": "uniform: 无第二显著结构（模型壁厚均匀）"
+    }
+   ],
+   "classification": null,
+   "note": null,
+   "R": 5,
+   "cornerD": null
+  },
+  {
+   "model": "fillet_R10",
+   "parameters": {
+    "R": 10
+   },
+   "expected": {
+    "uniform": false,
+    "hotspots": []
+   },
+   "detected": {
+    "status": "NO_HOTSPOT",
+    "reason": "uniform",
+    "hotspots": []
+   },
+   "status": "NO_HOTSPOT",
+   "positionError": null,
+   "positionGrade": null,
+   "thicknessError": null,
+   "thicknessErrorPct": null,
+   "mcError": null,
+   "mcErrorPct": null,
+   "confidence": null,
+   "resolutionScore": null,
+   "prominenceScore": null,
+   "validationScore": null,
+   "coarseError": null,
+   "refineError": null,
+   "finalError": null,
+   "runtime": 695,
+   "triCount": null,
+   "debug": {
+    "gs": 48,
+    "vs": 4.25,
+    "insidePoints": 33660,
+    "candidates": 64,
+    "regions": 0,
+    "peaks": 0
+   },
+   "radial": null,
+   "audit": [
+    {
+     "merged": null,
+     "split": null,
+     "rejected": "uniform: 无第二显著结构（模型壁厚均匀）"
+    }
+   ],
+   "classification": null,
+   "note": null,
+   "R": 10,
+   "cornerD": null
+  }
+ ]
+}

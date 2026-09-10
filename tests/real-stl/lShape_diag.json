@@ -1,0 +1,196 @@
+{
+  "stl": {
+    "file": "lShape.stl",
+    "triCount": 120656,
+    "size": [
+      120,
+      120,
+      60
+    ],
+    "bounds": {
+      "min": [
+        -60,
+        -60,
+        -30
+      ],
+      "max": [
+        60,
+        60,
+        30
+      ],
+      "size": [
+        120,
+        120,
+        60
+      ],
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "diagonal": 180
+    },
+    "volumeCm3": 503.7,
+    "areaMm2": 45149,
+    "closed": true,
+    "issues": []
+  },
+  "v3": {
+    "status": "ok",
+    "reason": null,
+    "elapsedMs": 862,
+    "hotspots": [
+      {
+        "hotspotId": 1,
+        "position": [
+          -27.08,
+          -27.08,
+          -1.16
+        ],
+        "peakModulus": 9.666666666666666,
+        "normalizedModulus": 1,
+        "regionVolume": 200,
+        "regionArea": 23.318355227093303,
+        "confidence": 0.8253290762521235,
+        "scaleStability": 1,
+        "geometrySource": "refined field peak @(-29.0,-29.0,1.0)"
+      }
+    ],
+    "debug": {
+      "coarse": {
+        "gs": 60,
+        "vs": 2,
+        "estMinWall": 4,
+        "pts": 7875,
+        "stride": 2,
+        "maxM": 9.666666666666666,
+        "meanM": 2.6372215857019206,
+        "peaks": 3,
+        "scanMs": 94,
+        "fieldMs": 91
+      },
+      "refine": [
+        {
+          "region": [
+            -31,
+            -31,
+            -1
+          ],
+          "gs": 44,
+          "vs": 2,
+          "pts": 1700,
+          "scanMs": 27,
+          "fieldMs": 22,
+          "maxM": 9.666666666666666,
+          "peaks": [
+            {
+              "M": 9.666666666666666,
+              "pt": [
+                -29,
+                -29,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "region": [
+            -43,
+            45,
+            -5
+          ],
+          "gs": 39,
+          "vs": 2,
+          "pts": 3350,
+          "scanMs": 31,
+          "fieldMs": 35,
+          "maxM": 7.9791876483962705,
+          "peaks": [
+            {
+              "M": 7.9791876483962705,
+              "pt": [
+                -35,
+                -14,
+                -1
+              ]
+            },
+            {
+              "M": 3.6666666666666665,
+              "pt": [
+                -11,
+                46,
+                -9
+              ]
+            }
+          ]
+        },
+        {
+          "region": [
+            45,
+            -43,
+            -5
+          ],
+          "gs": 39,
+          "vs": 2,
+          "pts": 3350,
+          "scanMs": 28,
+          "fieldMs": 40,
+          "maxM": 7.9791876483962705,
+          "peaks": [
+            {
+              "M": 7.9791876483962705,
+              "pt": [
+                -14,
+                -35,
+                -1
+              ]
+            },
+            {
+              "M": 3.6666666666666665,
+              "pt": [
+                46,
+                -11,
+                -9
+              ]
+            }
+          ]
+        }
+      ],
+      "elapsedMs": 862
+    },
+    "audit": [
+      {
+        "hotspotId": 1,
+        "reason": "weak_peak",
+        "M": 3.6666666666666665,
+        "topM": 9.666666666666666,
+        "distToTop": 78
+      },
+      {
+        "hotspotId": 2,
+        "reason": "weak_peak",
+        "M": 3.6666666666666665,
+        "topM": 9.666666666666666,
+        "distToTop": 78
+      }
+    ]
+  },
+  "v2": {
+    "status": "ok",
+    "reason": null,
+    "elapsedMs": 416,
+    "hotspots": [
+      {
+        "id": 1,
+        "position": [
+          -26.25,
+          -26.25,
+          0
+        ],
+        "mc": 30,
+        "confidence": 1,
+        "regionVolumeCm3": 504
+      }
+    ]
+  }
+}

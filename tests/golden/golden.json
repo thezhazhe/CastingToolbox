@@ -1,0 +1,61 @@
+{
+  "_comment": "黄金回归数据集：理论值可解析计算（来源：CastEyes README + verify_stl.mjs 期望值体系）。单位：mm³ / mm² / mm。容差：体积/表面积 ±2%，壁厚 Mc ±1.5mm（vs=mdim/48 量级）。；尺寸轴序以实测为准（板面 XZ、圆柱轴 Y）",
+  "cases": [
+    {
+      "name": "cube50",
+      "file": "cube50.stl",
+      "size": [
+        50,
+        50,
+        50
+      ],
+      "volume": 125000,
+      "area": 15000,
+      "wall": null,
+      "mc": 25,
+      "note": "50mm 立方体：均匀厚块，热结 Mc=25（全部等厚）"
+    },
+    {
+      "name": "plate20",
+      "file": "plate20.stl",
+      "size": [
+        200,
+        20,
+        200
+      ],
+      "volume": 800000,
+      "area": 96000,
+      "wall": 20,
+      "mc": 10,
+      "note": "200×200×20 平板：主体壁厚 20，热结 Mc=10"
+    },
+    {
+      "name": "cylinder100",
+      "file": "cylinder100.stl",
+      "size": [
+        100,
+        50,
+        100
+      ],
+      "volume": 392699,
+      "area": 31416,
+      "wall": null,
+      "mc": 25,
+      "note": "⌀100×50 圆柱：均匀厚块 Mc=25"
+    },
+    {
+      "name": "tube_wall10",
+      "file": "tube_wall10.stl",
+      "size": [
+        100,
+        50,
+        100
+      ],
+      "volume": 141372,
+      "area": 33929,
+      "wall": 10,
+      "mc": 5,
+      "note": "⌀100 外 × ⌀80 内 × 50 高圆筒：壁厚 10，Mc=5；热结质心必须位于实体内部（CastEyes Bug A 复现模型）"
+    }
+  ]
+}

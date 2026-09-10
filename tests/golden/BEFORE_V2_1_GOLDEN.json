@@ -1,0 +1,410 @@
+{
+  "tag": "BEFORE",
+  "generatedAt": "2026-08-20T05:44:15.503Z",
+  "models": [
+    {
+      "model": "cube50.stl",
+      "triCount": 12,
+      "status": "ok",
+      "reason": null,
+      "hotspots": [
+        {
+          "id": 1,
+          "x": -0.521,
+          "y": -0.521,
+          "z": -0.521,
+          "mc": 25,
+          "score": 24.5,
+          "regionBBox": {
+            "min": [
+              -15.104166666666666,
+              -15.104166666666666,
+              -15.104166666666666
+            ],
+            "max": [
+              15.104166666666671,
+              15.104166666666671,
+              15.104166666666671
+            ]
+          }
+        }
+      ],
+      "debug": {
+        "candidates": 1,
+        "regions": 1,
+        "peaks": 1,
+        "rejected": 0,
+        "insidePoints": 110592,
+        "totalPoints": 110592,
+        "gs": 48,
+        "vs": 1.042,
+        "elapsedMs": 162
+      },
+      "elapsedMs": 165
+    },
+    {
+      "model": "plate20.stl",
+      "triCount": 12,
+      "status": "ok",
+      "reason": null,
+      "hotspots": [
+        {
+          "id": 1,
+          "x": -91.667,
+          "y": -1.667,
+          "z": -91.667,
+          "mc": 10,
+          "score": 8.3,
+          "regionBBox": {
+            "min": [
+              -95,
+              -5,
+              -95
+            ],
+            "max": [
+              95,
+              5,
+              95
+            ]
+          }
+        }
+      ],
+      "debug": {
+        "candidates": 361,
+        "regions": 1,
+        "peaks": 1,
+        "rejected": 0,
+        "insidePoints": 21600,
+        "totalPoints": 216000,
+        "gs": 60,
+        "vs": 3.333,
+        "elapsedMs": 409
+      },
+      "elapsedMs": 411
+    },
+    {
+      "model": "cylinder100.stl",
+      "triCount": 256,
+      "status": "ok",
+      "reason": null,
+      "hotspots": [
+        {
+          "id": 1,
+          "x": -23.958,
+          "y": -1.042,
+          "z": -9.375,
+          "mc": 25,
+          "score": 24,
+          "regionBBox": {
+            "min": [
+              -38.541666666666664,
+              -13.541666666666666,
+              -38.541666666666664
+            ],
+            "max": [
+              38.54166666666667,
+              13.541666666666671,
+              38.54166666666667
+            ]
+          }
+        }
+      ],
+      "debug": {
+        "candidates": 56,
+        "regions": 1,
+        "peaks": 54,
+        "rejected": 0,
+        "insidePoints": 43296,
+        "totalPoints": 110592,
+        "gs": 48,
+        "vs": 2.083,
+        "elapsedMs": 134
+      },
+      "elapsedMs": 137
+    },
+    {
+      "model": "tube_wall10.stl",
+      "triCount": 512,
+      "status": "ok",
+      "reason": null,
+      "hotspots": [
+        {
+          "id": 1,
+          "x": -44.792,
+          "y": -19.792,
+          "z": -3.125,
+          "mc": 4.99,
+          "score": 4.9,
+          "regionBBox": {
+            "min": [
+              -46.875,
+              -21.875,
+              -46.875
+            ],
+            "max": [
+              46.875,
+              21.875,
+              46.875
+            ]
+          }
+        }
+      ],
+      "debug": {
+        "candidates": 252,
+        "regions": 1,
+        "peaks": 252,
+        "rejected": 0,
+        "insidePoints": 15456,
+        "totalPoints": 110592,
+        "gs": 48,
+        "vs": 2.083,
+        "elapsedMs": 145
+      },
+      "elapsedMs": 149
+    },
+    {
+      "model": "thinShell.stl",
+      "triCount": 211280,
+      "status": "NO_VALID_HOTSPOT",
+      "reason": "insufficient_resolution",
+      "hotspots": [],
+      "debug": {
+        "candidates": 0,
+        "regions": 0,
+        "peaks": 0,
+        "rejected": 0,
+        "insidePoints": 3704,
+        "totalPoints": 110592,
+        "gs": 48,
+        "vs": 8.333,
+        "elapsedMs": 544
+      },
+      "elapsedMs": 1068
+    },
+    {
+      "model": "lShape",
+      "triCount": 120656,
+      "status": "ok",
+      "reason": null,
+      "hotspots": [
+        {
+          "id": 1,
+          "x": -31.25,
+          "y": -31.25,
+          "z": -1.25,
+          "mc": 30,
+          "score": 28.8,
+          "regionBBox": {
+            "min": [
+              -46.25,
+              -46.25,
+              -16.25
+            ],
+            "max": [
+              46.25,
+              46.25,
+              16.25
+            ]
+          }
+        }
+      ],
+      "debug": {
+        "candidates": 44,
+        "regions": 1,
+        "peaks": 42,
+        "rejected": 0,
+        "insidePoints": 32256,
+        "totalPoints": 110592,
+        "gs": 48,
+        "vs": 2.5,
+        "elapsedMs": 425
+      },
+      "elapsedMs": 1346
+    },
+    {
+      "model": "boxShell",
+      "triCount": 251824,
+      "status": "ok",
+      "reason": null,
+      "hotspots": [
+        {
+          "id": 1,
+          "x": -44.792,
+          "y": -44.792,
+          "z": -44.792,
+          "mc": 6.25,
+          "score": 5.2,
+          "regionBBox": {
+            "min": [
+              -46.875,
+              -46.875,
+              -46.875
+            ],
+            "max": [
+              46.875,
+              46.875,
+              46.875
+            ]
+          }
+        }
+      ],
+      "debug": {
+        "candidates": 1028,
+        "regions": 1,
+        "peaks": 1028,
+        "rejected": 0,
+        "insidePoints": 55720,
+        "totalPoints": 110592,
+        "gs": 48,
+        "vs": 2.083,
+        "elapsedMs": 2671
+      },
+      "elapsedMs": 3981
+    },
+    {
+      "model": "longBlock",
+      "triCount": 85712,
+      "status": "ok",
+      "reason": null,
+      "hotspots": [
+        {
+          "id": 1,
+          "x": -68.75,
+          "y": 1.25,
+          "z": 1.25,
+          "mc": 29.792,
+          "score": 28.8,
+          "regionBBox": {
+            "min": [
+              -85.41666666666667,
+              -15.416666666666666,
+              -15.416666666666666
+            ],
+            "max": [
+              85.41666666666669,
+              17.91666666666667,
+              17.91666666666667
+            ]
+          }
+        }
+      ],
+      "debug": {
+        "candidates": 12,
+        "regions": 1,
+        "peaks": 12,
+        "rejected": 0,
+        "insidePoints": 9408,
+        "totalPoints": 110592,
+        "gs": 48,
+        "vs": 4.167,
+        "elapsedMs": 185
+      },
+      "elapsedMs": 685
+    },
+    {
+      "model": "twoHotspots",
+      "triCount": 167664,
+      "status": "ok",
+      "reason": null,
+      "hotspots": [
+        {
+          "id": 1,
+          "x": -51.667,
+          "y": -1.667,
+          "z": -1.667,
+          "mc": 30,
+          "score": 28.3,
+          "regionBBox": {
+            "min": [
+              -68.33333333333333,
+              -18.333333333333332,
+              -18.333333333333332
+            ],
+            "max": [
+              -31.666666666666664,
+              18.333333333333336,
+              18.333333333333336
+            ]
+          }
+        },
+        {
+          "id": 2,
+          "x": 48.333,
+          "y": -1.667,
+          "z": -1.667,
+          "mc": 30,
+          "score": 28.3,
+          "regionBBox": {
+            "min": [
+              31.66666666666667,
+              -18.333333333333332,
+              -18.333333333333332
+            ],
+            "max": [
+              68.33333333333334,
+              18.333333333333336,
+              18.333333333333336
+            ]
+          }
+        }
+      ],
+      "debug": {
+        "candidates": 2,
+        "regions": 2,
+        "peaks": 2,
+        "rejected": 0,
+        "insidePoints": 12276,
+        "totalPoints": 110592,
+        "gs": 48,
+        "vs": 3.333,
+        "elapsedMs": 420
+      },
+      "elapsedMs": 1491
+    },
+    {
+      "model": "tShape",
+      "triCount": 70752,
+      "status": "ok",
+      "reason": null,
+      "hotspots": [
+        {
+          "id": 1,
+          "x": -1.042,
+          "y": 19.792,
+          "z": -0.208,
+          "mc": 19.792,
+          "score": 19,
+          "regionBBox": {
+            "min": [
+              -40.625,
+              9.375,
+              -10.625
+            ],
+            "max": [
+              40.625,
+              90.625,
+              12.291666666666671
+            ]
+          }
+        }
+      ],
+      "debug": {
+        "candidates": 10,
+        "regions": 1,
+        "peaks": 10,
+        "rejected": 0,
+        "insidePoints": 23554,
+        "totalPoints": 110592,
+        "gs": 48,
+        "vs": 2.083,
+        "elapsedMs": 255
+      },
+      "elapsedMs": 704
+    }
+  ],
+  "testBaseline": {
+    "nodeTests": "48/48 pass",
+    "e2e": "all pass (design_center_test.mjs)",
+    "browserTest": "all pass"
+  }
+}

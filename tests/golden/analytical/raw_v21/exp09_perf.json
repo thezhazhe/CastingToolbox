@@ -1,0 +1,68 @@
+{
+ "experiment": "exp09_perf",
+ "meta": {
+  "targets": [
+   "10万=97200",
+   "20万=202800"
+  ],
+  "updatedAt": "2026-08-21T05:40:26.223Z"
+ },
+ "records": [
+  {
+   "model": "perf_10万",
+   "parameters": {
+    "faces": 291600,
+    "label": "10万"
+   },
+   "detected": {
+    "status": "ok",
+    "hotspots": 5
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "runtime": 102954,
+   "triCount": 291600,
+   "_genMs": 24,
+   "_buildMs": 55,
+   "_dfMs": 155060,
+   "_candRefineMs": -52106,
+   "debug": {
+    "gs": 48,
+    "vs": 8.333333333333334,
+    "insidePoints": 54755,
+    "candidates": 83
+   },
+   "budgetOk": false,
+   "note": "超预算"
+  },
+  {
+   "model": "perf_20万",
+   "parameters": {
+    "faces": 608400,
+    "label": "20万"
+   },
+   "detected": {
+    "status": "ok",
+    "hotspots": 4
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "runtime": 237675,
+   "triCount": 608400,
+   "_genMs": 16,
+   "_buildMs": 55,
+   "_dfMs": 223684,
+   "_candRefineMs": 13991,
+   "debug": {
+    "gs": 48,
+    "vs": 8.333333333333334,
+    "insidePoints": 55430,
+    "candidates": 75
+   },
+   "budgetOk": false,
+   "note": "超预算"
+  }
+ ]
+}

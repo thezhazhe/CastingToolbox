@@ -4,6 +4,8 @@
 // 向导完成后自动保存；计算器优先读取预填（无匹配仍可手输，不破坏现有功能）。
 // 纯本地 localStorage 持久化，数据不落任何 JSON。
 // ============================================================
+import { t } from './i18n/index.js';
+
 const KEY = 'ct-context';
 let ctx = {};
 try { ctx = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { ctx = {}; }
@@ -95,19 +97,22 @@ export function renderContextBar() {
   const bar = document.getElementById('ctxBar');
   if (!bar) return;
   const chips = [];
-  if (ctx.material) chips.push(['材料', ctx.material]);
-  if (ctx.line) chips.push(['造型线', ctx.line]);
-  if (ctx.prod) chips.push(['生产', ctx.prod]);
-  if (ctx.method) chips.push(['方法', ctx.method]);
+  // PHASE 72：场景条文案随界面语言切换（值本身是数据键，只译显示）
+  if (ctx.material) chips.push([t('材料'), t(ctx.material)]);
+  if (ctx.line) chips.push([t('造型线'), t(ctx.line)]);
+  if (ctx.prod) chips.push([t('生产'), t(ctx.prod)]);
+  if (ctx.method) chips.push([t('方法'), t(ctx.method)]);
   bar.hidden = chips.length === 0;
   const el = document.getElementById('ctxChips');
   if (el) el.innerHTML = chips.map(([k, v]) => `<span class="chip ctx-chip">${esc(k)}：${esc(v)}</span>`).join('');
 }
 
-/* ---- 材料下拉（首页面板 / 编辑弹窗共用）：按大类选，不做单一牌号 ---- */
+/* ---- 材料下拉（首页面板 / 编辑弹窗共用）：按大类选，不做单一牌号 ----
+   PHASE 72：option 的 value 始终是中文大类（数据键，参与 familyOf/预填匹配），
+   只把显示文本按语言翻译——翻译不动数据。 */
 export function populateMaterialSelect(sel) {
-  sel.innerHTML = '<option value="">不指定</option>'
-    + FAMILIES.map(f => `<option value="${f}">${f}</option>`).join('');
+  sel.innerHTML = `<option value="" data-i18n="ctx.unspecified">${t('不指定')}</option>`
+    + FAMILIES.map(f => `<option value="${f}">${esc(t(f))}</option>`).join('');
 }
 
 /* ---- 编辑弹窗 ---- */

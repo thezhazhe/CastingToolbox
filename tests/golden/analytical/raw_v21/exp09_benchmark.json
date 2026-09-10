@@ -1,0 +1,129 @@
+{
+ "experiment": "exp09_benchmark",
+ "meta": {
+  "elapsedSec": "630.4",
+  "updatedAt": "2026-08-21T06:47:34.486Z"
+ },
+ "records": [
+  {
+   "label": "A_tess50k",
+   "triCount": 152100,
+   "vertexCount": 34848,
+   "insidePoints": 51164,
+   "bvhBuildMs": 37,
+   "raycastMs": 4288,
+   "closestPointMs": 10233,
+   "closestPointExtrapolated": true,
+   "totalDistanceFieldMs": 14521,
+   "heapDeltaMB": -2.6
+  },
+  {
+   "label": "A_tess100k",
+   "triCount": 304704,
+   "vertexCount": 69192,
+   "insidePoints": 51812,
+   "bvhBuildMs": 29,
+   "raycastMs": 8841,
+   "closestPointMs": 20051,
+   "closestPointExtrapolated": true,
+   "totalDistanceFieldMs": 28892,
+   "heapDeltaMB": -41.2
+  },
+  {
+   "label": "A_tess200k",
+   "triCount": 608400,
+   "vertexCount": 137288,
+   "insidePoints": 53012,
+   "bvhBuildMs": 61,
+   "raycastMs": 49470,
+   "closestPointMs": 166272,
+   "closestPointExtrapolated": true,
+   "totalDistanceFieldMs": 215742,
+   "heapDeltaMB": -6.4
+  },
+  {
+   "label": "A_tess300k",
+   "triCount": 898704,
+   "vertexCount": 202248,
+   "insidePoints": 52301,
+   "bvhBuildMs": 74,
+   "raycastMs": 76521,
+   "closestPointMs": 225443,
+   "closestPointExtrapolated": true,
+   "totalDistanceFieldMs": 301964,
+   "heapDeltaMB": -16.7
+  },
+  {
+   "label": "A_tess500k",
+   "triCount": 1512900,
+   "vertexCount": 339488,
+   "insidePoints": 45000,
+   "bvhBuildMs": 129,
+   "raycastMs": 145427,
+   "closestPointMs": 891000,
+   "closestPointExtrapolated": true,
+   "totalDistanceFieldMs": 1036427,
+   "heapDeltaMB": null
+  },
+  {
+   "label": "A_tess1000k",
+   "triCount": 3006756,
+   "vertexCount": 672800,
+   "insidePoints": 45000,
+   "bvhBuildMs": 210,
+   "raycastMs": 324949,
+   "closestPointMs": 1989000,
+   "closestPointExtrapolated": true,
+   "totalDistanceFieldMs": 2313949,
+   "heapDeltaMB": null
+  },
+  {
+   "label": "B_mc48",
+   "triCount": 45728,
+   "vertexCount": 137184,
+   "insidePoints": 1128,
+   "bvhBuildMs": 51,
+   "raycastMs": 23,
+   "closestPointMs": 24,
+   "closestPointExtrapolated": false,
+   "totalDistanceFieldMs": 47,
+   "heapDeltaMB": 27.8
+  },
+  {
+   "label": "B_mc60",
+   "triCount": 72664,
+   "vertexCount": 217992,
+   "insidePoints": 1152,
+   "bvhBuildMs": 67,
+   "raycastMs": 31,
+   "closestPointMs": 19,
+   "closestPointExtrapolated": false,
+   "totalDistanceFieldMs": 50,
+   "heapDeltaMB": 26.2
+  },
+  {
+   "label": "B_mc72",
+   "triCount": 106760,
+   "vertexCount": 320280,
+   "insidePoints": 1128,
+   "bvhBuildMs": 87,
+   "raycastMs": 18,
+   "closestPointMs": 21,
+   "closestPointExtrapolated": false,
+   "totalDistanceFieldMs": 39,
+   "heapDeltaMB": 26.7
+  },
+  {
+   "label": "C_shell96",
+   "triCount": 534800,
+   "vertexCount": 1604400,
+   "insidePoints": 3672,
+   "bvhBuildMs": 381,
+   "raycastMs": 34,
+   "closestPointMs": 46,
+   "closestPointExtrapolated": true,
+   "totalDistanceFieldMs": 80,
+   "heapDeltaMB": -29.6
+  }
+ ]
+}

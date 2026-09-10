@@ -5,12 +5,15 @@
 // 有工况 → 「🎯 针对生产场景」（场景摘要 + 参数速查卡 + 对口工具/缺陷/标准/知识）
 // 推荐由 js/scenario.js（逻辑）+ data/scenarios.js（数据）驱动，无 AI、结果稳定。
 // ============================================================
-import { CALCULATORS } from '../../calcs/registry.js';
+import { CALCULATORS, calculatorsByCategory } from '../../calcs/registry.js';
 import * as context from '../context.js';
 import { setQuery } from './search.js';
 import { cardHtml } from './knowledge.js';
 import { attachLiveSearch } from '../liveSearch.js';
 import { buildRecommendation, paramsOf } from '../scenario.js';
+// PHASE 72（80.txt §七/§八）：首页 UI 中英双语
+import { t } from '../i18n/index.js';
+import { markRelocalizable } from '../i18n/viewState.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -49,11 +52,17 @@ const LOGO_SVG = `<svg viewBox="0 0 108 108" width="56" height="56">
 
 const toolCard = (c) => `<div class="card hover tool-card" data-open-calc="${c.id}">
   <div class="tool-top"><div class="tool-icon">${c.icon}</div>
-    <div><div class="tool-name">${esc(c.name)}</div><div class="tool-desc">${esc(c.desc)}</div></div>
+    <div><div class="tool-name">${esc(t(c.name))}</div><div class="tool-desc">${esc(t(c.desc))}</div></div>
   </div>
 </div>`;
 
+/** 下拉选项：value 恒为中文数据键，仅显示文本随语言变（翻译不动数据） */
+const opt = (v) => `<option value="${esc(v)}">${esc(t(v))}</option>`;
+
 export async function render(container) {
+  // PHASE 72：首页文案走 t()；表单值来自 context（模型侧），切语言重渲染不丢用户已填内容
+  markRelocalizable();
+  const prevQuery = document.getElementById('homeSearch')?.value || '';
   container.innerHTML = `
     <div class="home">
       <div class="home-screen">
@@ -62,40 +71,40 @@ export async function render(container) {
           <div class="home-logo-mark">${LOGO_SVG}</div>
           <div>
             <div class="home-title">Casting Toolbox</div>
-            <div class="home-sub">铸造工程师的开源瑞士军刀 · 完全离线 · 免费</div>
+            <div class="home-sub">${t('home.sub')}</div>
           </div>
         </div>
         <div class="home-search">
           <input id="homeSearch" class="home-search-input" type="text"
-            placeholder="搜索材料、缺陷、标准、公式、计算工具…" autocomplete="off" spellcheck="false">
-          <button class="btn btn-primary btn-lg" id="homeSearchBtn">🔍 搜索</button>
+            placeholder="${esc(t('search.placeholder'))}" autocomplete="off" spellcheck="false">
+          <button class="btn btn-primary btn-lg" id="homeSearchBtn">${t('home.searchBtn')}</button>
         </div>
       </section>
 
       <section class="card home-ctx">
         <div class="home-ctx-head">
-          <span class="home-ctx-title">🎯 生产场景</span>
-          <span class="field-hint">设置后自动推荐对口的计算工具、常见缺陷和标准（工艺向导完成也会自动写入）</span>
+          <span class="home-ctx-title">${t('ctx.title')}</span>
+          <span class="field-hint">${t('home.ctxHint')}</span>
         </div>
         <div class="home-ctx-form">
-          <div class="field"><label class="field-label">🔩 材料</label>
-            <select class="field-select" id="homeMat"><option value="">不指定</option></select></div>
-          <div class="field"><label class="field-label">📐 造型线</label>
-            <select class="field-select" id="homeLine"><option value="">不指定</option><option>垂直线</option><option>水平线</option></select></div>
-          <div class="field"><label class="field-label">🏭 生产方式</label>
-            <select class="field-select" id="homeProd"><option value="">不指定</option><option>自动线</option><option>手工线</option></select></div>
-          <div class="field"><label class="field-label">⚙️ 铸造方法</label>
-            <select class="field-select" id="homeMethod"><option value="">不指定</option><option>砂型</option><option>金属型</option><option>3D打印</option></select></div>
+          <div class="field"><label class="field-label">${t('ctx.material')}</label>
+            <select class="field-select" id="homeMat"><option value="">${t('ctx.unspecified')}</option></select></div>
+          <div class="field"><label class="field-label">${t('ctx.line')}</label>
+            <select class="field-select" id="homeLine"><option value="">${t('ctx.unspecified')}</option>${opt('垂直线')}${opt('水平线')}</select></div>
+          <div class="field"><label class="field-label">${t('ctx.prod')}</label>
+            <select class="field-select" id="homeProd"><option value="">${t('ctx.unspecified')}</option>${opt('自动线')}${opt('手工线')}</select></div>
+          <div class="field"><label class="field-label">${t('ctx.method')}</label>
+            <select class="field-select" id="homeMethod"><option value="">${t('ctx.unspecified')}</option>${opt('砂型')}${opt('金属型')}${opt('3D打印')}</select></div>
           <div class="home-ctx-actions">
-            <button class="btn btn-primary" id="homeCtxApply">应用</button>
-            <button class="btn btn-ghost" id="homeCtxClear">清除</button>
+            <button class="btn btn-primary" id="homeCtxApply">${t('home.apply')}</button>
+            <button class="btn btn-ghost" id="homeCtxClear">${t('home.clear')}</button>
           </div>
         </div>
       </section>
 
       <!-- 渐进展示：首屏只露搜索 + 生产场景，推荐区在下方，点此 / 滚轮即可看到 -->
-      <button class="home-reco-hint" id="homeRecoHint" title="滚动查看下方内容">
-        <span id="homeRecoHintText">查看工具推荐</span>
+      <button class="home-reco-hint" id="homeRecoHint" title="${esc(t('滚动查看下方内容'))}">
+        <span id="homeRecoHintText">${t('home.viewTools')}</span>
         <span class="hrh-arrow">▾</span>
       </button>
       </div>
@@ -103,6 +112,7 @@ export async function render(container) {
       <div id="homeReco"></div>
     </div>
   `;
+  if (prevQuery) container.querySelector('#homeSearch').value = prevQuery;   // 切语言不丢已输入的搜索词
 
   // 搜索：回车 + 按钮 + 实时下拉（与顶栏共用一套逻辑）
   container.querySelector('#homeSearchBtn').addEventListener('click', () => doSearch(container.querySelector('#homeSearch').value));
@@ -131,9 +141,9 @@ export async function render(container) {
       method: container.querySelector('#homeMethod').value || null,
     });
     const reco = await buildRecommendation();
-    toast(`🎯 已应用生产场景 · 匹配 ${reco.counts.calcs} 工具 / ${reco.counts.defects} 缺陷 / ${reco.counts.standards} 标准`);
+    toast(t('🎯 已应用生产场景 · 匹配 {a} 工具 / {b} 缺陷 / {c} 标准', [reco.counts.calcs, reco.counts.defects, reco.counts.standards]));
   });
-  container.querySelector('#homeCtxClear').addEventListener('click', () => { context.clear(); toast('已清除生产场景'); });
+  container.querySelector('#homeCtxClear').addEventListener('click', () => { context.clear(); toast(t('已清除生产场景')); });
 
   await renderReco();
 }
@@ -145,16 +155,27 @@ async function renderReco() {
   const ctx = context.get();
   // 提示条文案随是否有生产场景变化
   const hintText = document.getElementById('homeRecoHintText');
-  if (hintText) hintText.textContent = context.hasAny() ? '查看针对你的生产场景的推荐' : '查看常用工具';
+  if (hintText) hintText.textContent = context.hasAny() ? t('home.viewReco') : t('home.viewTools');
 
   if (!context.hasAny()) {
+    // PHASE 78（78.txt 十一）：常用工具按类别分组（与「计算工具」页同一套分类）
+    const groups = calculatorsByCategory(CALCULATORS.filter(c => c.status === 'ready'));
     recoEl.innerHTML = `
-      <div class="group-title" style="margin:24px 0 10px;color:var(--primary)">⚡ 常用工具</div>
-      <div class="tools-grid">${CALCULATORS.filter(c => c.status === 'ready').map(toolCard).join('')}</div>
+      <div class="group-title" style="margin:24px 0 10px;color:var(--primary)">${t('home.commonTools')}</div>
+      ${groups.map(g => `
+        <section class="calc-cat">
+          <div class="calc-cat-head">
+            <span class="calc-cat-icon">${g.icon}</span>
+            <span class="calc-cat-name">${t(g.name)}</span>
+            <span class="calc-cat-desc">${t(g.desc)}</span>
+            <span class="calc-cat-n">${t('{n} 个', [g.items.length])}</span>
+          </div>
+          <div class="tools-grid">${g.items.map(toolCard).join('')}</div>
+        </section>`).join('')}
       <div class="card hover home-wizard-cta" data-wizard>
         <div class="tool-top"><div class="tool-icon">🧭</div>
-          <div><div class="tool-name">工艺向导 <span class="chip warning" style="font-size:.62rem;padding:1px 6px;vertical-align:2px">试用版</span></div>
-            <div class="tool-desc">填几个数，一键生成浇注系统 + 冒口工艺建议报告，并自动记录生产场景</div></div>
+          <div><div class="tool-name">${t('home.wizard')} <span class="chip warning" style="font-size:.62rem;padding:1px 6px;vertical-align:2px">${t('home.wizardBeta')}</span></div>
+            <div class="tool-desc">${t('home.wizardDesc')}</div></div>
         </div>
         <span class="kb-arrow">›</span>
       </div>
@@ -167,39 +188,39 @@ async function renderReco() {
 
   const reco = await buildRecommendation();
   const chips = [
-    ctx.material ? `材料 ${ctx.material}` : null,
-    ctx.line ? `造型线 ${ctx.line}` : null,
-    ctx.prod ? `生产 ${ctx.prod}` : null,
-    ctx.method ? `方法 ${ctx.method}` : null,
+    ctx.material ? `${t('材料')} ${t(ctx.material)}` : null,
+    ctx.line ? `${t('造型线')} ${t(ctx.line)}` : null,
+    ctx.prod ? `${t('生产')} ${t(ctx.prod)}` : null,
+    ctx.method ? `${t('方法')} ${t(ctx.method)}` : null,
   ].filter(Boolean).join(' · ');
   const params = paramsOf(reco.defDoc);
 
   recoEl.innerHTML = `
     <div class="home-reco-head">
-      <span class="group-title" style="color:var(--primary)">🎯 针对你的生产场景</span>
+      <span class="group-title" style="color:var(--primary)">${t('home.forScenario')}</span>
       <span class="chip ctx-chip">${esc(chips)}</span>
     </div>
     <div class="card scenario-summary">
-      <div class="ss-match">已匹配 <b>${reco.counts.calcs}</b> 个计算工具 · <b>${reco.counts.defects}</b> 条缺陷对策 · <b>${reco.counts.standards}</b> 条标准</div>
+      <div class="ss-match">${t('已匹配 {a} 个计算工具 · {b} 条缺陷对策 · {c} 条标准', [reco.counts.calcs, reco.counts.defects, reco.counts.standards])}</div>
       ${reco.reason ? `<div class="ss-reason">${esc(reco.reason)}</div>` : ''}
       ${params.length ? `
-        <div class="ss-title">📋 参数速查 · ${esc(reco.defDoc?.title || '')}</div>
-        <div class="ss-params">${params.map(([k, v]) => `<div class="ss-param"><span class="ss-k">${esc(k)}</span><span class="ss-v">${esc(v)}</span></div>`).join('')}</div>` : ''}
+        <div class="ss-title">📋 ${t('参数速查')} · ${esc(reco.defDoc?.title || '')}</div>
+        <div class="ss-params">${params.map(([k, v]) => `<div class="ss-param"><span class="ss-k">${esc(t(k))}</span><span class="ss-v">${esc(v)}</span></div>`).join('')}</div>` : ''}
       ${reco.tips.length ? `
-        <div class="ss-title">✅ 操作要点</div>
-        <ul class="ss-tips">${reco.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+        <div class="ss-title">✅ ${t('操作要点')}</div>
+        <ul class="ss-tips">${reco.tips.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     </div>
     ${reco.calcs.length ? `
-      <div class="reco-title">🧮 对口计算工具</div>
+      <div class="reco-title">${t('🧮 对口计算工具')}</div>
       <div class="tools-grid">${reco.calcs.map(toolCard).join('')}</div>` : ''}
     ${reco.defects.length ? `
-      <div class="reco-title">🩹 常见缺陷 · 同材质</div>
+      <div class="reco-title">${t('🩹 常见缺陷 · 同材质')}</div>
       <div class="kb-list">${reco.defects.map(d => cardHtml(d)).join('')}</div>` : ''}
     ${reco.standards.length ? `
-      <div class="reco-title">📜 相关标准</div>
+      <div class="reco-title">${t('📜 相关标准')}</div>
       <div class="kb-list">${reco.standards.map(s => `<div class="card hover kb-item cat-std" data-std="${esc(s)}"><div class="kb-item-title">📜 ${esc(s)}</div><div class="kb-item-right"><span class="kb-arrow">›</span></div></div>`).join('')}</div>` : ''}
     ${reco.know.length ? `
-      <div class="reco-title">📚 相关知识 · 同场景</div>
+      <div class="reco-title">${t('📚 相关知识 · 同场景')}</div>
       <div class="kb-list">${reco.know.map(d => cardHtml(d)).join('')}</div>` : ''}
   `;
   recoEl.querySelectorAll('[data-open-calc]').forEach(el =>

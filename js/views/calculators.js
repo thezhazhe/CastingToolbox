@@ -1,8 +1,10 @@
 // ============================================================
 // 计算器视图：注册表卡片网格 + 工具详情（M1 填充真实计算表单）
 // ============================================================
-import { CALCULATORS, getCalculator } from '../../calcs/registry.js';
+import { CALCULATORS, getCalculator, calculatorsByCategory } from '../../calcs/registry.js';
 import { renderGating } from './gatingView.js';
+import { renderCampbell } from './campbellGatingView.js';
+import { renderVerticalGating } from './verticalGatingView.js';
 import { renderRiser } from './riserView.js';
 import { renderShrinkage, renderMachining, renderYield, renderChill, renderSandbox, renderCastability } from './smallCalcs.js';
 import { renderDefectFinder } from './defectFinder.js';
@@ -10,6 +12,9 @@ import { renderCharge } from './chargeCalc.js';
 import { renderShakeout } from './shakeoutCalc.js';
 import { renderCT } from './ctCalc.js';
 import { renderPrinciples } from './principlesCalc.js';
+// PHASE 72（80.txt §七/§十七）：列表页与工具名/简介中英双语
+import { t } from '../i18n/index.js';
+import { markRelocalizable } from '../i18n/viewState.js';
 
 export function render(container, params = {}) {
   const { id } = params;
@@ -20,6 +25,8 @@ export function render(container, params = {}) {
 // 已接入的独立计算器视图
 const DEDICATED_VIEWS = {
   gating: renderGating,
+  campbell_gating: renderCampbell,
+  vertical_gating: renderVerticalGating,
   riser: renderRiser,
   shrinkage: renderShrinkage,
   machining: renderMachining,
@@ -34,27 +41,38 @@ const DEDICATED_VIEWS = {
   principles: renderPrinciples,
 };
 
-/* ---- 列表：卡片网格 ---- */
+/* ---- 列表：**按类别分组**的卡片网格（PHASE 78 · 78.txt 十一） ---- */
+const toolCardHtml = (c) => `
+  <div class="card hover tool-card" data-open="${c.id}">
+    <span class="badge-status badge-${c.status === 'ready' ? 'ready' : 'pending'}">${t(c.status === 'ready' ? '✓ 可用' : '接入中')}</span>
+    <div class="tool-top">
+      <div class="tool-icon">${c.icon}</div>
+      <div>
+        <div class="tool-name">${t(c.name)}</div>
+        <div class="tool-desc">${t(c.desc)}</div>
+      </div>
+    </div>
+    <div class="tool-tags">${c.tags.map(x => `<span class="chip">${t(x)}</span>`).join('')}</div>
+  </div>`;
+
 function renderList(container) {
+  markRelocalizable();   // PHASE 72：纯列表页，无表单状态
+  const groups = calculatorsByCategory();
   container.innerHTML = `
     <div class="page-head">
-      <h1 class="page-title">计算工具</h1>
-      <p class="page-sub">独立高频工具 · 完全离线 · 数据本地。共 ${CALCULATORS.length} 个。</p>
+      <h1 class="page-title">${t('计算工具')}</h1>
+      <p class="page-sub">${t('calc.listSub', [CALCULATORS.length, groups.length])}</p>
     </div>
-    <div class="tools-grid">
-      ${CALCULATORS.map(c => `
-        <div class="card hover tool-card" data-open="${c.id}">
-          <span class="badge-status badge-${c.status === 'ready' ? 'ready' : 'pending'}">${c.status === 'ready' ? '✓ 可用' : '接入中'}</span>
-          <div class="tool-top">
-            <div class="tool-icon">${c.icon}</div>
-            <div>
-              <div class="tool-name">${c.name}</div>
-              <div class="tool-desc">${c.desc}</div>
-            </div>
-          </div>
-          <div class="tool-tags">${c.tags.map(t => `<span class="chip">${t}</span>`).join('')}</div>
-        </div>`).join('')}
-    </div>
+    ${groups.map(g => `
+      <section class="calc-cat">
+        <div class="calc-cat-head">
+          <span class="calc-cat-icon">${g.icon}</span>
+          <span class="calc-cat-name">${t(g.name)}</span>
+          <span class="calc-cat-desc">${t(g.desc)}</span>
+          <span class="calc-cat-n">${t('{n} 个', [g.items.length])}</span>
+        </div>
+        <div class="tools-grid">${g.items.map(toolCardHtml).join('')}</div>
+      </section>`).join('')}
   `;
   container.querySelectorAll('[data-open]').forEach(el => {
     el.addEventListener('click', () => {

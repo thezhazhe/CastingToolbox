@@ -3,11 +3,13 @@
 // 金属炉料按比例%输入自动算 kg · 每个料可选规格/自定义成分 ·
 // 吸收率可改 · 补料建议一键应用 · CE 显示 · 报告弹窗
 // ============================================================
-import { CHARGE_GRADES, CHARGE_TARGETS, CHARGE_MATERIALS, SPHERO_TYPES, INOC_TYPES, returnComposition } from '../../data/charge_calc.js';
+import { CHARGE_GRADES, CHARGE_TARGETS, CHARGE_MATERIALS, CHARGE_RET_ABS, SPHERO_TYPES, INOC_TYPES, returnComposition } from '../../data/charge_calc.js';
 import { defaultCharge, runCharge } from '../../calcs/charge.js';
 import { prefillMaterial } from '../context.js';
 import { renderNextSteps } from './nextSteps.js';
 import { saveFile } from '../download.js';
+import { checkNum, firstErr, parseNum } from './numcheck.js';
+import { installExampleTags } from './exampleTag.js';
 
 const row = (label, value, unit, cls = '', note = '') =>
   `<div class="rrow ${cls}"><span class="rl">${label}</span><span class="rv">${value}${unit ? `<span class="ru">${unit}</span>` : ''}${note ? `<span class="rf">${note}</span>` : ''}</span></div>`;
@@ -40,7 +42,7 @@ export function renderCharge(container, calc) {
           <div class="section-card-title"><span class="step-badge">1</span>📋 输入</div>
           <div class="field-grid2" style="margin-bottom:12px">
             <div class="field"><label class="field-label">🔩 材质牌号</label><div class="f-row"><select class="field-select" id="c_mat">${gradeOpts}</select></div></div>
-            <div class="field"><label class="field-label">⚖️ 铁液总重</label><div class="f-row"><input class="field-input" type="number" id="c_wt" value="1000" step="100" min="10"><span class="f-unit">Kg</span></div></div>
+            <div class="field"><label class="field-label">⚖️ 铁液总重</label><div class="f-row"><input class="field-input" type="number" id="c_wt" value="1000" step="100" min="10"><span class="f-unit">Kg</span></div><div class="field-hint" style="margin-top:2px">= 出炉目标铁液量：炉料按此 % 配料、合金/处理剂另按 kg 加（实投略高 = 炉损）；成分按占出炉铁液 % 计</div></div>
           </div>
 
           <div class="divider"></div>
@@ -185,8 +187,10 @@ export function renderCharge(container, calc) {
   const pct = (id) => (parseFloat(q(id).value) || 0) / 100;
 
   /* ---- 读取输入（合金建议标签用当前规格名） ---- */
+  // PHASE 63 P1-5：增碳剂/硅铁/锰铁吸收率改读输入框（原 read() 用静态默认 → dead input）；
+  //   默认值仍由 loadDefaults 按 CHARGE_MATERIALS/CHARGE_RET_ABS 写入输入框（初始值合法来源）
   const read = () => {
-    const wt = parseFloat(q('#c_wt').value) || 1000;
+    const wt = parseNum(q('#c_wt').value);
     const pig = rowContent('#c_pig', [['#c_pigC', 'C'], ['#c_pigSi', 'Si'], ['#c_pigMn', 'Mn'], ['#c_pigP', 'P'], ['#c_pigS', 'S']]);
     const scrap = rowContent('#c_scrap', [['#c_scrapC', 'C'], ['#c_scrapSi', 'Si'], ['#c_scrapMn', 'Mn'], ['#c_scrapP', 'P'], ['#c_scrapS', 'S']]);
     const carb = rowContent('#c_carb', [['#c_carbC', 'C']]);
@@ -197,9 +201,9 @@ export function renderCharge(container, calc) {
       pig: { content: pig.content, kg: wt * pct('#c_pigPct'), abs: pct('#c_pigAbs') },
       scrap: { content: scrap.content, kg: wt * pct('#c_scrapPct'), abs: pct('#c_scrapAbs') },
       ret: { content: returnComposition(q('#c_mat').value), kg: wt * pct('#c_retPct'), abs: pct('#c_retAbs') },
-      carb: { content: carb.content, kg: parseFloat(q('#c_carbKg').value) || 0, abs: carb.abs, label: carbLabel(), key: 'carb' },
-      feSi: { content: feSi.content, kg: parseFloat(q('#c_feSiKg').value) || 0, abs: feSi.abs, label: feSiLabel(), key: 'feSi' },
-      feMn: { content: feMn.content, kg: parseFloat(q('#c_feMnKg').value) || 0, abs: feMn.abs, label: feMnLabel(), key: 'feMn' },
+      carb: { content: carb.content, kg: parseFloat(q('#c_carbKg').value) || 0, abs: pct('#c_carbAbs'), label: carbLabel(), key: 'carb' },
+      feSi: { content: feSi.content, kg: parseFloat(q('#c_feSiKg').value) || 0, abs: pct('#c_feSiAbs'), label: feSiLabel(), key: 'feSi' },
+      feMn: { content: feMn.content, kg: parseFloat(q('#c_feMnKg').value) || 0, abs: pct('#c_feMnAbs'), label: feMnLabel(), key: 'feMn' },
       sphero: spheroContent(), inoc: inocContent(),
     };
   };
@@ -220,7 +224,7 @@ export function renderCharge(container, calc) {
     q('#c_feMn').value = d.feMnKey; q('#c_feMnKg').value = d.feMn;
     setAbs('#c_pigAbs', CHARGE_MATERIALS[d.pigKey].abs);
     setAbs('#c_scrapAbs', CHARGE_MATERIALS[d.scrapKey].abs);
-    setAbs('#c_retAbs', 0.95);
+    setAbs('#c_retAbs', CHARGE_RET_ABS);   // 本厂熟料少烧损，默认高于生铁/废钢（数据层 CHARGE_RET_ABS）
     setAbs('#c_carbAbs', CHARGE_MATERIALS[d.carbKey].abs);
     setAbs('#c_feSiAbs', CHARGE_MATERIALS[d.feSiKey].abs);
     setAbs('#c_feMnAbs', CHARGE_MATERIALS[d.feMnKey].abs);
@@ -243,7 +247,7 @@ export function renderCharge(container, calc) {
     q('#c_retKg').textContent = '= ' + fmt(wt * pct('#c_retPct'), 1) + ' kg';
     const sum = pct('#c_pigPct') + pct('#c_scrapPct') + pct('#c_retPct');
     const sumPct = Math.round(sum * 100);
-    q('#c_pctSum').textContent = `金属炉料合计 ${sumPct}%（应≈100%，不足部分以合金/处理剂补充）`;
+    q('#c_pctSum').textContent = `金属炉料合计 ${sumPct}%（金属炉料应≈100%；实投另加合金/处理剂 kg，故总投料略高于铁液总重）`;
     if (q('#c_addons').style.display !== 'none' && CHARGE_TARGETS[q('#c_mat').value]?.addons) {
       q('#c_spheroPct').textContent = `= ${fmt((parseFloat(q('#c_spheroKg').value) || 0) / wt * 100, 2)}%`;
     }
@@ -300,21 +304,36 @@ export function renderCharge(container, calc) {
       row(`🔤 ${ELEM_NAMES[e.el]}`, `${fmt(e.target, 2)}%`, '',
         diffCls(e.diff),
         `计算 ${fmt(e.base, 2)}% · 差额 ${diffTxt(e.diff)}%`)).join('');
-    const ceRows = row('🌡️ 碳当量 CE（原铁液）', fmt(r.baseCE, 2), '', 'ok',
-      `目标 ${CHARGE_TARGETS[r.grade].CE} · 补碳/补硅后达目标 · CE = C + 0.33(Si+P)`);
+    // CE 行（61 核查口径）：灰铁=原铁液=成铁；球铁区间按成铁（含处理带入 Si）口径对照；
+    // 实算超出声明区间 ±0.05 时给警示行（数值不自洽不自动改，交人工核对）
+    const ceRngM = String(CHARGE_TARGETS[r.grade].CE || '').match(/([\d.]+)\s*~\s*([\d.]+)/);
+    const isQT = r.grade.startsWith('QT');
+    const ceFinal = (r.final.C || 0) + 0.33 * ((r.final.Si || 0) + (r.final.P || 0));
+    const ceBad = ceRngM && (ceFinal < parseFloat(ceRngM[1]) - 0.05 || ceFinal > parseFloat(ceRngM[2]) + 0.05);
+    const ceRows = row('🌡️ 碳当量 CE', fmt(ceFinal, 2), '', ceBad ? 'warn' : 'ok',
+      ceBad
+        ? `实算 ${fmt(ceFinal, 2)}${isQT ? '（成铁口径；原铁液 ' + fmt(r.baseCE, 2) + '）' : ''} 与声明区间 ${CHARGE_TARGETS[r.grade].CE} 不自洽——数值未自动修改，请人工核对企业牌号目标或区间口径 · CE = C + 0.33(Si+P)`
+        : `目标 ${CHARGE_TARGETS[r.grade].CE}${isQT ? `（成铁口径；原铁液 ${fmt(r.baseCE, 2)}，处理带入 Si 后约 ${fmt(ceFinal, 2)}）` : '（灰铁：原铁液 = 成铁）'} · CE = C + 0.33(Si+P)`);
     const finalRows = r.grade.startsWith('QT')
       ? row('🏁 成铁成分预估', '', '', '',
           `C ${fmt(r.final.C, 2)} · Si ${fmt(r.final.Si, 2)} · Mn ${fmt(r.final.Mn, 2)} · Mg ${fmt(r.final.Mg, 3)} · RE ${fmt(r.final.RE, 3)}%`)
       : '';
 
+    // P/S 无常规补料手段，超差时单独提示（不让"✅ 无需补料"掩盖）
+    const psBad = r.elems.filter(e => e.el === 'P' || e.el === 'S').filter(e => Math.abs(e.diff) > 0.05)
+      .map(e => `${e.el} ${fmt(e.base, 3)}%（目标 ${e.target}%，差 ${e.diff > 0 ? '+' : ''}${fmt(e.diff, 3)}）`).join(' · ');
+    const psNote = psBad
+      ? `<div class="field-hint" style="padding:6px 4px 0;color:var(--warning,#B45309)">⚠️ P/S 超差（${psBad}）：无常规补料手段——靠炉料选择（低 P/S 料）与脱硫等炉前处理控制，不在 C/Si/Mn 平衡范围</div>`
+      : '';
     const sugs = r.sugs.length
       ? r.sugs.map(s => `
           <div class="rrow ok" style="align-items:center">
             <span class="rl">💡 建议补 ${s.label}</span>
-            <span class="rv">${fmt(s.kg, 1)} Kg<button class="btn btn-ghost btn-sm" data-apply="${s.key}" style="margin-left:8px;padding:2px 10px;font-size:.75rem">应用</button></span></div>`).join('')
-      : `<div class="field-hint" style="padding:6px 4px 0">✅ C/Si/Mn 均在目标（±0.05%）内，无需补料</div>`;
+            <span class="rv">${fmt(s.kg, 1)} Kg<button class="btn btn-ghost btn-sm" data-apply="${s.key}" style="margin-left:8px;padding:2px 10px;font-size:.75rem">应用</button></span></div>`).join('') + psNote
+      : psNote || `<div class="field-hint" style="padding:6px 4px 0">✅ C/Si/Mn 均在目标（±0.05%）内，无需补料</div>`;
 
     q('#c_results').innerHTML = `
+      ${ex.exampleNote()}
       ${row('🧭 目标基准', CHARGE_TARGETS[r.grade].addons ? '原铁液目标（已扣球化/孕育硅）' : '目标成分', '', '')}
       ${elemsRows}
       ${ceRows}
@@ -325,9 +344,46 @@ export function renderCharge(container, calc) {
       <div class="field-hint" style="padding:8px 4px 0">${r.note}<br>建议量 = 差额% × 铁液总重 ÷（合金含量 × 吸收率）。</div>`;
   };
 
+  const ex = installExampleTags(container, ['c_wt']);   // 铁液总重 1000kg 为示例默认值
+  // PHASE 63 P0-1：非法输入门禁 —— 不再静默回退 1000/默认吸收率
+  const validateInputs = () => {
+    const checks = [
+      checkNum(q('#c_wt').value, { label: '铁液总重', gt: 0, required: true }),
+      checkNum(q('#c_pigPct').value, { label: '生铁比例', min: 0, max: 100 }),
+      checkNum(q('#c_scrapPct').value, { label: '废钢比例', min: 0, max: 100 }),
+      checkNum(q('#c_retPct').value, { label: '回炉料比例', min: 0, max: 100 }),
+      checkNum(q('#c_carbAbs').value, { label: '增碳剂吸收率', gt: 0, max: 100, required: true }),
+      checkNum(q('#c_feSiAbs').value, { label: '硅铁吸收率', gt: 0, max: 100, required: true }),
+      checkNum(q('#c_feMnAbs').value, { label: '锰铁吸收率', gt: 0, max: 100, required: true }),
+    ];
+    if (q('#c_addons').style.display !== 'none') {
+      checks.push(
+        checkNum(q('#c_spheroMgAbs').value, { label: '球化剂 Mg 吸收率', gt: 0, max: 100, required: true }),
+        checkNum(q('#c_spheroReAbs').value, { label: '球化剂 RE 吸收率', gt: 0, max: 100, required: true }),
+        checkNum(q('#c_spheroSiAbs').value, { label: '球化剂 Si 吸收率', gt: 0, max: 100, required: true }),
+        checkNum(q('#c_inocSiAbs').value, { label: '孕育剂 Si 吸收率', gt: 0, max: 100, required: true }));
+    }
+    const main = firstErr(checks);
+    if (main) return main;   // 先报显式主字段（如铁液总重），再查其余
+    // 其余数值输入（合金 kg / 自定义成分等）：非空须为 ≥0 有效数字
+    const rowLabel = (el) => {
+      const f = el.closest('.field');
+      const l = f && f.querySelector('.field-label');
+      return (l ? l.textContent.replace(/<[^>]*>/g, '').trim() : '输入').slice(0, 16) || '输入';
+    };
+    for (const el of container.querySelectorAll('.section-card input[type=number]')) {
+      const v = String(el.value).trim();
+      if (v === '') continue;
+      const n = Number(v);
+      if (!Number.isFinite(n) || n < 0) return `「${rowLabel(el)}」 需为非负有效数字（当前 ${v}）`;
+    }
+    return null;
+  };
   const update = () => {
+    const err = validateInputs();
+    if (err) { q('#c_results').innerHTML = `<div class="empty" style="padding:20px"><span class="empty-sub">⚠️ ${err}</span></div>`; return; }
     const input = read();
-    if (!input.totalWt || !CHARGE_TARGETS[input.grade]) { q('#c_results').innerHTML = '<div class="empty" style="padding:20px"><span class="empty-sub">请设置铁液总重</span></div>'; return; }
+    if (!CHARGE_TARGETS[input.grade]) { q('#c_results').innerHTML = '<div class="empty" style="padding:20px"><span class="empty-sub">请设置材质牌号</span></div>'; return; }
     syncKg();
     renderResults(runCharge(input));
   };
@@ -346,6 +402,7 @@ export function renderCharge(container, calc) {
   q('#c_results').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-apply]');
     if (!btn) return;
+    // 建议项 key 由视图 read() 传入（feSi/feMn/carb），映射必须与其一致 —— 应用按钮写回对应 kg 输入
     const map = { feSi: '#c_feSiKg', feMn: '#c_feMnKg', carb: '#c_carbKg' };
     q(map[btn.dataset.apply]).value = lastResult.sugs.find(s => s.key === btn.dataset.apply).kg;
     update();
@@ -401,11 +458,12 @@ export function renderCharge(container, calc) {
   if (q('#c_mat').value !== initGrade) loadDefaults(q('#c_mat').value, parseFloat(q('#c_wt').value) || 1000);
   q('#c_source').innerHTML = `
     · <b>比例输入</b>：生铁/废钢/回炉料按占铁液总重的<b>百分比</b>输入，重量自动算出；合金按 kg 手输。<br>
+    · <b>「铁液总重」= 目标出炉铁液量</b>（本工具口径，方案A）：成分均按「占出炉铁液 %」计算（与炉前取样同一口径）；金属炉料合计应≈100%，合金/增碳剂/球化/孕育剂再按 kg 加入——<b>实投总料略高于出炉量，差额为熔炼损耗</b>（烧损/渣损/挥发），故无"实投=出炉"的精确闭合，属炉前实用近似。<br>
     · <b>自定义</b>：生铁/废钢/合金/球化剂都可选「✏️ 自定义…」填本厂成分（每个厂都有自己的炉料）。<br>
-    · <b>碳当量 CE</b> = C + 0.33(Si+P)，炉前快速判定灰铁/球铁成分倾向。<br>
-    · <b>吸收率</b>默认值来自《铸造工程师手册 第3版》表3-316（中频炉取中值），可改成本厂实测。<br>
+    · <b>碳当量 CE</b> = C + 0.33(Si+P)，炉前快速判定灰铁/球铁成分倾向；灰铁区间按成铁、球铁区间按成铁（含处理带入硅）口径对照。<br>
+    · <b>吸收率</b>默认值来自《铸造工程师手册 第3版》表3-316（中频炉取中值，工程经验参数），可改成本厂实测；回炉料默认 0.95（本厂熟料少烧损）；球化剂 Mg/RE/Si 与孕育 Si 收得率（45/55/80/85%）为冲入法典型经验值（喂丝法 Mg 吸收可至 60%）。<br>
     · 球铁：原铁液目标已扣除默认球化剂 1.3% + 孕育剂 0.6% 带入的硅；球化剂加入量按本厂实际调。<br>
-    · 差额 = 目标 − 计算（正=缺，负=超）；建议量 = 差额% × 总重 ÷（合金含量 × 吸收率）。
+    · 差额 = 目标 − 计算（正=缺，负=超）；建议量 = 差额% × 总重 ÷（合金含量 × 吸收率）；P/S 无常规补料手段，超差时单独警示。
   `;
   update();
   renderNextSteps(container, calc);

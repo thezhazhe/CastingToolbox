@@ -86,7 +86,7 @@ try {
   check('侧边栏 4 个导航（首页/计算器/向导/捐助）', shell.navItems === 4, String(shell.navItems));
   check('首页渲染（大搜索框）', shell.homeHero && shell.homeSearch);
   check('首页导航高亮', shell.homeNavActive);
-  check('首页常用工具 13 个', shell.toolCards === 13, String(shell.toolCards));
+  check('首页常用工具 15 个（6 类分组）', shell.toolCards === 15, String(shell.toolCards));
   check('首页隐藏顶栏搜索', !shell.topSearchVisible);
   check('首页无常搜（已删除）', !shell.hasHot);
 
@@ -195,18 +195,63 @@ try {
   r = await send('Runtime.evaluate', { expression: `document.querySelectorAll('.kb-theme').length`, returnByValue: true });
   check('知识库主题树渲染 7 类', r.result.value === 7, String(r.result.value));
 
-  // ---- 3. 切到工艺向导 ----
-  await send('Runtime.evaluate', { expression: `document.querySelector('[data-view="wizard"]').click()` });
+  // ---- 3. 切到铸造工艺设计中心（工艺向导入口已升级，见 v0.17） ----
+  await send('Runtime.evaluate', { expression: `document.querySelector('[data-view="designCenter"]').click()` });
+  await wait(400);
+  r = await send('Runtime.evaluate', { expression: `document.querySelector('.dc-import-zone') !== null`, returnByValue: true });
+  check('工艺设计中心渲染（STL 导入区）', r.result.value);
+
+  // ---- 3b. 计算器工作流（V2.3：手动模式 → 步骤条 → 缺失参数 → 执行 → 结果） ----
+  await send('Runtime.evaluate', { expression: `document.querySelector('#dc_manualLink').click()` });
+  await wait(400);
+  r = await send('Runtime.evaluate', { expression: `JSON.stringify({
+    manualGeo: document.querySelector('#dc_params')?.textContent.includes('基础几何参数（手动输入）') || false,
+    nums: [...document.querySelectorAll('#dc_params input[type=number]')].map(i => i.id).filter(id => id.startsWith('dc_m_')).length,
+    hasFamily: !!document.querySelector('#dc_m_family')
+  })`, returnByValue: true });
+  const wflow = JSON.parse(r.result.value);
+  console.log('\n[计算器工作流]');
+  check('手动模式参数区（几何手填）', wflow.manualGeo);
+  check('固定分组参数渲染（含材料大类）', wflow.hasFamily && wflow.nums >= 3, JSON.stringify(wflow));
+  // 填参数并执行（PHASE 71.6：固定任务集，无任务勾选；核心参数均在默认展开区）
+  await send('Runtime.evaluate', { expression: `(() => {
+    const fam = document.querySelector('#dc_m_family'); if (fam) { fam.value = '球铁'; fam.dispatchEvent(new Event('change')); }
+    const setNum = (id, v) => { const el = document.querySelector(id); if (el) { el.value = v; el.dispatchEvent(new Event('input')); } };
+    setNum('#dc_m_cav2', 1); setNum('#dc_m_mc', 10);
+    setNum('#dc_p_volume', 8000); setNum('#dc_p_weight', 55);
+    // 手动模式外形尺寸（线收缩率/加工余量需要；STL 模式下自动来自 STL）
+    setNum('#dc_m_dims_0', 120); setNum('#dc_m_dims_1', 80); setNum('#dc_m_dims_2', 60);
+    document.querySelector('#dc_run').click();
+  })()`, returnByValue: true });
+  await wait(1500);
+  r = await send('Runtime.evaluate', { expression: `JSON.stringify({
+    hasResult: !document.querySelector('#dc_results').hidden,
+    nav: (document.querySelector('#dc_resultNav') || {}).textContent || '',
+    hasGating: (document.querySelector('#dc_results') || {}).textContent?.includes('浇注系统') || false,
+    hasRiser: (document.querySelector('#dc_results') || {}).textContent?.includes('冒口') || false,
+    hasYieldPage: !!document.querySelector('#dc_resultNav [data-nav="yield"]'),
+    hasShrink: (document.querySelector('#dc_results') || {}).textContent?.includes('线收缩率') || false,
+    hasMachining: (document.querySelector('#dc_results') || {}).textContent?.includes('加工余量') || false,
+    hasShakeout: (document.querySelector('#dc_results') || {}).textContent?.includes('开箱时间') || false,
+    noCalcLink: ![...document.querySelectorAll('#dc_results [data-calc-link]')].length
+  })`, returnByValue: true });
+  const wres = JSON.parse(r.result.value);
+  check('执行后生成结果中心（工艺性/冒口/浇注 三页）',
+    wres.hasResult && wres.hasGating && wres.hasRiser && !wres.hasYieldPage, JSON.stringify(wres));
+  check('线收缩率/加工余量以卡片并入工艺性页（77.txt 五：不再分页）',
+    wres.hasShrink && wres.hasMachining && wres.nav.includes('铸件结构工艺性'),
+    JSON.stringify({ s: wres.hasShrink, m: wres.hasMachining }));
+  check('开箱时间等独立计算器不进入设计中心流程', !wres.hasShakeout, JSON.stringify(wres));
+  // 清理本测试写入的生产场景/项目数据（避免污染后续"无工况"断言）
+  await send('Runtime.evaluate', { expression: `localStorage.removeItem('ct-context'); localStorage.removeItem('ct-project')`, returnByValue: true });
+  await send('Page.reload', {});
+  await wait(1200);
+
+  // ---- 4. 旧工艺向导路由仍可用（#/wizard 保留） ----
+  await send('Runtime.evaluate', { expression: `location.hash = '#/wizard'` });
   await wait(400);
   r = await send('Runtime.evaluate', { expression: `document.querySelector('.wizard-hero') !== null`, returnByValue: true });
-  check('向导首页 Hero 渲染', r.result.value);
-
-  // ---- 4. 点开始设计 → 步骤条出现 ----
-  await send('Runtime.evaluate', { expression: `document.getElementById('wzStart') ? document.getElementById('wzStart').click() : null` });
-  await wait(400);
-  r = await send('Runtime.evaluate', { expression: `document.querySelectorAll('.view').length, window.location.hash`, returnByValue: true });
-  const stepsHtml = await send('Runtime.evaluate', { expression: `document.body.innerHTML.includes('第 1 / 6 步')`, returnByValue: true });
-  check('向导进入步骤 1', stepsHtml.result.value);
+  check('旧工艺向导路由可用', r.result.value);
 
   // ---- 5. 浇注系统计算器 ----
   await send('Runtime.evaluate', { expression: `location.hash = '#/calculators/gating'` });
@@ -223,7 +268,8 @@ try {
   check('表单渲染', gating.hasForm);
   check('返回按钮', gating.hasBack);
   check('自动计算结果出现', gating.tValue.length > 0, gating.tValue);
-  check('判定为设计合理', gating.judge.includes('设计合理'), gating.judge);
+  // P50 起流速改为"优化提示"（非硬性不合规）→ 默认态可能落在"设计可用 · 存在可选优化项"
+  check('判定可用（设计合理 / 设计可用）', gating.judge.includes('设计合理') || gating.judge.includes('设计可用'), gating.judge);
   check('状态徽章=可用', gating.badge.includes('可用'), gating.badge);
 
   // 报告弹窗：初始隐藏 → 打开 → 关闭（回归 bug1：弹窗常显关不掉）
@@ -443,6 +489,9 @@ try {
   // ---- 8d. 尺寸公差 CT 查询（新工具：主输入=直接选 CT 等级） ----
   await send('Runtime.evaluate', { expression: `location.hash = '#/calculators/ct'` });
   await wait(600);
+  // CT 等级默认留空（图纸标注优先）→ 先选一个等级再断言公差结果行
+  await send('Runtime.evaluate', { expression: `(() => { const s = document.getElementById('ct_grade'); s.value = 'CT10'; s.dispatchEvent(new Event('change')); })()` });
+  await wait(500);
   r = await send('Runtime.evaluate', { expression: `JSON.stringify({
     form: !!document.getElementById('ct_grade') && !!document.getElementById('ct_size'),
     method: !!document.getElementById('ct_method'),
@@ -454,7 +503,7 @@ try {
   })`, returnByValue: true });
   const ct = JSON.parse(r.result.value);
   check('CT公差查询渲染（主输入=CT等级）', ct.form && ct.method, `CT等级 ${ct.grade}`);
-  check('CT公差按所选等级算公差', ct.rec.includes('CT') && ct.hasTol && ct.hasDev, ct.rec);
+  check('CT公差按所选等级算公差', ct.rec.includes('CT') && ct.hasTol && ct.hasDev, `rec=${ct.rec} hasTol=${ct.hasTol} hasDev=${ct.hasDev} hasTable=${ct.hasTable}`);
   check('CT公差说明带数值表', ct.hasTable);
   // 切换等级 → 公差值变化
   await send('Runtime.evaluate', { expression: `document.getElementById('ct_grade').value='CT6'; document.getElementById('ct_grade').dispatchEvent(new Event('change'));` });
@@ -505,7 +554,7 @@ try {
     topSearchVisible: getComputedStyle(document.querySelector('.search-wrap')).display !== 'none',
   })`, returnByValue: true });
   const calclist = JSON.parse(r.result.value);
-  check('返回计算器列表', calclist.cards === 13, String(calclist.cards));
+  check('返回计算器列表', calclist.cards === 15, String(calclist.cards));
   check('计算页显示顶栏搜索', calclist.topSearchVisible);
 
   // ---- 10. 知识库：主题树 ----
@@ -619,7 +668,7 @@ try {
   await send('Runtime.evaluate', { expression: `document.querySelector('[data-view="calculators"]').click()` });
   await wait(400);
   r = await send('Runtime.evaluate', { expression: `document.querySelectorAll('.tool-card').length`, returnByValue: true });
-  check('返回计算器列表', r.result.value === 13, String(r.result.value));
+  check('返回计算器列表', r.result.value === 15, String(r.result.value));
 
   // ---- 14. 主题切换 + 知识字段中文化 ----
   await send('Runtime.evaluate', { expression: `document.getElementById('themeBtn').click()` });
@@ -634,27 +683,27 @@ try {
   await send('Runtime.evaluate', { expression: `document.getElementById('themeBtn').click()` });
   await wait(150);
 
-  // ---- 14b. 捐助弹窗 + 二维码放大 ----
-  await send('Runtime.evaluate', { expression: `document.getElementById('btnDonate').click()` });
-  await wait(350);
+  // ---- 14b. 捐助页（73.txt：弹窗已改平铺页 #/donate）+ 二维码放大 ----
+  await send('Runtime.evaluate', { expression: `location.hash = '#/donate'` });
+  await wait(500);
   r = await send('Runtime.evaluate', { expression: `JSON.stringify({
-    modalOpen: !document.getElementById('donateModal').hidden,
+    pageOpen: !!document.querySelector('.donate-page'),
     hasHeart: document.body.innerHTML.includes('完全开源、永久免费') && document.body.innerHTML.includes('愿中国的铸造行业'),
-    qrLoaded: (function(){ var im = document.querySelector('#donateModal .donate-qr'); return im && im.complete && im.naturalWidth > 0; })()
+    qrLoaded: (function(){ var im = document.querySelector('.donate-page .donate-qr'); return !!im && im.complete && im.naturalWidth > 0; })()
   })`, returnByValue: true });
   const dn = JSON.parse(r.result.value);
   console.log('\n[捐助]');
-  check('捐助弹窗打开', dn.modalOpen);
+  check('捐助页打开', dn.pageOpen);
   check('情怀话文案', dn.hasHeart);
   check('二维码完整加载', dn.qrLoaded);
-  await send('Runtime.evaluate', { expression: `document.querySelector('[data-open-lightbox]').click()` });
+  await send('Runtime.evaluate', { expression: `document.querySelector('.donate-page [data-open-lightbox]').click()` });
   await wait(300);
   r = await send('Runtime.evaluate', { expression: `!document.getElementById('qrLightbox').hidden`, returnByValue: true });
   check('二维码放大层打开', r.result.value);
   await send('Runtime.evaluate', { expression: `document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))` });
   await wait(200);
-  r = await send('Runtime.evaluate', { expression: `document.getElementById('qrLightbox').hidden && document.getElementById('donateModal').hidden`, returnByValue: true });
-  check('Esc 关闭弹窗', r.result.value);
+  r = await send('Runtime.evaluate', { expression: `document.getElementById('qrLightbox').hidden`, returnByValue: true });
+  check('Esc 关闭放大层', r.result.value);
 
   // ---- 14c. 反馈弹窗（请用户发邮件 + 感谢） ----
   await send('Runtime.evaluate', { expression: `document.getElementById('btnSource').click()` });

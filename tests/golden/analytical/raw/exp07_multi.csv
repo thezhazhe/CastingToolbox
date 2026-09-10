@@ -1,0 +1,7 @@
+model,n,expectedCount,detected,status,regs,peaks,rejected
+multi_n1,1,1,1,ok,2,2,0
+multi_n2,2,2,2,ok,3,3,0
+multi_n3,3,3,3,ok,4,4,0
+multi_n5,5,5,5,ok,6,5,0
+multi_n8,8,5,5,ok,9,5,0
+multi_n10,10,5,5,ok,11,5,0

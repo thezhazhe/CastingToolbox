@@ -9,6 +9,7 @@ import { TAXONOMY, themeOfId } from '../../data/taxonomy.js';
 import { TAGS } from '../../data/tags.js';
 import { isUnlocked } from '../devmode.js';
 import * as context from '../context.js';
+import { t } from '../i18n/index.js';   // PHASE 72：知识库中文提示（§十六）
 
 // 字段键 → 中文标签（材料等结构化内容的详情渲染用）
 const FIELD_LABELS = {
@@ -180,8 +181,10 @@ async function renderSearch(container) {
   window.scrollTo(0, 0);   // 详情→返回：回到结果顶部
   const docs = await loadKnowledge();
   const q = searchQuery || '';
+  // PHASE 72（80.txt §十六）：知识库内容本阶段保持中文——英文界面下显式声明，不让用户以为坏了
+  const kbNote = t('kb.zhOnly') ? `<div class="field-hint" style="margin:2px 0 10px">🌐 ${t('kb.zhOnly')}</div>` : '';
   if (!q.trim()) {
-    container.innerHTML = `<div class="page-head"><h1 class="page-title">搜索结果</h1><p class="page-sub">在顶部或首页输入关键词开始搜索。</p></div>`;
+    container.innerHTML = `<div class="page-head"><h1 class="page-title">搜索结果</h1><p class="page-sub">在顶部或首页输入关键词开始搜索。</p></div>${kbNote}`;
     return;
   }
   const kResults = searchKnowledge(q, docs);
@@ -240,6 +243,7 @@ async function renderSearch(container) {
       <p class="page-sub">“${escapeHtml(q)}” · 共 ${kResults.length} 条知识 · ${calcs.length} 个计算工具
         <button class="btn btn-ghost" id="kb_clear" style="margin-left:8px;padding:4px 12px">✕ 清除</button></p>
     </div>
+    ${kbNote}
     ${sections.map(s => s.html).join('')}
     ${kResults.length === 0 && calcs.length === 0
       ? `<div class="card"><div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">没有找到“${escapeHtml(q)}”</div><div class="empty-sub">试试材料牌号（如 QT450）、缺陷名（如 气孔）、工艺词（如 浇注温度）。</div></div></div>` : ''}
@@ -314,7 +318,7 @@ function renderDetail(container, doc, docs) {
         </div>
         <p class="page-sub">${(doc.keywords || []).map(k => `<span class="chip">${escapeHtml(k)}</span>`).join(' ')}</p>
       </div>
-      <span class="chip primary">${themeName}</span>${confText(doc.confidence)}${relText(doc)}
+      <span class="chip primary">${themeName}</span>${confText(doc.confidence)}${relText(doc)}${evidText(doc)}
     </div>
     ${quickFactsHTML(doc)}
     <div class="card section-card">
@@ -421,7 +425,7 @@ export function cardHtml(doc, opts = {}) {
     <div class="kb-item-main">
       <div class="kb-item-title">${escapeHtml(doc.title)}${opts.snippet ? `<span class="field-hint" style="display:block;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(opts.snippet)}</span>` : ''}</div>
       <div class="kb-item-summary">${escapeHtml(cardSummary(doc))}</div>
-      <div class="kb-item-meta">${escapeHtml(meta)}${confText(doc.confidence)}</div>
+      <div class="kb-item-meta">${escapeHtml(meta)}${confText(doc.confidence)}${evidText(doc)}</div>
     </div>
     <div class="kb-item-right"><span class="kb-arrow">›</span></div>
   </div>`;
@@ -452,6 +456,17 @@ function relText(doc) {
   if (!r) return '';
   const label = REL_TEXT[r] || r;
   return `<span class="kb-conf ${REL_CLS[r] || 'conf-mid'}">可靠等级 ${r} · ${label}</span>`;
+}
+
+// PHASE 65.1：证据三态徽章（可选顶层字段 evidence；无字段卡不显示，零迁移）
+// VERIFIED 已核实 / ENGINEERING_REFERENCE 工程参考（非标准条文）/ UNCERTAIN 无法确认
+const EV_TEXT = { VERIFIED: 'VERIFIED · 已核实', ENGINEERING_REFERENCE: 'ENGINEERING REFERENCE · 工程参考', UNCERTAIN: 'UNCERTAIN · 无法确认' };
+const EV_CLS = { VERIFIED: 'ev-verified', ENGINEERING_REFERENCE: 'ev-er', UNCERTAIN: 'ev-uncertain' };
+function evidText(doc) {
+  const e = doc.evidence;
+  if (!e) return '';
+  const label = EV_TEXT[e] || e;
+  return `<span class="kb-conf ${EV_CLS[e] || 'conf-mid'}">${label}</span>`;
 }
 
 // 优先级原因等级徽章（A 最优先检查）

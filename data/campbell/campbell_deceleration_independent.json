@@ -1,0 +1,22 @@
+{
+  "id": "campbell_deceleration_independent",
+  "title": "Campbell：自然流动不能替代独立减速（过滤器优先）",
+  "keywords": ["Campbell", "过滤器", "减速", "降速", "涌流冒口", "扇形内浇口", "1/4", "1/5"],
+  "evidence": "ENGINEERING_REFERENCE",
+  "content": {
+    "rule": "自然加压系统没有内置显著降速机制——必须搭配完全独立的减速手段；过滤器是首选（流速通常降至 1/4~1/5）。",
+    "mechanism": "直浇道底部速度 ~2.4 m/s 直接进型腔会违反临界速度规则。独立减速手段按优先级：①泡沫过滤器（首选；过滤器对净化的作用仅 ~10%，90% 来自降速层流化）；②涌流/旁通冒口；③垂直扇形内浇口（威布尔模数可提高近 4 倍）；④（未来）涡流吸能。",
+    "parameter": {
+      "过滤器降速": "降至 1/4~1/5（书：约 5 倍）",
+      "过滤器面积": "≥ 横浇道 2 倍（厚壁）~4 倍（薄壁）；前置液压锁+捕泡空间",
+      "过滤器后通道": "可放大 ≤4 倍（精算 3.85；工作例取 3 倍安全裕度）",
+      "过滤器位置": "直浇道底部/横浇道入口处，系统最低点；其后落差 ≤~100mm 可重复（>200mm 失去可重复性）",
+      "出处": "12.3（行 10910-10920）、12.8.5（行 11662-11676）、12.8.7（行 11714-11716）"
+    },
+    "check": [
+      "V1 速算不计算减速件——结果页以'Campbell 工艺提示'折叠提醒",
+      "高速/薄壁/夹杂卷气敏感工艺：应进一步考虑过滤器或其他独立减速措施"
+    ]
+  },
+  "reference": { "book": "Complete Casting Handbook", "chapter": "12.8 Filters as flow-control devices + 13.4 deceleration options", "author": "John Campbell", "kind": "book", "school": "Campbell", "method": "Campbell Gating" }
+}

@@ -43,8 +43,10 @@ export const SB_BURROW_NOLOAD = 30;
  */
 export const SB_BARE = { min: 40, softLayer: 5, bottomFactor: 1.5, maxCore: 1200 };
 
-/** 3D 打印砂型最小壁厚（表5）：<100mm → 8mm；100~4000 → 30mm */
-export const SB_MIN_WALL = { small: { max: 100, wall: 8 }, large: { wall: 30 } };
+/** 3D 打印砂型最小壁厚（表5，企业规范）：<100mm → 8mm；100~4000mm → 30mm；>4000 超表。
+ *  语义 = 砂型结构可制造/强度下限（任何部位不得低于），区别于：
+ *  非承重壁 30mm（常规设计值，表3 说明）与 承重壁查表（≥40mm）。 */
+export const SB_MIN_WALL = { small: { max: 100, wall: 8 }, large: { max: 4000, wall: 30 } };
 
 export const SB_NOTE = [
   '埋箱：吃砂量只需满足砂型自身强度（翻转/施涂/转运不变形），非承重壁 30mm 恒定',

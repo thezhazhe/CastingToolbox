@@ -458,7 +458,7 @@ function reportHtml(doc, md, g, r, mc) {
     <h3>🧪 材料与输入</h3>
     <table>${t('材料', doc.title)}${t('浇注温度', c.pouring?.pour_temperature || '—')}${t('密度', c.physical?.density || '—')}${t('线收缩率', c.physical?.linear_shrinkage || '—')}${t('单件毛重', state.partWt + ' Kg × ' + state.cav + ' 件')}${t('出品率', state.yield + '%')}${t('主壁厚', state.wall + ' mm')}${t('热节模数 Mc', mc.toFixed(1) + ' mm')}${t('浇注方向', state.pos)}</table>
     <h3>🌊 浇注系统建议</h3>
-    <table>${t('浇注重量 G', fmt(g.G, 2) + ' Kg')}${t('浇注时间 t', fmt(g.t, 2) + ' s')}${t('阻流截面 A_choke', fmt(g.A, 1) + ' mm²')}${t('内浇道', g.gc + '个 × ' + g.gt + 'mm厚 × ' + g.L_g + 'mm长')}${t('横浇道', g.rc + '条 × ' + g.rt + 'mm厚 × ' + g.L_r + 'mm长')}${t('直浇道', '⌀' + g.D_sp + ' mm')}${t('流速校核', fmt(g.v, 2) + ' m/s ' + (g.v_ok ? '✅' : '⚠️ 超1.8'))}${t('排气面积比', fmt(g.vr, 2) + ' 倍 ' + (g.vr_ok ? '✅' : '⚠️ 需≥1.5'))}</table>
+    <table>${t('浇注重量 G', fmt(g.G, 2) + ' Kg')}${t('浇注时间 t', fmt(g.t, 2) + ' s')}${t('阻流截面 A_choke', fmt(g.A, 1) + ' mm²')}${t('内浇道', g.gc + '个 × ' + g.gt + 'mm厚 × ' + g.L_g + 'mm长')}${t('横浇道', g.rc + '条 × ' + g.rt + 'mm厚 × ' + g.L_r + 'mm长')}${t('直浇道', '⌀' + g.D_sp + ' mm')}${t('流速校核', fmt(g.v, 2) + ' m/s ' + (g.v_ok ? '✅' : '⚠️ 超' + g.vLimit))}${t('排气面积比', fmt(g.vr, 2) + ' 倍 ' + (g.vr_ok ? '✅' : '⚠️ 需≥1.5'))}</table>
     <h3>🏗️ 冒口建议</h3>
     <table>${t('冒口形状', r ? r.sd.name : '—')}${t('冒口尺寸', r ? r.sd.label(r.D, r.H) : '—')}${t('所需模数 Mr_需', r ? r.Mr_need.toFixed(2) + ' mm' : '—')}${t('实际模数 Mr_实', r ? r.Mr_act.toFixed(2) + ' mm' : '—')}${t('冒口体积', r ? (r.Vr / 1000).toFixed(1) + ' cm³' : '—')}${t('圆形冒口颈', r ? '⌀' + r.d_neck + ' mm' : '—')}${t('补缩判定', r && r.volOk ? '✅ 体积补缩充足' : r ? '⚠️ 体积不足，需加大冒口' : '—')}</table>
     <h3>✅ 综合判定</h3>

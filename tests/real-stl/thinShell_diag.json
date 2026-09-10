@@ -1,0 +1,79 @@
+{
+  "stl": {
+    "file": "thinShell.stl",
+    "triCount": 211280,
+    "size": [
+      400,
+      200,
+      100
+    ],
+    "bounds": {
+      "min": [
+        -200,
+        -100,
+        -50
+      ],
+      "max": [
+        200,
+        100,
+        50
+      ],
+      "size": [
+        400,
+        200,
+        100
+      ],
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "diagonal": 458.257569495584
+    },
+    "volumeCm3": 2024.1,
+    "areaMm2": 512960,
+    "closed": true,
+    "issues": []
+  },
+  "v3": {
+    "status": "NO_HOTSPOT",
+    "reason": "no_candidate",
+    "elapsedMs": 3188,
+    "hotspots": [],
+    "debug": {
+      "coarse": {
+        "gs": 80,
+        "vs": 5,
+        "estMinWall": 10,
+        "pts": 19072,
+        "stride": 1,
+        "maxM": 0.8333333333333333,
+        "meanM": 0.5445881433402237,
+        "peaks": 0,
+        "uniform": true,
+        "scanMs": 106,
+        "fieldMs": 5
+      },
+      "elapsedMs": 3188
+    },
+    "audit": []
+  },
+  "v2": {
+    "status": "ok",
+    "reason": null,
+    "elapsedMs": 542,
+    "hotspots": [
+      {
+        "id": 1,
+        "position": [
+          -194.4819819991653,
+          -94.25675667084016,
+          -44.4819819991653
+        ],
+        "mc": 5.170795791857955,
+        "confidence": 0.772,
+        "regionVolumeCm3": 20.03
+      }
+    ]
+  }
+}

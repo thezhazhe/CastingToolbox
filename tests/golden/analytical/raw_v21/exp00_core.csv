@@ -1,0 +1,36 @@
+model,parameters,status,reason,positionError,positionGrade,thicknessErrorPct,mcErrorPct,confidence,resolutionScore,prominenceScore,validationScore,runtime,classification,note
+uniformCube,{},NO_HOTSPOT,,,,,,,,,,821,PASS,均匀件 → NO_HOTSPOT ✓
+uniformCylinder,{},NO_HOTSPOT,,,,,,,,,,1205,PASS,均匀件 → NO_HOTSPOT ✓
+uniformPlate,{},NO_HOTSPOT,,,,,,,,,,441,PASS,均匀件 → NO_HOTSPOT ✓
+uniformTube,{},ok,,,,,,0.723,0.306,1,1,967,TEST_ARTIFACT,均匀件报热结（ok，conf=0.723）——MC 圆角伪影待实验量化（圆角扫描）
+thinShell,{},ok,,,,,,0.735,0.338,1,1,936,TEST_ARTIFACT,均匀件报热结（ok，conf=0.735）——MC 圆角伪影待实验量化（圆角扫描）
+bossOnPlate,{},ok,,11.796,FAIL,1.7,1.7,0.77,0.426,1,1,295,PASS,1 热结 ✓
+eccentricBoss,{"ox":80,"oy":40},ok,,14.2,FAIL,1.7,1.7,0.77,0.426,1,1,248,PASS,1 热结 ✓
+multipleBosses,{"n":4},ok,,6.821,WARNING,16.7,16.7,0.767,0.417,1,1,475,PASS,4 热结 ✓
+steppedThickness,{},ok,,43.567,FAIL,6.3,1.0,0.86,0.65,1,1,413,FAIL,OK 但 数量 2 vs 期望 1
+lShape,{},ok,,1.768,GOOD,4.2,0.0,1,1,1,1,575,PASS,1 热结 ✓
+tShape,{},ok,,38.134,FAIL,5.1,1.0,1,1,1,1,488,PASS,1 热结 ✓
+flange,{},ok,,26.882,FAIL,38.2,24.3,0.72,0.3,1,1,457,FAIL,OK 但 数量 3 vs 期望 2
+hollowThickRing,{},ok,,7.813,WARNING,0.0,0.0,0.963,0.907,1,1,1361,PASS,1 热结 ✓
+centralBoss,{},ok,,11.796,FAIL,1.7,1.7,0.77,0.426,1,1,245,PASS,1 热结 ✓
+offsetBoss,{"ox":-90,"oy":50},ok,,10.184,FAIL,1.7,1.7,0.77,0.426,1,1,262,PASS,1 热结 ✓
+twoAdjacentBosses,{"tA":30,"tB":30,"v":15},ok,,25.34,FAIL,7.6,1.0,0.767,0.417,1,1,513,PASS,2 热结 ✓
+threeBosses,{},ok,,6.401,WARNING,16.7,16.7,0.767,0.417,1,1,416,PASS,3 热结 ✓
+ribBoss,{},ok,,9.433,WARNING,12.5,18.8,0.86,0.65,1,1,501,PASS,1 热结 ✓
+thickCorner,{},ok,,2.558,ACCEPTABLE,3.0,3.1,0.86,0.649,1,1,348,FAIL,OK 但 数量 2 vs 期望 1
+thickEnd,{},ok,,31.443,FAIL,11.8,2.9,0.72,0.3,1,1,366,PASS,1 热结 ✓
+gradualTaper,{},NO_HOTSPOT,,,,,,,,,,352,EXPECTED,NO_HOTSPOT（undefined）——GT 预期无局部极大，符合语义
+suddenTransition,{},ok,,43.567,FAIL,6.3,1.0,0.86,0.65,1,1,385,FAIL,OK 但 数量 2 vs 期望 1
+pvpPair,{"tA":30,"tB":30,"v":28},ok,,25.34,FAIL,7.6,1.0,0.767,0.417,1,1,526,PASS,1 热结 ✓
+bossOnPlate@res48,{"resolution":48},ok,,11.796,FAIL,1.7,1.7,0.77,0.426,1,1,297,,
+bossOnPlate@res64,{"resolution":64},ok,,22.103,FAIL,8.8,1.7,0.849,0.622,1,1,288,,
+bossOnPlate@res96,{"resolution":96},NO_HOTSPOT,,,,,,,,,,442,,
+lShape@res48,{"resolution":48},ok,,1.768,GOOD,4.2,0.0,1,1,1,1,516,,
+lShape@res64,{"resolution":64},ok,,1.326,GOOD,3.1,0.0,1,1,1,1,715,,
+lShape@res96,{"resolution":96},ok,,0,EXCELLENT,2.1,0.0,1,1,1,1,2175,,
+thickEnd@res48,{"resolution":48},ok,,31.443,FAIL,11.8,2.9,0.72,0.3,1,1,332,,
+thickEnd@res64,{"resolution":64},ok,,30.027,FAIL,7.8,1.8,0.799,0.498,1,1,328,,
+thickEnd@res96,{"resolution":96},ok,,33.477,FAIL,3.8,0.2,1,1,1,1,487,,
+pvpPair@res48,{"tA":30,"tB":30,"v":15,"resolution":48},ok,,25.34,FAIL,7.6,1.0,0.767,0.417,1,1,526,,
+pvpPair@res64,{"tA":30,"tB":30,"v":15,"resolution":64},ok,,25.315,FAIL,8.9,1.0,0.87,0.675,1,1,564,,
+pvpPair@res96,{"tA":30,"tB":30,"v":15,"resolution":96},ok,,26.662,FAIL,1.0,1.0,1,1,1,1,1080,,

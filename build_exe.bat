@@ -37,7 +37,8 @@ rem      首次会联网拉取 rcedit；失败只警告，不中断构建。
 if not exist "dist\apk\CastingToolbox.ico" (
   python "dist\apk\gen_icons.py" >nul 2>&1
 )
-node "scripts\set_exe_icon.cjs" "CastingToolbox.exe" "dist\apk\CastingToolbox.ico"
+rem      同时写入版本元数据（右键属性/快捷方式可见）——版本号与 js/version.js 保持一致
+node "scripts\set_exe_icon.cjs" "CastingToolbox.exe" "dist\apk\CastingToolbox.ico" "1.0.0"
 if errorlevel 1 echo   [WARN] 图标设置失败（可忽略，仅影响快捷方式图标） & echo.
 
 rem ==== 3. 注入 blob（postject，首次联网下载） ====

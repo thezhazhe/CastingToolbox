@@ -1,0 +1,119 @@
+{
+  "stl": {
+    "file": "thickOnThin.stl",
+    "triCount": 106760,
+    "size": [
+      400,
+      200,
+      68
+    ],
+    "bounds": {
+      "min": [
+        -200,
+        -100,
+        -4
+      ],
+      "max": [
+        200,
+        100,
+        64
+      ],
+      "size": [
+        400,
+        200,
+        68
+      ],
+      "center": [
+        0,
+        0,
+        30
+      ],
+      "diagonal": 452.3538437992983
+    },
+    "volumeCm3": 1229.2,
+    "areaMm2": 192422,
+    "closed": true,
+    "issues": []
+  },
+  "v3": {
+    "status": "ok",
+    "reason": null,
+    "elapsedMs": 564,
+    "hotspots": [
+      {
+        "hotspotId": 1,
+        "position": [
+          -0.5,
+          0.5,
+          31.75
+        ],
+        "peakModulus": 10.326334208223972,
+        "normalizedModulus": 1,
+        "regionVolume": 4159.375,
+        "regionArea": 429.79937593568957,
+        "confidence": 0.8125359089390088,
+        "scaleStability": 0.8728843970828976,
+        "geometrySource": "refined field peak @(-11.5,-10.5,31.8)"
+      }
+    ],
+    "debug": {
+      "coarse": {
+        "gs": 73,
+        "vs": 5.5,
+        "estMinWall": 11,
+        "pts": 6191,
+        "stride": 1,
+        "maxM": 10.326334208223972,
+        "meanM": 2.662260369844418,
+        "peaks": 1,
+        "scanMs": 71,
+        "fieldMs": 12
+      },
+      "refine": [
+        {
+          "region": [
+            -15.75,
+            -14.75,
+            31.75
+          ],
+          "gs": 23,
+          "vs": 5.5,
+          "pts": 549,
+          "scanMs": 15,
+          "fieldMs": 2,
+          "maxM": 10.326334208223972,
+          "peaks": [
+            {
+              "M": 10.326334208223972,
+              "pt": [
+                -11.5,
+                -10.5,
+                31.75
+              ]
+            }
+          ]
+        }
+      ],
+      "elapsedMs": 564
+    },
+    "audit": []
+  },
+  "v2": {
+    "status": "ok",
+    "reason": null,
+    "elapsedMs": 255,
+    "hotspots": [
+      {
+        "id": 1,
+        "position": [
+          1.4210854715202004e-14,
+          7.697546304067751e-15,
+          29.333333333333346
+        ],
+        "mc": 33.33333333333334,
+        "confidence": 0.782,
+        "regionVolumeCm3": 1250
+      }
+    ]
+  }
+}

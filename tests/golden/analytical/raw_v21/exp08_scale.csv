@@ -1,0 +1,5 @@
+model,status,rotErr,transErr,scaleErr,positionError,confidence,note
+scale_0.5,ok,,,5.897,18.229,0.77,归一化位置偏差 5.897mm（×0.5）
+scale_1,ok,,,11.78,11.796,0.77,归一化位置偏差 11.78mm（×1）
+scale_2,ok,,,23.575,40.553,0.77,归一化位置偏差 23.575mm（×2）
+scale_5,ok,,,58.93,145.926,0.77,归一化位置偏差 58.93mm（×5）

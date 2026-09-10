@@ -7,6 +7,7 @@
 export const CALCULATORS = [
   {
     id: 'gating',
+    cat: 'pouring',   // PHASE 78 分类
     name: '浇注系统设计',
     icon: '🌊',
     desc: '浇注时间（Dietert）· 阻流截面（奥赞）· 直/横/内浇道 · 排气面积 · 浇注方向判断',
@@ -21,7 +22,40 @@ export const CALCULATORS = [
     status: 'ready',
   },
   {
+    id: 'campbell_gating',
+    cat: 'pouring',   // PHASE 78 分类
+    name: 'Campbell 浇注系统速算',
+    icon: '🌿',
+    desc: '极简输入（材料/重量/壁厚/内浇口数）→ Campbell 1:1:n 基础方案：浇注时间 · 质量流 · 内浇口面积 · 直浇道/横浇道 1:1 · 速度证据分级标注',
+    tags: ['浇注', 'Campbell', '方法实验室', 'ENGINEERING_REFERENCE'],
+    keywords: ['Campbell', '浇注系统', '自然加压', '1:1:n', '内浇口', '质量流率', '0.5 m/s', '1000', '500', 'mm²/(kg/s)', '速算', '连续节流'],
+    next: [
+      { icon: '📖', label: '查 Campbell 知识', kind: 'search', target: 'Campbell' },
+      { icon: '🩹', label: '查卷吸/气孔缺陷', kind: 'search', target: '卷吸' },
+    ],
+    status: 'ready',
+    method: 'Campbell Gating · 独立方法（与现行浇注系统计算器互不混用）',
+  },
+  {
+    id: 'vertical_gating',
+    cat: 'pouring',   // PHASE 78 分类
+    name: '垂直造型线小件浇注系统',
+    icon: '🏭',
+    desc: 'DISA 手册方法 · 加压/减压/不加压/混合四种系统 · 多层铸型各层按自身有效静压头分别计算内浇口 · 逐段流道 · 分层输出',
+    tags: ['浇注', '垂直造型', 'DISA', '多层', 'ENGINEERING_REFERENCE'],
+    keywords: ['垂直造型', 'DISA', '加压式', '减压式', '不加压式', '混合式', '静压头', '内浇口', '浇注系统', '竖型串', '多层铸型', '浇口杯', '有效静压头', '分层'],
+    next: [
+      { icon: '🌊', label: '通用浇注系统计算器（对照）', kind: 'calc', target: 'gating' },
+      { icon: '📊', label: '查看出品率', kind: 'calc', target: 'yield' },
+      { icon: '🩹', label: '查冷隔/浇不足', kind: 'search', target: '冷隔' },
+      { icon: '🩹', label: '查砂眼/夹渣', kind: 'search', target: '夹渣' },
+    ],
+    status: 'ready',
+    method: 'DISA 230 Application Manual（补缩和浇注 6.8~6.12）· 独立方法（与现行浇注系统计算器互不混用）',
+  },
+  {
     id: 'riser',
+    cat: 'feed',   // PHASE 78 分类
     name: '冒口设计',
     icon: '🏗️',
     desc: '热节模数 Mc · 冒口形状/补缩效率 · 冒口尺寸 · 冒口颈 · 模数校验',
@@ -37,6 +71,7 @@ export const CALCULATORS = [
   },
   {
     id: 'shrinkage',
+    cat: 'dim',   // PHASE 78 分类
     name: '线收缩率',
     icon: '📏',
     desc: '按方向推荐收缩率 · 最大方向取上限 · 方向悬殊自动提示分开放缩水',
@@ -51,6 +86,7 @@ export const CALCULATORS = [
   },
   {
     id: 'machining',
+    cat: 'dim',   // PHASE 78 分类
     name: '加工余量',
     icon: '🛠️',
     desc: '方法×材质 → 余量范围（等级自动，不选等级）· 顶面/底面分级 · GB/T 6414',
@@ -64,6 +100,7 @@ export const CALCULATORS = [
   },
   {
     id: 'yield',
+    cat: 'melt',   // PHASE 78 分类
     name: '出品率与铁水重量',
     icon: '📊',
     desc: '①预估出品率区间 → ②现场实测出品率 → 单件/一模铁液 · 浇冒口重（铁液按实绩算）',
@@ -78,6 +115,7 @@ export const CALCULATORS = [
   },
   {
     id: 'chill',
+    cat: 'feed',   // PHASE 78 分类
     name: '冷铁计算',
     icon: '❄️',
     desc: '外冷铁/内冷铁厚度（系数×热节壁厚）· 失效提醒（>100mm/挂砂层/二分之一原则）· 布置规则',
@@ -91,6 +129,7 @@ export const CALCULATORS = [
   },
   {
     id: 'sandbox',
+    cat: 'structure',   // PHASE 78 分类
     name: '3D砂型吃砂量',
     icon: '📦',
     desc: '埋箱查表 / 裸浇原则 → 吃砂量 · 砂型最小壁厚（3D打印砂型专用，勿套用传统造型）',
@@ -103,6 +142,7 @@ export const CALCULATORS = [
   },
   {
     id: 'castability',
+    cat: 'structure',   // PHASE 78 分类
     name: '铸件结构工艺性',
     icon: '🏰',
     desc: '最小壁厚 · 临界壁厚 · 铸造圆角 · 拔模斜度 · 最小铸孔（按材质/尺寸/批量）',
@@ -117,6 +157,7 @@ export const CALCULATORS = [
   },
   {
     id: 'principles',
+    cat: 'method',   // PHASE 78 分类
     name: '铸造原则 · Campbell 十规则',
     icon: '🧭',
     desc: '金属液质量 → 充型 → 凝固 → 冷却四阶段十规则全景 · 机理/参数/违反后果/检查要点（展示型）',
@@ -132,11 +173,12 @@ export const CALCULATORS = [
   },
   {
     id: 'ct',
+    cat: 'dim',   // PHASE 78 分类
     name: '尺寸公差 CT 查询',
     icon: '📐',
-    desc: 'GB/T 6414 尺寸公差 CT1~16 · 方法×材质推荐等级 · 基本尺寸查公差（±）· 壁厚粗一级',
-    tags: ['公差', '尺寸', 'GB/T 6414', 'CT'],
-    keywords: ['公差', '尺寸公差', 'CT', 'GB/T 6414', 'CT等级', '铸件公差', '偏差', '壁厚公差'],
+    desc: 'GB/T 42124.3-2025 尺寸公差 CT/DCTG1~16 · 方法×材质推荐等级 · 基本尺寸查公差（±）· 壁厚粗一级 · 表值经 ISO 8062-3:2023 Table 7 交叉核验',
+    tags: ['公差', '尺寸', 'GB/T 42124.3', 'CT'],
+    keywords: ['公差', '尺寸公差', 'CT', 'DCTG', 'GB/T 6414', 'GB/T 42124.3', 'CT等级', '铸件公差', '偏差', '壁厚公差'],
     next: [
       { icon: '🛠️', label: '加工余量', kind: 'calc', target: 'machining' },
       { icon: '📏', label: '线收缩率', kind: 'calc', target: 'shrinkage' },
@@ -146,6 +188,7 @@ export const CALCULATORS = [
   },
   {
     id: 'defect_finder',
+    cat: 'method',   // PHASE 78 分类
     name: '缺陷查找',
     icon: '🩹',
     desc: '按缺陷名/俗称/症状找问题：GB/T 5611 八大类 · 特征 · 原因 · 对策 · 相关标准',
@@ -160,6 +203,7 @@ export const CALCULATORS = [
   },
   {
     id: 'charge',
+    cat: 'melt',   // PHASE 78 分类
     name: '熔炼加料计算',
     icon: '🏭',
     desc: '选牌号→自动配比（生铁/废钢/回炉料）→改量实时成分平衡→补料建议（吸收率可调）',
@@ -174,6 +218,7 @@ export const CALCULATORS = [
   },
   {
     id: 'shakeout',
+    cat: 'feed',   // PHASE 78 分类
     name: '开箱时间',
     icon: '⏱️',
     desc: '材质×重量×壁厚 → 型内冷却时间范围 · 开箱温度目标 · 风险提示（流水线/热时效可调）',
@@ -191,4 +236,27 @@ export const CALCULATORS = [
 /** 按 id 取计算器 */
 export function getCalculator(id) {
   return CALCULATORS.find(c => c.id === id) || null;
+}
+
+/* ============================================================
+   PHASE 78（78.txt 十一）：工具分类——按"工艺设计流程中解决的问题"分组，
+   不按技术实现分。顺序即铸造工艺设计的自然推进顺序：
+   浇注（怎么浇进去）→ 补缩与凝固（怎么不缩）→ 尺寸与加工（留多少量）
+   → 结构与成型（能不能做出来）→ 熔炼与经济性（要多少料、出品多少）
+   → 方法与诊断（原则与缺陷排查）。
+   ============================================================ */
+export const CALC_CATEGORIES = [
+  { key: 'pouring',   icon: '🌊', name: '浇注系统设计', desc: '浇注时间 · 阻流截面 · 浇道尺寸 · 排气' },
+  { key: 'feed',      icon: '🏗️', name: '补缩与凝固控制', desc: '冒口 · 冷铁 · 开箱时间' },
+  { key: 'dim',       icon: '📏', name: '尺寸与加工', desc: '线收缩率 · 加工余量 · 尺寸公差' },
+  { key: 'structure', icon: '🏰', name: '结构与成型工艺', desc: '结构工艺性 · 3D 砂型吃砂量' },
+  { key: 'melt',      icon: '🏭', name: '熔炼与经济性', desc: '熔炼加料 · 出品率与铁水重量' },
+  { key: 'method',    icon: '🧭', name: '方法与缺陷诊断', desc: '铸造原则 · 缺陷查找' },
+];
+
+/** 分类 → 该类别下的计算器（保持 CALCULATORS 内的声明顺序；空类别自动省略） */
+export function calculatorsByCategory(list = CALCULATORS) {
+  return CALC_CATEGORIES
+    .map(c => ({ ...c, items: list.filter(x => x.cat === c.key) }))
+    .filter(c => c.items.length);
 }

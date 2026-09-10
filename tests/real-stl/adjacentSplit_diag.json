@@ -1,0 +1,199 @@
+{
+  "stl": {
+    "file": "adjacentSplit.stl",
+    "triCount": 162544,
+    "size": [
+      240,
+      60,
+      60
+    ],
+    "bounds": {
+      "min": [
+        -80,
+        -30,
+        -30
+      ],
+      "max": [
+        160,
+        30,
+        30
+      ],
+      "size": [
+        240,
+        60,
+        60
+      ],
+      "center": [
+        40,
+        0,
+        0
+      ],
+      "diagonal": 254.55844122715712
+    },
+    "volumeCm3": 725.3,
+    "areaMm2": 62418,
+    "closed": true,
+    "issues": []
+  },
+  "v3": {
+    "status": "ok",
+    "reason": null,
+    "elapsedMs": 461,
+    "hotspots": [
+      {
+        "hotspotId": 1,
+        "position": [
+          112.93194876140697,
+          -1.6285105006728504,
+          -1.6285105006728504
+        ],
+        "peakModulus": 9.406353706259818,
+        "normalizedModulus": 1,
+        "regionVolume": 10215.52346948608,
+        "regionArea": 1206.277803839902,
+        "confidence": 0.8299551072188045,
+        "scaleStability": 1,
+        "geometrySource": "refined field peak @(92.7,1.8,1.8)"
+      },
+      {
+        "hotspotId": 2,
+        "position": [
+          -31.25,
+          0,
+          0
+        ],
+        "peakModulus": 8.75,
+        "normalizedModulus": 1,
+        "regionVolume": 11812.5,
+        "regionArea": 1363.7130896231388,
+        "confidence": 0.834570748683255,
+        "scaleStability": 1,
+        "geometrySource": "refined field peak @(-53.8,-3.8,-3.8)"
+      }
+    ],
+    "debug": {
+      "coarse": {
+        "gs": 32,
+        "vs": 7.5,
+        "estMinWall": 15,
+        "pts": 1664,
+        "stride": 1,
+        "maxM": 8.75,
+        "meanM": 2.991434480850553,
+        "peaks": 3,
+        "scanMs": 48,
+        "fieldMs": 2
+      },
+      "refine": [
+        {
+          "region": [
+            -53.75,
+            -3.75,
+            -3.75
+          ],
+          "gs": 16,
+          "vs": 7.5,
+          "pts": 832,
+          "scanMs": 11,
+          "fieldMs": 1,
+          "maxM": 8.75,
+          "peaks": [
+            {
+              "M": 8.75,
+              "pt": [
+                -53.75,
+                -3.75,
+                -3.75
+              ]
+            },
+            {
+              "M": 4.75,
+              "pt": [
+                36.25,
+                -3.75,
+                -3.75
+              ]
+            }
+          ]
+        },
+        {
+          "region": [
+            96.25,
+            -3.75,
+            -3.75
+          ],
+          "gs": 16,
+          "vs": 7.0624308624934535,
+          "pts": 868,
+          "scanMs": 9,
+          "fieldMs": 0,
+          "maxM": 9.406353706259818,
+          "peaks": [
+            {
+              "M": 9.406353706259818,
+              "pt": [
+                92.71878456875328,
+                1.7809388812205427,
+                1.7809388812205427
+              ]
+            }
+          ]
+        },
+        {
+          "region": [
+            21.25,
+            -3.75,
+            -3.75
+          ],
+          "gs": 16,
+          "vs": 3.5625,
+          "pts": 2380,
+          "scanMs": 18,
+          "fieldMs": 1,
+          "maxM": 8.152565013719732,
+          "peaks": [
+            {
+              "M": 8.152565013719732,
+              "pt": [
+                -5.46875,
+                0.28125,
+                0.28125
+              ]
+            }
+          ]
+        }
+      ],
+      "elapsedMs": 461
+    },
+    "audit": []
+  },
+  "v2": {
+    "status": "ok",
+    "reason": null,
+    "elapsedMs": 424,
+    "hotspots": [
+      {
+        "id": 1,
+        "position": [
+          -32.5,
+          0,
+          0
+        ],
+        "mc": 30,
+        "confidence": 0.953,
+        "regionVolumeCm3": 744
+      },
+      {
+        "id": 2,
+        "position": [
+          112.5,
+          0,
+          0
+        ],
+        "mc": 30,
+        "confidence": 0.953,
+        "regionVolumeCm3": 744
+      }
+    ]
+  }
+}

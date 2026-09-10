@@ -1,0 +1,21 @@
+{
+  "id": "campbell_continuous_throttle",
+  "title": "Campbell：摩擦与持续节流（连续节流）",
+  "keywords": ["Campbell", "持续节流", "连续节流", "局部节流口", "摩擦", "自然加压"],
+  "evidence": "ENGINEERING_REFERENCE",
+  "content": {
+    "rule": "摒弃'局部节流口'：让充型系统的整个长度都使壁面与金属液保持永久接触——一种连续节流原理，处处充满、处处微加压。",
+    "mechanism": "传统设计把流量控制放在某个最窄处（内浇口节流=有压；或干脆不节流=无压）。Campbell 认为两者都不满意：节流口迫使金属射流进型腔；无压横浇道半充满。自然加压让系统全长都是'贴着液流的管道'，摩擦自然产生背压并排净空气。",
+    "parameter": {
+      "原文要点": "整个系统长度上壁面与金属液永久接触",
+      "对照": "有压=单点节流（内浇口当闸门）；自然加压=全程连续约束",
+      "限制": "持续摩擦≠独立减速：直浇道底 ~2.4 m/s 需要专门减速件（见 独立减速 卡）",
+      "出处": "13.4（译稿行 11832-11833）；'水力学损失系数累加'被否声明：11 章（行 10402-10408）"
+    },
+    "check": [
+      "不要把'1:1'解读为'逐渐加压'——工具采用核准表述：持续的摩擦/节流作用",
+      "V1 直浇道出口隐含流速 n×v：n=4、v=0.5 → 2.0 m/s，属自然加压系统的正常上游速度"
+    ]
+  },
+  "reference": { "book": "Complete Casting Handbook", "chapter": "13.4 'A continuous throttle' + Ch.11 methodology statement", "author": "John Campbell", "kind": "book", "school": "Campbell", "method": "Campbell Gating" }
+}

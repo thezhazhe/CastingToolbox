@@ -1,0 +1,290 @@
+{
+ "experiment": "exp08_determinism",
+ "meta": {
+  "runs": 20,
+  "identical": true,
+  "updatedAt": "2026-08-21T07:44:59.207Z"
+ },
+ "records": [
+  {
+   "model": "det_run1",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 1: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run2",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 2: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run3",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 3: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run4",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 4: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run5",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 5: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run6",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 6: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run7",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 7: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run8",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 8: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run9",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 9: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run10",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 10: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run11",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 11: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run12",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 12: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run13",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 13: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run14",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 14: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run15",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 15: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run16",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 16: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run17",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 17: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run18",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 18: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run19",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 19: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  },
+  {
+   "model": "det_run20",
+   "parameters": {},
+   "expected": {},
+   "detected": {
+    "hotspots": [],
+    "status": "ok"
+   },
+   "status": "ok",
+   "positionError": null,
+   "classification": null,
+   "note": "run 20: 1:-55.4167,-0.3125,-1.1458:14.8438:0.7670 | 2:55.4167,-0.3125,-1.1458:14.8438:0.7670",
+   "identical": true
+  }
+ ]
+}

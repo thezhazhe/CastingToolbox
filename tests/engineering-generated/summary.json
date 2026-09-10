@@ -1,0 +1,441 @@
+[
+  {
+    "name": "t01_boss100",
+    "category": "A",
+    "status": "ok",
+    "found": 1,
+    "expected": 1,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 9.3,
+    "rankingOk": true,
+    "ms": 2013,
+    "variants": {
+      "rot90": {
+        "status": "ok",
+        "hotspotCount": 1,
+        "ms": 1810,
+        "rotatedPositions": [
+          [
+            -2.1875,
+            2.1875,
+            51.25
+          ]
+        ]
+      },
+      "scale10": {
+        "status": "ok",
+        "hotspotCount": 1,
+        "ms": 1827,
+        "peakModulus": [
+          182.29
+        ],
+        "expectedRatio": 10
+      },
+      "scale01": {
+        "status": "ok",
+        "hotspotCount": 1,
+        "ms": 289,
+        "peakModulus": [
+          1.88
+        ],
+        "expectedRatio": 0.1
+      }
+    }
+  },
+  {
+    "name": "t02_thin10_boss60",
+    "category": "A",
+    "status": "ok",
+    "found": 1,
+    "expected": 1,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 8.2,
+    "rankingOk": true,
+    "ms": 583,
+    "variants": {}
+  },
+  {
+    "name": "t03_twoDiff_60_100",
+    "category": "F",
+    "status": "ok",
+    "found": 2,
+    "expected": 2,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 14.2,
+    "rankingOk": true,
+    "ms": 1032,
+    "variants": {}
+  },
+  {
+    "name": "t04_twoSame_60_60",
+    "category": "F",
+    "status": "ok",
+    "found": 2,
+    "expected": 2,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 15,
+    "rankingOk": true,
+    "ms": 1094,
+    "variants": {}
+  },
+  {
+    "name": "t05_threeSizes",
+    "category": "E",
+    "status": "ok",
+    "found": 3,
+    "expected": 3,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 15.1,
+    "rankingOk": true,
+    "ms": 1059,
+    "variants": {}
+  },
+  {
+    "name": "t06_taperStairs",
+    "category": "G",
+    "status": "ok",
+    "found": 3,
+    "expected": 1,
+    "pass": false,
+    "missed": [],
+    "fp": 2,
+    "maxPosErr": 10.8,
+    "rankingOk": true,
+    "ms": 2150,
+    "variants": {}
+  },
+  {
+    "name": "t07_eccentric80",
+    "category": "H",
+    "status": "ok",
+    "found": 1,
+    "expected": 1,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 39.3,
+    "rankingOk": true,
+    "ms": 756,
+    "variants": {}
+  },
+  {
+    "name": "t08_pipeFlange70",
+    "category": "C",
+    "status": "ok",
+    "found": 2,
+    "expected": 1,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 38.8,
+    "rankingOk": true,
+    "ms": 1718,
+    "variants": {
+      "density_r90": {
+        "status": "ok",
+        "hotspotCount": 1,
+        "triCount": 224800,
+        "ms": 2152,
+        "peakModulus": [
+          11.55
+        ]
+      },
+      "density_r120": {
+        "status": "ok",
+        "hotspotCount": 2,
+        "triCount": 397472,
+        "ms": 2578,
+        "peakModulus": [
+          11.57,
+          7.07
+        ]
+      }
+    }
+  },
+  {
+    "name": "t09_boxInner80",
+    "category": "D",
+    "status": "ok",
+    "found": 1,
+    "expected": 1,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 4.5,
+    "rankingOk": true,
+    "ms": 2504,
+    "variants": {}
+  },
+  {
+    "name": "t10_multiDirBoss",
+    "category": "E",
+    "status": "ok",
+    "found": 3,
+    "expected": 3,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 9.9,
+    "rankingOk": true,
+    "ms": 666,
+    "variants": {
+      "rot90": {
+        "status": "ok",
+        "hotspotCount": 3,
+        "ms": 597,
+        "rotatedPositions": [
+          [
+            1.5625,
+            -1.5625,
+            40.25
+          ],
+          [
+            0,
+            -248.4375,
+            -1.9375
+          ],
+          [
+            248.4375,
+            0,
+            -1.9375
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "name": "t11_edgeThick80",
+    "category": "H",
+    "status": "ok",
+    "found": 1,
+    "expected": 1,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 7.5,
+    "rankingOk": true,
+    "ms": 1147,
+    "variants": {}
+  },
+  {
+    "name": "t12_closePair",
+    "category": "F",
+    "status": "ok",
+    "found": 2,
+    "expected": 2,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 4.8,
+    "rankingOk": true,
+    "ms": 1096,
+    "variants": {}
+  },
+  {
+    "name": "t13_farPair",
+    "category": "F",
+    "status": "ok",
+    "found": 2,
+    "expected": 2,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 11.6,
+    "rankingOk": true,
+    "ms": 729,
+    "variants": {
+      "rot90": {
+        "status": "ok",
+        "hotspotCount": 2,
+        "ms": 706,
+        "rotatedPositions": [
+          [
+            355.46875,
+            3.125,
+            40.78125
+          ],
+          [
+            -343.75,
+            3.125,
+            40.78125
+          ]
+        ]
+      },
+      "scale10": {
+        "status": "ok",
+        "hotspotCount": 2,
+        "ms": 759,
+        "peakModulus": [
+          148.44,
+          145.83
+        ],
+        "expectedRatio": 10
+      }
+    }
+  },
+  {
+    "name": "t14_taperSeries",
+    "category": "G",
+    "status": "ok",
+    "found": 5,
+    "expected": 5,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 25.7,
+    "rankingOk": true,
+    "ms": 2327,
+    "variants": {}
+  },
+  {
+    "name": "t15_weakRamp",
+    "category": "F",
+    "status": "ok",
+    "found": 5,
+    "expected": 4,
+    "pass": false,
+    "missed": [],
+    "fp": 1,
+    "maxPosErr": 12.4,
+    "rankingOk": true,
+    "ms": 955,
+    "variants": {}
+  },
+  {
+    "name": "t16_extreme_10_100",
+    "category": "A",
+    "status": "ok",
+    "found": 1,
+    "expected": 1,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 7.7,
+    "rankingOk": true,
+    "ms": 1231,
+    "variants": {
+      "density_r90": {
+        "status": "ok",
+        "hotspotCount": 1,
+        "triCount": 139848,
+        "ms": 1181,
+        "peakModulus": [
+          12.91
+        ]
+      },
+      "density_r120": {
+        "status": "ok",
+        "hotspotCount": 1,
+        "triCount": 252656,
+        "ms": 1454,
+        "peakModulus": [
+          13.08
+        ]
+      }
+    }
+  },
+  {
+    "name": "t17_weak_30_60",
+    "category": "A",
+    "status": "ok",
+    "found": 1,
+    "expected": 1,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 16.1,
+    "rankingOk": true,
+    "ms": 296,
+    "variants": {}
+  },
+  {
+    "name": "t18_multiSizeBoss",
+    "category": "E",
+    "status": "ok",
+    "found": 4,
+    "expected": 4,
+    "pass": true,
+    "missed": [],
+    "fp": 0,
+    "maxPosErr": 14.6,
+    "rankingOk": true,
+    "ms": 2096,
+    "variants": {}
+  },
+  {
+    "name": "t19_valveLike",
+    "category": "J",
+    "status": "ok",
+    "found": 5,
+    "expected": 4,
+    "pass": false,
+    "missed": [
+      "stub",
+      "midRing"
+    ],
+    "fp": 0,
+    "maxPosErr": 29.3,
+    "rankingOk": true,
+    "ms": 2208,
+    "variants": {
+      "rot90": {
+        "status": "ok",
+        "hotspotCount": 5,
+        "ms": 2155,
+        "rotatedPositions": [
+          [
+            -54.5174247458398,
+            128.6000021823384,
+            -33.77921586611894
+          ],
+          [
+            41.11593625806252,
+            -129.459262927105,
+            -54.54374917564774
+          ],
+          [
+            -16.383609000758778,
+            -129.45926292710473,
+            -61.26812294345743
+          ],
+          [
+            45.414642426069,
+            97.89782662648327,
+            27.63654771143345
+          ],
+          [
+            31.94270838906218,
+            124.90509203714312,
+            -49.93009367340351
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "name": "t20_combinedBox",
+    "category": "I",
+    "status": "ok",
+    "found": 3,
+    "expected": 4,
+    "pass": false,
+    "missed": [
+      "topFlange"
+    ],
+    "fp": 0,
+    "maxPosErr": 37.8,
+    "rankingOk": true,
+    "ms": 3443,
+    "variants": {}
+  }
+]

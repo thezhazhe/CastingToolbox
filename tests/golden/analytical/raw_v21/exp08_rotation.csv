@@ -1,0 +1,13 @@
+model,status,rotErr,transErr,scaleErr,positionError,confidence,note
+lShape_rot_r0,ok,0,,,1.768,1,
+lShape_rot_rx90,ok,0,,,41.571,1,反向旋转误差 0.00mm
+lShape_rot_ry90,ok,3.75,,,39.071,1,反向旋转误差 3.75mm
+lShape_rot_rz90,ok,3.75,,,55.014,1,反向旋转误差 3.75mm
+lShape_rot_r45,ok,2.825,,,22.063,1,反向旋转误差 2.82mm
+lShape_rot_comb,ok,2.825,,,22.063,1,反向旋转误差 2.82mm
+bossOnPlate_rot_r0,ok,0,,,11.796,0.77,
+bossOnPlate_rot_rx90,NO_HOTSPOT,,,,,,旋转后无热结或基数无
+bossOnPlate_rot_ry90,ok,16.667,,,54.624,0.77,反向旋转误差 16.67mm
+bossOnPlate_rot_rz90,ok,16.667,,,11.796,0.77,反向旋转误差 16.67mm
+bossOnPlate_rot_r45,ok,83.454,,,89.038,0.853,反向旋转误差 83.45mm
+bossOnPlate_rot_comb,ok,83.454,,,89.038,0.853,反向旋转误差 83.45mm
