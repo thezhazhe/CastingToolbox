@@ -150,16 +150,33 @@
 ## 7. GitHub
 
 * **repository**：`https://github.com/thezhazhe/CastingToolbox`（沿用现有仓库，未新建）
-* **branch**：`main`　**tag**：`v1.0.0`　**release**：`Casting Toolbox v1.0.0`（见 §二十三 说明与附件）
-* **README**：英前中后双语改写（`README.md`）——入门/核心功能/STL 工艺设计中心/平台/工程理念/**可靠性说明（诚实声明经验值与 STL 局限）**/安装/License
-* **Windows artifact**：`CastingToolbox-v1.0.0-win64.zip`
-* **Android artifact**：`CastingToolbox-v1.0.0.apk`
-* **敏感信息检查**：全仓扫描 `ghp_/gho_/sk-/PRIVATE KEY/password=` 无命中；`.gitignore` 已补齐浏览器 profile / 截图 / 产物 / 签名文件；本次提交 543 个文件**不含** EXE、APK、dist、profile、临时日志
+* **branch**：`main` → `5284456`　**tag**：`v1.0.0`　**release**：https://github.com/thezhazhe/CastingToolbox/releases/tag/v1.0.0 （非 draft / 非 prerelease）
+* **远端文件树**：638 个文件；抽查 `index.html` / `js/version.js` / `js/i18n/en-US.js` / `docs/PHASE73_REPORT.md` / `tests/FIXTURES.md` / `vendor/three.module.js` / `README.md` / `LICENSE` 均存在且大小正确
+* **README**：英前中后双语改写 —— 入门 / 核心功能 / STL 工艺设计中心 / 平台 / 工程理念 / **可靠性说明（诚实声明经验值口径与 STL 局限）** / 安装 / License
+* **Windows artifact**：`CastingToolbox-v1.0.0-win64.zip`（35.6 MB，state=uploaded）
+* **Android artifact**：`CastingToolbox-v1.0.0.apk`（1.17 MB，state=uploaded）
+* **敏感信息检查**：全仓扫描 `ghp_/gho_/sk-/PRIVATE KEY/password=` **无命中**；`.gitignore` 已补齐浏览器 profile / 截图 / 产物 / 签名文件；入库 638 个文件**不含** EXE、APK、dist、profile、临时日志
+* **测试夹具策略**（用户裁定）：大件程序生成物（约 2.2GB）与作者真实产品模具模型**不入库**，缺夹具时相关测试**跳过并提示再生命令**（§4 KNOWN EXISTING 之外的新增保护）
+
+### ⚠️ 本次发布的两个环境事实（后续维护必读）
+
+1. **网络**：本机 `github.com` 的 git 传输（HTTPS/SSH）被重置，只有 `api.github.com` 可达 ——
+   `git push` / `git fetch` **必然失败**。因此本次改用新增的 `scripts/publish_via_api.mjs`
+   （Git Data API：并发上传 blob → 建树 → 建提交 → 移动分支）。
+2. **远端历史形态**：因为是 API 发布，**远端 `main` 是"一个快照提交"**（父提交 = v0.16 的 `44a7658`），
+   本地则保留了逐阶段的 5 个提交 —— **两边内容一致、历史形状不同**，将来网络恢复后
+   直接 `git push` 会是非快进。二选一：
+   ① 继续用 `publish_via_api.mjs` 发快照（当前网络下唯一可行）；
+   ② 网络恢复后 `git fetch && git reset --hard origin/main` 让本地跟随远端（会丢弃本地分层历史）。
+   **本次未擅自改写本地历史**，留给你决定。
 
 ## 8. 最终结论
 
 **GO**
 
-依据：P0 = 0；P1 = 6 条**全部修复并有回归用例守卫**；核心测试 458/0；全部浏览器测试（含新增的中英 DOM 审计、响应式、性能）通过；Windows 产物**真机实测通过**；中英文核心 UI 干净；语言切换不动任何工程数据。
+依据：P0 = 0；P1 = 6 条**全部修复并有回归用例守卫**；核心测试 **461/0**；全部浏览器测试（含新增的中英 DOM 审计、响应式、性能）通过；Windows 产物**真机实测通过**；中英文核心 UI 干净；语言切换不动任何工程数据；GitHub Release v1.0.0 已发布并核验（两个附件 uploaded）。
 
-**唯一保留意见**：Android 只有静态验证，**实机安装与 STL 文件选择未验证**（无设备/模拟器），已在 §6 逐项列明待人工验收项，未以任何形式冒充通过。
+**两条保留意见（均已在上文逐项列明，未以任何形式冒充通过）**：
+1. **Android 只有静态验证** —— 本机无设备也无 AVD，安装/启动/STL 文件选择需真人手机验收（§6）。
+2. **远端历史为快照形态** —— 受网络所限改用 API 发布，远端 `main` 是一个提交而非本地的 5 个分层提交（§7），
+   内容一致；是否需要统一历史请你决定。

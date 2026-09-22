@@ -13,6 +13,7 @@ import * as searchView from './views/search.js';
 import * as devmode from './devmode.js';
 import * as context from './context.js';
 import * as liveSearch from './liveSearch.js';
+import { loadKnowledge } from './search.js';
 // PHASE 72（80.txt）：界面语言切换（zh-CN / en-US）——只做显示层，不动项目/计算
 import * as i18n from './i18n/index.js';
 import * as viewState from './i18n/viewState.js';
@@ -243,3 +244,9 @@ i18n.onChange(() => {
 devmode.applyNav();
 context.renderContextBar();
 render();
+
+/* ---- 首屏后预取知识库（2026-09-11 挂 GitHub Pages 时加） ----
+   172 个 JSON 合计仅 252KB，但走网络时瓶颈是往返次数：不预取的话用户第一次
+   搜索 / 开缺陷查找 / 开工艺向导要现等几秒（本地磁盘无感，网页版明显）。
+   延后 1.2s 让首屏先画完；失败静默忽略——真正用到时会再取一次。 */
+setTimeout(() => { loadKnowledge().catch(() => {}); }, 1200);

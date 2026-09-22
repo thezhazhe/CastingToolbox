@@ -7,23 +7,39 @@ import { DATA_INDEX } from '../data/index.js';
 import { CALCULATORS } from '../calcs/registry.js';
 
 let docsCache = null;
+let docsLoading = null;          // 进行中的加载：并发调用共享同一轮，不重复发请求
+const FETCH_CONCURRENCY = 16;    // 并发上限：172 个文件既要快（瓶颈是往返次数，不是流量），也不一次打满对端
 
-/** 加载知识库全部 JSON（按 data/index.js 清单） */
+/** 加载知识库全部 JSON（按 data/index.js 清单）
+ *
+ *  2026-09-11（挂 GitHub Pages 时发现）：原来是 172 个文件**串行** await。
+ *  本地磁盘 0.4s 完全无感，挂到网页后实测 **67s**（每次往返约 390ms × 172）——
+ *  首页搜索下拉、缺陷查找、工艺向导首屏全被拖住，等于网页版不可用。
+ *  改为并发抓取（上限 8）：同一份数据从 67s 降到个位数秒。
+ *
+ *  语义刻意保持不变：仍是"单条失败即跳过"，返回顺序仍与 DATA_INDEX 清单一致。 */
 export async function loadKnowledge() {
   if (docsCache) return docsCache;
-  const docs = [];
-  for (const cat of Object.keys(DATA_INDEX)) {
-    for (const file of DATA_INDEX[cat]) {
+  if (docsLoading) return docsLoading;   // 连续输入触发的重复调用，等同一次加载
+  const tasks = [];
+  for (const cat of Object.keys(DATA_INDEX)) for (const file of DATA_INDEX[cat]) tasks.push({ cat, file });
+  const results = new Array(tasks.length);
+  let next = 0;
+  const worker = async () => {
+    while (true) {
+      const i = next++;
+      if (i >= tasks.length) return;
+      const { cat, file } = tasks[i];
       try {
         const res = await fetch(`data/${cat}/${file}`);
-        if (!res.ok) continue;
-        const j = await res.json();
-        docs.push({ ...j, _cat: cat, _file: file });
-      } catch (e) { /* 单条失败不影响整体 */ }
+        results[i] = res.ok ? { ...(await res.json()), _cat: cat, _file: file } : null;
+      } catch (e) { results[i] = null; }   // 单条失败不影响整体
     }
-  }
-  docsCache = docs;
-  return docs;
+  };
+  docsLoading = Promise.all(Array.from({ length: Math.min(FETCH_CONCURRENCY, tasks.length) }, worker))
+    .then(() => { docsCache = results.filter(Boolean); docsLoading = null; return docsCache; },
+          (e) => { docsLoading = null; throw e; });
+  return docsLoading;
 }
 
 /** 全部可用计算器（ready） */
