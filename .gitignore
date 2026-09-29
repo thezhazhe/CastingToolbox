@@ -11,7 +11,9 @@ scripts/_books/
 scripts/extract/_extract/
 
 # 测试 / 打包残留（PHASE 73：浏览器 profile 一律按前缀忽略，避免只漏掉 _edge_profile/ 一个）
-_edge_profile*/
+# PHASE 87：改成 _edge_*/ —— 之前只忽略 _edge_profile*，PHASE 86 的脚本用了 _edge_p86s
+#   这种名字就漏进了 git status（工作区多出一个 ?? 目录）。以后任何 _edge_ 前缀都忽略。
+_edge_*/
 _qa_profile*/
 _probe*/
 _shot*/

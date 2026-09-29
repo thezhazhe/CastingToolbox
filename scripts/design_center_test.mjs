@@ -313,7 +313,8 @@ try {
   await evalJs(`document.querySelector('.dc-hs-item').click()`);
   await wait(200);
   const hsRealOn = await evalJs(`document.querySelector('.dc-hs-item.on')?.textContent || ''`);
-  check('真实热结列表点击 → 选中高亮', hsRealOn.includes('Mc'), hsRealOn.slice(0, 30));
+  // 83.txt 三：列表文案由 "Mc 18.2 mm" 改为带名字的 "模数 18.2 mm"（同时给出区域/置信度）
+  check('真实热结列表点击 → 选中高亮', hsRealOn.includes('模数') && hsRealOn.includes('mm') && hsRealOn.includes('区域'), hsRealOn.slice(0, 50));
   await wait(500);   // 等 consoleAPICalled 事件全部到达 CDP
   const h1Line = consoleMsgs.find(m => m.includes('[HS-DEBUG]') && m.includes('H1 '));
   check('hsDebug：真实热结输出 H1 XYZ/Score', !!h1Line, h1Line?.slice(0, 80));

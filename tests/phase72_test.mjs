@@ -79,7 +79,8 @@ const rawTests = [
       i18n.setLocale('en-US');
       assert(i18n.getLocale() === 'en-US', '语言已切换');
       assert(i18n.isEn(), 'isEn() 为真');
-      const nav = { 'nav.home': 'Home', 'nav.calculators': 'Calculators', 'nav.knowledge': 'Knowledge Base', 'nav.designCenter': 'Process Design Center', 'nav.donate': 'Donate' };
+      // 83.txt 四：捐助入口统一改名「支持与资源」→ 'Support & Resources'
+      const nav = { 'nav.home': 'Home', 'nav.calculators': 'Calculators', 'nav.knowledge': 'Knowledge Base', 'nav.designCenter': 'Process Design Center', 'nav.donate': 'Support & Resources' };
       for (const [k, v] of Object.entries(nav)) assert(i18n.t(k) === v, `导航 ${k} → ${v}（实际 ${i18n.t(k)}）`);
       // 首页 / 工具名（中文原文即 key）
       const ui = { 'search.placeholder': 'Search materials, defects, standards, formulas, tools…', 'home.wizard': 'Process Wizard', '浇注系统设计': 'Gating System Design', '冒口设计': 'Riser Design', '线收缩率': 'Linear Shrinkage', '加工余量': 'Machining Allowance', '铸件结构工艺性': 'Casting Processability', '出品率与铁水重量': 'Casting Yield & Iron Weight' };

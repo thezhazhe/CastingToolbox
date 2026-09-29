@@ -8,26 +8,26 @@
     "pass": true,
     "missed": [],
     "fp": 0,
-    "maxPosErr": 9.3,
+    "maxPosErr": 11.6,
     "rankingOk": true,
-    "ms": 2013,
+    "ms": 2284,
     "variants": {
       "rot90": {
         "status": "ok",
         "hotspotCount": 1,
-        "ms": 1810,
+        "ms": 2140,
         "rotatedPositions": [
           [
-            -2.1875,
-            2.1875,
-            51.25
+            4.648234200743494,
+            -4.648234200743494,
+            50.48396840148699
           ]
         ]
       },
       "scale10": {
         "status": "ok",
         "hotspotCount": 1,
-        "ms": 1827,
+        "ms": 2329,
         "peakModulus": [
           182.29
         ],
@@ -36,12 +36,29 @@
       "scale01": {
         "status": "ok",
         "hotspotCount": 1,
-        "ms": 289,
+        "ms": 613,
         "peakModulus": [
           1.88
         ],
         "expectedRatio": 0.1
       }
+    },
+    "diag": {
+      "requiredZones": 1,
+      "peakDetectedZones": 1,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 0,
+      "repAccurateZones": 0,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": false,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "CORRECT_ZONE_POSITION_OFFSET": 1
+      },
+      "peakWithinTol": 0,
+      "repWithinTol": 1,
+      "hotspotCount": 1
     }
   },
   {
@@ -53,10 +70,27 @@
     "pass": true,
     "missed": [],
     "fp": 0,
-    "maxPosErr": 8.2,
+    "maxPosErr": 8.7,
     "rankingOk": true,
-    "ms": 583,
-    "variants": {}
+    "ms": 1159,
+    "variants": {},
+    "diag": {
+      "requiredZones": 1,
+      "peakDetectedZones": 1,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 0,
+      "repAccurateZones": 0,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": false,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "CORRECT_ZONE_POSITION_OFFSET": 1
+      },
+      "peakWithinTol": 0,
+      "repWithinTol": 1,
+      "hotspotCount": 1
+    }
   },
   {
     "name": "t03_twoDiff_60_100",
@@ -64,13 +98,33 @@
     "status": "ok",
     "found": 2,
     "expected": 2,
-    "pass": true,
-    "missed": [],
-    "fp": 0,
-    "maxPosErr": 14.2,
+    "pass": false,
+    "missed": [
+      "A60",
+      "B100"
+    ],
+    "fp": 2,
+    "maxPosErr": null,
     "rankingOk": true,
-    "ms": 1032,
-    "variants": {}
+    "ms": 1576,
+    "variants": {},
+    "diag": {
+      "requiredZones": 2,
+      "peakDetectedZones": 2,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 2,
+      "repAccurateZones": 0,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": false,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "REPRESENTATIVE_DRIFT": 2
+      },
+      "peakWithinTol": 2,
+      "repWithinTol": 0,
+      "hotspotCount": 2
+    }
   },
   {
     "name": "t04_twoSame_60_60",
@@ -78,13 +132,33 @@
     "status": "ok",
     "found": 2,
     "expected": 2,
-    "pass": true,
-    "missed": [],
-    "fp": 0,
-    "maxPosErr": 15,
+    "pass": false,
+    "missed": [
+      "A60",
+      "B60"
+    ],
+    "fp": 2,
+    "maxPosErr": null,
     "rankingOk": true,
-    "ms": 1094,
-    "variants": {}
+    "ms": 1525,
+    "variants": {},
+    "diag": {
+      "requiredZones": 2,
+      "peakDetectedZones": 2,
+      "repDetectedZones": 0,
+      "peakAccurateZones": 2,
+      "repAccurateZones": 0,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": false,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "REPRESENTATIVE_DRIFT": 2
+      },
+      "peakWithinTol": 2,
+      "repWithinTol": 0,
+      "hotspotCount": 2
+    }
   },
   {
     "name": "t05_threeSizes",
@@ -92,27 +166,66 @@
     "status": "ok",
     "found": 3,
     "expected": 3,
-    "pass": true,
-    "missed": [],
-    "fp": 0,
-    "maxPosErr": 15.1,
+    "pass": false,
+    "missed": [
+      "B60",
+      "B100"
+    ],
+    "fp": 2,
+    "maxPosErr": 25.8,
     "rankingOk": true,
-    "ms": 1059,
-    "variants": {}
+    "ms": 1564,
+    "variants": {},
+    "diag": {
+      "requiredZones": 3,
+      "peakDetectedZones": 3,
+      "repDetectedZones": 2,
+      "peakAccurateZones": 3,
+      "repAccurateZones": 1,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": false,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "CORRECT_PEAK": 1,
+        "REPRESENTATIVE_DRIFT": 2
+      },
+      "peakWithinTol": 3,
+      "repWithinTol": 1,
+      "hotspotCount": 3
+    }
   },
   {
     "name": "t06_taperStairs",
     "category": "G",
     "status": "ok",
-    "found": 3,
+    "found": 2,
     "expected": 1,
     "pass": false,
     "missed": [],
-    "fp": 2,
-    "maxPosErr": 10.8,
+    "fp": 1,
+    "maxPosErr": 34.8,
     "rankingOk": true,
-    "ms": 2150,
-    "variants": {}
+    "ms": 2752,
+    "variants": {},
+    "diag": {
+      "requiredZones": 1,
+      "peakDetectedZones": 1,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 0,
+      "repAccurateZones": 0,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": false,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "CORRECT_ZONE_POSITION_OFFSET": 1,
+        "OUTSIDE_EXPECTED_ZONE": 1
+      },
+      "peakWithinTol": 0,
+      "repWithinTol": 1,
+      "hotspotCount": 2
+    }
   },
   {
     "name": "t07_eccentric80",
@@ -120,13 +233,32 @@
     "status": "ok",
     "found": 1,
     "expected": 1,
-    "pass": true,
-    "missed": [],
-    "fp": 0,
-    "maxPosErr": 39.3,
+    "pass": false,
+    "missed": [
+      "ecc80"
+    ],
+    "fp": 1,
+    "maxPosErr": null,
     "rankingOk": true,
-    "ms": 756,
-    "variants": {}
+    "ms": 1298,
+    "variants": {},
+    "diag": {
+      "requiredZones": 1,
+      "peakDetectedZones": 1,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 1,
+      "repAccurateZones": 0,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "REPRESENTATIVE_DRIFT": 1
+      },
+      "peakWithinTol": 1,
+      "repWithinTol": 0,
+      "hotspotCount": 1
+    }
   },
   {
     "name": "t08_pipeFlange70",
@@ -134,18 +266,18 @@
     "status": "ok",
     "found": 2,
     "expected": 1,
-    "pass": true,
+    "pass": false,
     "missed": [],
-    "fp": 0,
-    "maxPosErr": 38.8,
+    "fp": 1,
+    "maxPosErr": 38,
     "rankingOk": true,
-    "ms": 1718,
+    "ms": 2303,
     "variants": {
       "density_r90": {
         "status": "ok",
         "hotspotCount": 1,
         "triCount": 224800,
-        "ms": 2152,
+        "ms": 3152,
         "peakModulus": [
           11.55
         ]
@@ -154,12 +286,30 @@
         "status": "ok",
         "hotspotCount": 2,
         "triCount": 397472,
-        "ms": 2578,
+        "ms": 4245,
         "peakModulus": [
           11.57,
           7.07
         ]
       }
+    },
+    "diag": {
+      "requiredZones": 1,
+      "peakDetectedZones": 1,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 1,
+      "repAccurateZones": 1,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": true,
+      "counters": {
+        "CORRECT_PEAK": 1,
+        "REPRESENTATIVE_DRIFT": 1
+      },
+      "peakWithinTol": 2,
+      "repWithinTol": 1,
+      "hotspotCount": 2
     }
   },
   {
@@ -171,10 +321,27 @@
     "pass": true,
     "missed": [],
     "fp": 0,
-    "maxPosErr": 4.5,
+    "maxPosErr": 8.1,
     "rankingOk": true,
-    "ms": 2504,
-    "variants": {}
+    "ms": 3911,
+    "variants": {},
+    "diag": {
+      "requiredZones": 1,
+      "peakDetectedZones": 1,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 0,
+      "repAccurateZones": 0,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": false,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "CORRECT_ZONE_POSITION_OFFSET": 1
+      },
+      "peakWithinTol": 0,
+      "repWithinTol": 1,
+      "hotspotCount": 1
+    }
   },
   {
     "name": "t10_multiDirBoss",
@@ -182,35 +349,55 @@
     "status": "ok",
     "found": 3,
     "expected": 3,
-    "pass": true,
-    "missed": [],
-    "fp": 0,
-    "maxPosErr": 9.9,
+    "pass": false,
+    "missed": [
+      "xSide"
+    ],
+    "fp": 1,
+    "maxPosErr": 14.1,
     "rankingOk": true,
-    "ms": 666,
+    "ms": 1030,
     "variants": {
       "rot90": {
         "status": "ok",
         "hotspotCount": 3,
-        "ms": 597,
+        "ms": 980,
         "rotatedPositions": [
           [
-            1.5625,
-            -1.5625,
-            40.25
+            1.1806177260519248,
+            -1.1806177260519248,
+            35.63803715308863
           ],
           [
-            0,
-            -248.4375,
-            -1.9375
+            0.646551724137931,
+            -248.54525862068965,
+            7.6530172413793105
           ],
           [
-            248.4375,
-            0,
-            -1.9375
+            248.54525862068965,
+            -0.646551724137931,
+            7.6530172413793105
           ]
         ]
       }
+    },
+    "diag": {
+      "requiredZones": 3,
+      "peakDetectedZones": 3,
+      "repDetectedZones": 3,
+      "peakAccurateZones": 3,
+      "repAccurateZones": 2,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "CORRECT_PEAK": 2,
+        "REPRESENTATIVE_DRIFT": 1
+      },
+      "peakWithinTol": 3,
+      "repWithinTol": 2,
+      "hotspotCount": 3
     }
   },
   {
@@ -222,10 +409,27 @@
     "pass": true,
     "missed": [],
     "fp": 0,
-    "maxPosErr": 7.5,
+    "maxPosErr": 6.7,
     "rankingOk": true,
-    "ms": 1147,
-    "variants": {}
+    "ms": 1579,
+    "variants": {},
+    "diag": {
+      "requiredZones": 1,
+      "peakDetectedZones": 1,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 0,
+      "repAccurateZones": 0,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": false,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "CORRECT_ZONE_POSITION_OFFSET": 1
+      },
+      "peakWithinTol": 0,
+      "repWithinTol": 1,
+      "hotspotCount": 1
+    }
   },
   {
     "name": "t12_closePair",
@@ -236,10 +440,27 @@
     "pass": true,
     "missed": [],
     "fp": 0,
-    "maxPosErr": 4.8,
+    "maxPosErr": 23.6,
     "rankingOk": true,
-    "ms": 1096,
-    "variants": {}
+    "ms": 1590,
+    "variants": {},
+    "diag": {
+      "requiredZones": 2,
+      "peakDetectedZones": 2,
+      "repDetectedZones": 2,
+      "peakAccurateZones": 2,
+      "repAccurateZones": 2,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": true,
+      "counters": {
+        "CORRECT_PEAK": 2
+      },
+      "peakWithinTol": 2,
+      "repWithinTol": 2,
+      "hotspotCount": 2
+    }
   },
   {
     "name": "t13_farPair",
@@ -250,37 +471,54 @@
     "pass": true,
     "missed": [],
     "fp": 0,
-    "maxPosErr": 11.6,
+    "maxPosErr": 22.1,
     "rankingOk": true,
-    "ms": 729,
+    "ms": 1861,
     "variants": {
       "rot90": {
         "status": "ok",
         "hotspotCount": 2,
-        "ms": 706,
+        "ms": 2073,
         "rotatedPositions": [
           [
-            355.46875,
-            3.125,
-            40.78125
+            344.38004032258067,
+            -7.963709677419355,
+            30.19657258064516
           ],
           [
-            -343.75,
-            3.125,
-            40.78125
+            -350.14204545454544,
+            -7.262073863636363,
+            32.25852272727273
           ]
         ]
       },
       "scale10": {
         "status": "ok",
         "hotspotCount": 2,
-        "ms": 759,
+        "ms": 1910,
         "peakModulus": [
           148.44,
           145.83
         ],
         "expectedRatio": 10
       }
+    },
+    "diag": {
+      "requiredZones": 2,
+      "peakDetectedZones": 2,
+      "repDetectedZones": 2,
+      "peakAccurateZones": 2,
+      "repAccurateZones": 2,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": true,
+      "counters": {
+        "CORRECT_PEAK": 2
+      },
+      "peakWithinTol": 2,
+      "repWithinTol": 2,
+      "hotspotCount": 2
     }
   },
   {
@@ -292,10 +530,27 @@
     "pass": true,
     "missed": [],
     "fp": 0,
-    "maxPosErr": 25.7,
+    "maxPosErr": 20.8,
     "rankingOk": true,
-    "ms": 2327,
-    "variants": {}
+    "ms": 5148,
+    "variants": {},
+    "diag": {
+      "requiredZones": 5,
+      "peakDetectedZones": 5,
+      "repDetectedZones": 5,
+      "peakAccurateZones": 5,
+      "repAccurateZones": 5,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": true,
+      "counters": {
+        "CORRECT_PEAK": 5
+      },
+      "peakWithinTol": 5,
+      "repWithinTol": 5,
+      "hotspotCount": 5
+    }
   },
   {
     "name": "t15_weakRamp",
@@ -304,12 +559,35 @@
     "found": 5,
     "expected": 4,
     "pass": false,
-    "missed": [],
-    "fp": 1,
-    "maxPosErr": 12.4,
+    "missed": [
+      "S40",
+      "S35",
+      "S30",
+      "S25"
+    ],
+    "fp": 5,
+    "maxPosErr": null,
     "rankingOk": true,
-    "ms": 955,
-    "variants": {}
+    "ms": 1330,
+    "variants": {},
+    "diag": {
+      "requiredZones": 4,
+      "peakDetectedZones": 4,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 4,
+      "repAccurateZones": 0,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": false,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "REPRESENTATIVE_DRIFT": 4,
+        "OUTSIDE_EXPECTED_ZONE": 1
+      },
+      "peakWithinTol": 4,
+      "repWithinTol": 0,
+      "hotspotCount": 5
+    }
   },
   {
     "name": "t16_extreme_10_100",
@@ -320,15 +598,15 @@
     "pass": true,
     "missed": [],
     "fp": 0,
-    "maxPosErr": 7.7,
+    "maxPosErr": 5.5,
     "rankingOk": true,
-    "ms": 1231,
+    "ms": 1833,
     "variants": {
       "density_r90": {
         "status": "ok",
         "hotspotCount": 1,
         "triCount": 139848,
-        "ms": 1181,
+        "ms": 1648,
         "peakModulus": [
           12.91
         ]
@@ -337,11 +615,28 @@
         "status": "ok",
         "hotspotCount": 1,
         "triCount": 252656,
-        "ms": 1454,
+        "ms": 2357,
         "peakModulus": [
           13.08
         ]
       }
+    },
+    "diag": {
+      "requiredZones": 1,
+      "peakDetectedZones": 1,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 1,
+      "repAccurateZones": 1,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": true,
+      "counters": {
+        "CORRECT_PEAK": 1
+      },
+      "peakWithinTol": 1,
+      "repWithinTol": 1,
+      "hotspotCount": 1
     }
   },
   {
@@ -353,10 +648,27 @@
     "pass": true,
     "missed": [],
     "fp": 0,
-    "maxPosErr": 16.1,
+    "maxPosErr": 25.6,
     "rankingOk": true,
-    "ms": 296,
-    "variants": {}
+    "ms": 593,
+    "variants": {},
+    "diag": {
+      "requiredZones": 1,
+      "peakDetectedZones": 1,
+      "repDetectedZones": 1,
+      "peakAccurateZones": 1,
+      "repAccurateZones": 1,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": true,
+      "counters": {
+        "CORRECT_PEAK": 1
+      },
+      "peakWithinTol": 1,
+      "repWithinTol": 1,
+      "hotspotCount": 1
+    }
   },
   {
     "name": "t18_multiSizeBoss",
@@ -364,13 +676,33 @@
     "status": "ok",
     "found": 4,
     "expected": 4,
-    "pass": true,
-    "missed": [],
-    "fp": 0,
-    "maxPosErr": 14.6,
+    "pass": false,
+    "missed": [
+      "B3_60x60x40"
+    ],
+    "fp": 1,
+    "maxPosErr": 20.7,
     "rankingOk": true,
-    "ms": 2096,
-    "variants": {}
+    "ms": 2175,
+    "variants": {},
+    "diag": {
+      "requiredZones": 4,
+      "peakDetectedZones": 4,
+      "repDetectedZones": 3,
+      "peakAccurateZones": 4,
+      "repAccurateZones": 3,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": false,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "CORRECT_PEAK": 3,
+        "REPRESENTATIVE_DRIFT": 1
+      },
+      "peakWithinTol": 4,
+      "repWithinTol": 3,
+      "hotspotCount": 4
+    }
   },
   {
     "name": "t19_valveLike",
@@ -384,42 +716,59 @@
       "midRing"
     ],
     "fp": 0,
-    "maxPosErr": 29.3,
+    "maxPosErr": 30.5,
     "rankingOk": true,
-    "ms": 2208,
+    "ms": 2917,
     "variants": {
       "rot90": {
         "status": "ok",
         "hotspotCount": 5,
-        "ms": 2155,
+        "ms": 2968,
         "rotatedPositions": [
           [
-            -54.5174247458398,
-            128.6000021823384,
-            -33.77921586611894
+            -55.5437249402912,
+            127.61455308861072,
+            -29.44899918923648
           ],
           [
-            41.11593625806252,
-            -129.459262927105,
-            -54.54374917564774
+            38.60633028556606,
+            -129.13456742376326,
+            -56.57447990891319
           ],
           [
-            -16.383609000758778,
-            -129.45926292710473,
-            -61.26812294345743
+            48.75208508026379,
+            127.53857504538644,
+            24.566077237823254
           ],
           [
-            45.414642426069,
-            97.89782662648327,
-            27.63654771143345
+            -15.907320007876926,
+            -127.32165033698257,
+            -57.93245282503926
           ],
           [
-            31.94270838906218,
-            124.90509203714312,
-            -49.93009367340351
+            -47.01867440195889,
+            128.15873392137334,
+            22.13456456690798
           ]
         ]
       }
+    },
+    "diag": {
+      "requiredZones": 2,
+      "peakDetectedZones": 2,
+      "repDetectedZones": 2,
+      "peakAccurateZones": 2,
+      "repAccurateZones": 2,
+      "peakDetectionPass": true,
+      "peakAccuracyPass": true,
+      "zoneDetectionPass": true,
+      "representativeAccuracyPass": true,
+      "counters": {
+        "CORRECT_PEAK": 5
+      },
+      "peakWithinTol": 5,
+      "repWithinTol": 5,
+      "hotspotCount": 5
     }
   },
   {
@@ -430,12 +779,33 @@
     "expected": 4,
     "pass": false,
     "missed": [
+      "inner80",
+      "basePad40",
+      "sideBoss",
       "topFlange"
     ],
-    "fp": 0,
-    "maxPosErr": 37.8,
+    "fp": 3,
+    "maxPosErr": null,
     "rankingOk": true,
-    "ms": 3443,
-    "variants": {}
+    "ms": 4636,
+    "variants": {},
+    "diag": {
+      "requiredZones": 4,
+      "peakDetectedZones": 3,
+      "repDetectedZones": 2,
+      "peakAccurateZones": 1,
+      "repAccurateZones": 0,
+      "peakDetectionPass": false,
+      "peakAccuracyPass": false,
+      "zoneDetectionPass": false,
+      "representativeAccuracyPass": false,
+      "counters": {
+        "REPRESENTATIVE_DRIFT": 1,
+        "CORRECT_ZONE_POSITION_OFFSET": 2
+      },
+      "peakWithinTol": 1,
+      "repWithinTol": 0,
+      "hotspotCount": 3
+    }
   }
 ]

@@ -179,10 +179,19 @@ async function renderReco() {
         </div>
         <span class="kb-arrow">›</span>
       </div>
+      <!-- PHASE 88（88.txt §五）：工艺检测中心入口。PHASE 93 §四 起它也是侧栏的独立栏目。 -->
+      <div class="card hover home-wizard-cta" data-inspection>
+        <div class="tool-top"><div class="tool-icon">🔍</div>
+          <div><div class="tool-name">${t('工艺检测中心')} <span class="chip" style="font-size:.62rem;padding:1px 6px;vertical-align:2px">${t('试用中')}</span></div>
+            <div class="tool-desc">${t('导入产品与冒口 STL，检查冒口模数比')}</div></div>
+        </div>
+        <span class="kb-arrow">›</span>
+      </div>
     `;
     recoEl.querySelectorAll('[data-open-calc]').forEach(el =>
       el.addEventListener('click', () => { location.hash = '#/calculators/' + el.dataset.openCalc; }));
     recoEl.querySelector('[data-wizard]')?.addEventListener('click', () => { location.hash = '#/wizard'; });
+    recoEl.querySelector('[data-inspection]')?.addEventListener('click', () => { location.hash = '#/inspection'; });
     return;
   }
 

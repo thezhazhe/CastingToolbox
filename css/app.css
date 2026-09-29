@@ -62,6 +62,9 @@
 .sf-about { margin-top: 6px; padding: 6px 2px 2px; border-top: 1px dashed var(--border); font-size: .68rem; line-height: 1.8; color: var(--text-muted); }
 .sf-about a { color: var(--text-secondary); text-decoration: none; }
 .sf-about a:hover { color: var(--primary); text-decoration: underline; }
+/* PHASE 98：作者署名行稍微放大加粗（.68→.78rem / 600 / secondary 色）——
+   只动这一行，其余行与整体风格不变；不上大标题、不加背景 */
+.sf-author { font-size: .78rem; font-weight: 600; color: var(--text-secondary); }
 .sf-lite { opacity: .8; }
 
 /* 开发者模式 */
@@ -625,6 +628,8 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
   border-radius: 12px; border: 1px solid var(--border); background: #fff; padding: 8px;
   cursor: zoom-in; box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
 }
+/* 支持与资源页：二维码在窄栏里按栏宽自适应（原图 1260×1960 竖版，300px 会撑爆左栏） */
+.sr-card-qr .donate-qr { width: 100%; }
 .donate-tip { font-size: .78rem; color: var(--text-muted); margin-top: 10px; }
 .donate-author { font-size: .8rem; color: var(--text-secondary); margin-top: 6px; }
 .lightbox-overlay { background: rgba(3, 5, 10, .9); z-index: 200; cursor: zoom-out; }
@@ -634,6 +639,43 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
   box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
 }
 .lightbox-tip { position: absolute; bottom: 18px; left: 0; right: 0; text-align: center; color: rgba(255, 255, 255, .6); font-size: .78rem; }
+
+/* ===== 支持与资源页（83.txt 四/五：原捐助页改版）===== */
+.sr-lead {
+  max-width: 720px; margin: 0 0 16px;
+  font-size: .88rem; line-height: 1.85; color: var(--text-secondary);
+}
+/* 左窄（二维码主操作）右宽（说明 + 名单）——名单天然吃高度，两列不会留大白 */
+.sr-grid { display: grid; grid-template-columns: minmax(280px, 350px) 1fr; gap: 16px; align-items: stretch; }
+.sr-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.sr-card { padding: 20px; }
+.sr-card-grow { flex: 1; }   /* 名单卡吸收右列剩余高度 */
+.sr-list { list-style: none; padding: 0; margin: 12px 0 0; }
+.sr-list li {
+  position: relative; padding-left: 15px; margin: 7px 0;
+  font-size: .85rem; line-height: 1.8; color: var(--text-secondary);
+}
+.sr-list li::before { content: '·'; position: absolute; left: 3px; color: var(--primary); font-weight: 700; }
+.sr-note {
+  margin-top: 14px; padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--primary-soft); border: 1px solid var(--border);
+  font-size: .82rem; line-height: 1.8; color: var(--text-secondary);
+}
+.sr-note b { color: var(--text); }
+.sr-empty { padding: 26px 10px; text-align: center; color: var(--text-muted); font-size: .86rem; }
+.sr-people { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sr-person {
+  padding: 14px 16px; border-radius: var(--radius-sm);
+  background: var(--bg-elev); border: 1px solid var(--border);
+}
+.sr-person-name { font-weight: 700; color: var(--text); font-size: .92rem; }
+.sr-person-meta { font-size: .78rem; color: var(--text-muted); margin-top: 3px; }
+.sr-person-note { font-size: .82rem; color: var(--text-secondary); margin-top: 8px; line-height: 1.7; }
+@media (max-width: 860px) {
+  .sr-grid, .sr-people { grid-template-columns: 1fr; }
+  /* 窄屏：二维码占满一屏太高，收敛为可扫尺寸（点开仍可放大） */
+  .sr-card-qr .donate-qr { width: 260px; }
+}
 
 /* ===== 首页（Bing 式搜索） ===== */
 .home {
@@ -1297,3 +1339,629 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 @media (max-width: 720px) {
   .lang-btn { padding: 0 8px; min-height: 34px; font-size: .72rem; }
 }
+
+/* ============================================================
+   PHASE 88 · 工艺检验中心（#/inspection）
+   88.txt §二十四：状态只有 PASS / WARNING / INFO 三级，不引入新调色板——
+   全部复用 tokens.css 的 --success / --warning / --primary。
+   88.txt §三十三：不做大表格；主展示一律卡片 + 纵向列表 + 折叠。
+   ============================================================ */
+.pi-ws { display: flex; flex-direction: column; gap: 12px; }
+.pi-sec { margin-top: 0; }
+
+/* ---- 导入区：5 个槽（产品 ×1 / 冒口 / 直浇道 / 横浇道 / 内浇口 ×N） ---- */
+.pi-import {
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+.pi-slot {
+  background: var(--bg-card); border: 1px dashed var(--border-strong);
+  border-radius: var(--radius); padding: 10px; min-width: 0;
+  transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.pi-slot.over { border-color: var(--primary); background: var(--primary-soft); }
+.pi-slot-head { display: flex; align-items: center; gap: 6px; }
+.pi-slot-icon { font-size: 1rem; }
+.pi-slot-name { font-size: .82rem; font-weight: 700; color: var(--text); white-space: nowrap; }
+.pi-slot-mul { font-size: .64rem; color: var(--text-muted); margin-left: 4px; font-weight: 600; }
+.pi-slot-n {
+  margin-left: auto; min-width: 20px; text-align: center;
+  font-size: .7rem; font-weight: 700; color: var(--text-secondary);
+  background: var(--bg-card-hi); border: 1px solid var(--border);
+  border-radius: 999px; padding: 1px 7px;
+}
+.pi-slot-body { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.pi-slot-body .btn { padding: 4px 10px; font-size: .74rem; }
+
+/* ---- ① 工艺方案 ---- */
+.pi-planlist { display: flex; flex-direction: column; gap: 2px; }
+.pi-planrow {
+  display: grid; grid-template-columns: minmax(88px, 22%) 1fr;
+  align-items: center; gap: 8px; padding: 6px 4px;
+  border-bottom: 1px dashed var(--border); font-size: .8rem;
+}
+.pi-planrow:last-child { border-bottom: none; }
+.pi-planrow-k { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+.pi-planrow-v { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; color: var(--text); }
+.pi-planrow-v b { font-size: .95rem; }
+.pi-planrow-sub { font-size: .72rem; color: var(--text-muted); }
+.pi-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.pi-ids {
+  font-size: .68rem; color: var(--text-muted); font-family: ui-monospace, Consolas, monospace;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+}
+.pi-empty { padding: 14px 6px; color: var(--text-muted); font-size: .82rem; text-align: center; }
+.pi-empty-sm { padding: 8px 4px; text-align: left; font-size: .78rem; }
+
+/* ---- ② 检查结果 ---- */
+.pi-reshead { font-size: .95rem; font-weight: 700; padding: 10px 12px; border-radius: var(--radius-sm); margin-bottom: 8px; }
+.pi-reshead.ok { color: var(--success); background: var(--success-soft); }
+.pi-reshead.warn { color: var(--warning); background: var(--warning-soft); }
+.pi-reslist { display: flex; flex-direction: column; gap: 4px; }
+.pi-resrow {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 6px 8px; border-radius: var(--radius-xs); font-size: .82rem;
+  background: var(--bg-card-hi); border-left: 3px solid var(--border-strong);
+}
+.pi-resrow.pi-pass    { border-left-color: var(--success); }
+.pi-resrow.pi-warning { border-left-color: var(--warning); }
+.pi-resrow.pi-info    { border-left-color: var(--primary); }
+.pi-resicon { flex: none; font-weight: 700; }
+.pi-resrow.pi-pass .pi-resicon    { color: var(--success); }
+.pi-resrow.pi-warning .pi-resicon { color: var(--warning); }
+.pi-resrow.pi-info .pi-resicon    { color: var(--primary); }
+
+/* ---- ③ 热结 — 冒口 ---- */
+.pi-hslist { display: flex; flex-direction: column; gap: 8px; }
+.pi-hsrow {
+  background: var(--bg-card-hi); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px; min-width: 0;
+}
+.pi-hsrow-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pi-hsid { font-weight: 800; color: var(--text); font-size: .88rem; }
+.pi-hsmc { font-size: .82rem; color: var(--text); font-weight: 600; }
+.pi-hsmeta { font-size: .72rem; color: var(--text-muted); }
+.pi-hsrow-spacer { flex: 1; }
+.pi-hsrow-body { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: .78rem; color: var(--text-secondary); }
+.pi-hsrel b { color: var(--primary); }
+.pi-hsstats { display: flex; gap: 14px; flex-wrap: wrap; }
+.pi-hsstats b { color: var(--text); }
+.pi-tag { font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pi-tag.ok   { color: var(--success); background: var(--success-soft); }
+.pi-tag.warn { color: var(--warning); background: var(--warning-soft); }
+.pi-tag.info { color: var(--primary); background: var(--info-soft, var(--primary-soft)); }
+.pi-more {
+  margin-top: 8px; background: none; border: none; cursor: pointer; padding: 2px 0;
+  color: var(--primary); font-size: .74rem; font-family: inherit;
+}
+.pi-more:hover { text-decoration: underline; }
+.pi-allbox {
+  margin-top: 6px; padding: 8px 10px; border-radius: var(--radius-xs);
+  background: var(--bg-input); border: 1px solid var(--border);
+}
+.pi-allrow {
+  display: grid; grid-template-columns: minmax(48px, 1fr) repeat(3, minmax(56px, auto)) 18px;
+  gap: 8px; align-items: center; padding: 3px 0;
+  font-size: .74rem; color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.pi-ok { color: var(--success); } .pi-warn { color: var(--warning); } .pi-info { color: var(--primary); }
+
+/* ---- ④ 浇注系统 ---- */
+.pi-gblock { background: var(--bg-card-hi); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; }
+.pi-ghead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pi-gname { font-size: .84rem; font-weight: 700; color: var(--text); }
+.pi-gn { font-size: .74rem; font-weight: 700; color: var(--text-secondary); background: var(--bg-input); border-radius: 999px; padding: 1px 8px; }
+.pi-gbody { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 8px; font-size: .78rem; color: var(--text-secondary); }
+.pi-gstat b { color: var(--text); font-size: .88rem; }
+.pi-dim { color: var(--text-muted); font-size: .7rem; }
+.pi-gaxis { display: flex; align-items: center; gap: 6px; font-size: .74rem; color: var(--text-muted); }
+.pi-axis {
+  background: var(--bg-input); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 6px; font-size: .74rem; font-family: inherit; cursor: pointer;
+}
+.pi-garea { flex-basis: 100%; margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.pi-garea-total { font-size: .82rem; color: var(--text-secondary); }
+.pi-garea-total b { font-size: 1.05rem; color: var(--primary); }
+.pi-garea-sub { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; font-size: .76rem; color: var(--text-secondary); }
+.pi-garea-sub b { color: var(--text); }
+.pi-ingatebox { max-height: 260px; overflow-y: auto; }
+
+/* ---- ④b 流道（PHASE 90 §十四） ---- */
+.pi-flconn { font-size: .8rem; color: var(--text-secondary); margin-bottom: 8px; }
+.pi-flconn b { font-size: 1rem; color: var(--primary); }
+.pi-flseg {
+  border: 1px solid var(--border); border-radius: var(--radius-xs);
+  padding: 8px 10px; margin-top: 6px; background: var(--bg-card);
+}
+.pi-flhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .74rem; margin-bottom: 6px; }
+.pi-flid { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.pi-fltag {
+  margin-left: auto; padding: 1px 8px; border-radius: 999px; font-size: .7rem;
+  background: rgba(96, 165, 250, .14); color: var(--primary);
+}
+.pi-fltag-dim { background: var(--bg-card-hi); color: var(--text-muted); }
+.pi-flgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 4px 14px; }
+.pi-flrow { display: flex; align-items: baseline; gap: 8px; font-size: .76rem; color: var(--text-secondary); }
+.pi-flrow > span:first-child { min-width: 72px; color: var(--text-muted); }
+.pi-flrow b { color: var(--text); font-variant-numeric: tabular-nums; }
+.pi-fljump b { color: var(--warning, #fbbf24); }
+.pi-flseries {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border); font-size: .72rem;
+}
+.pi-flseries > span:first-child { color: var(--text-muted); min-width: 72px; }
+.pi-flseries code {
+  font-family: Bahnschrift, Consolas, monospace; font-size: .72rem; color: var(--text);
+  background: var(--bg-card-hi); padding: 2px 6px; border-radius: var(--radius-xs);
+  word-break: break-all; line-height: 1.6;
+}
+.pi-fldiag { margin-top: 10px; font-size: .74rem; }
+.pi-fldiag > summary { cursor: pointer; color: var(--text-muted); user-select: none; }
+.pi-fldiag .pi-dgrid { margin: 8px 0; }
+.pi-warnline-inline b { color: var(--warning, #fbbf24); }
+
+/* ---- ⑤ 3D 图例 ---- */
+.pi-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-left: auto; font-size: .72rem; color: var(--text-secondary); }
+.pi-lgi { display: inline-flex; align-items: center; gap: 5px; }
+.pi-lgi i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+/* ---- ⑥ 详细数据 ---- */
+.pi-summary {
+  cursor: pointer; font-size: .78rem; font-weight: 700; color: var(--text);
+  letter-spacing: .4px; list-style: none; user-select: none;
+}
+.pi-summary::-webkit-details-marker { display: none; }
+.pi-summary::after { content: '▾'; float: right; color: var(--text-muted); }
+details[open] > .pi-summary::after { content: '▴'; }
+.pi-dgroup { margin-top: 12px; }
+.pi-dtitle { font-size: .76rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+.pi-dgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.pi-tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-xs); }
+.pi-table { width: 100%; border-collapse: collapse; font-size: .74rem; font-variant-numeric: tabular-nums; }
+.pi-table th, .pi-table td { padding: 5px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
+.pi-table th { color: var(--text-muted); font-weight: 600; background: var(--bg-card-hi); position: sticky; top: 0; }
+.pi-table td:first-child, .pi-table th:first-child,
+.pi-table td.pi-tdname, .pi-table th:nth-child(2) { text-align: left; }
+.pi-table td.pi-tdname { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.pi-table tr:last-child td { border-bottom: none; }
+.pi-x {
+  background: none; border: none; cursor: pointer; color: var(--text-muted);
+  font-size: .9rem; line-height: 1; padding: 2px 6px; border-radius: 4px;
+}
+.pi-x:hover { color: var(--danger); background: var(--danger-soft); }
+
+/* ---- 响应式（88.txt §三十三：桌面 / 平板 / 移动） ---- */
+@media (max-width: 860px) {
+  .pi-import { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+}
+@media (max-width: 640px) {
+  .pi-import { grid-template-columns: 1fr 1fr; }
+  .pi-planrow { grid-template-columns: 1fr; gap: 2px; }
+  .pi-hsrow-body { gap: 8px 14px; }
+  .pi-gbody { gap: 10px 14px; }
+  .pi-legend { margin-left: 0; flex-basis: 100%; }
+  .pi-allrow { grid-template-columns: minmax(40px, 1fr) repeat(3, minmax(48px, auto)) 16px; gap: 5px; font-size: .7rem; }
+}
+@media (max-width: 420px) {
+  /* 窄屏也保持两列：5 个槽单列堆叠会占掉整个首屏，每次进页面都要滚过去 */
+  .pi-import { grid-template-columns: 1fr 1fr; }
+  .pi-slot { padding: 8px; }
+  .pi-slot-name { font-size: .76rem; }
+  .pi-slot-mul { display: none; }        /* ×N 已由右上角计数角标表达 */
+  .pi-slot-body .btn { padding: 4px 8px; }
+}
+
+/* ============================================================
+   PHASE 89 · 工艺检验中心：3 个导入槽 + 浇注系统入口点选
+   （89.txt §十四：输入区只留 ①产品 ②冒口 ③浇注系统 ④入口点选）
+   ============================================================ */
+.pi-slot-hint { font-size: .68rem; color: var(--fg-dim, #8a94a6); line-height: 1.35; margin: 2px 0 6px; }
+.pi-hl b { color: #34d399; }
+
+/* 入口点选面板（嵌在浇注系统槽里） */
+.pi-entry { margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,.12); }
+.pi-entry-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: .78rem; }
+.pi-entry-label { color: var(--fg-dim, #8a94a6); }
+.pi-entry-line b { color: #ff5252; font-size: 1rem; }
+.pi-entry-btns { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 4px; }
+.pi-entry-btns .btn { padding: 3px 9px; font-size: .74rem; }
+.pi-entry .field-hint { font-size: .68rem; }
+
+/* 点选进行中的提示条（置于 3D 视图上方，避免用户不知道该干嘛） */
+.pi-pickbar {
+  margin: 0 0 8px; padding: 7px 12px; border-radius: 8px; font-size: .8rem;
+  background: rgba(255,82,82,.12); border: 1px solid rgba(255,82,82,.45); color: #ffb3b3;
+}
+
+/* 浇注系统结果：三个类别块 */
+.pi-glist { display: flex; flex-direction: column; gap: 10px; }
+.pi-gnotes { margin-top: 6px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* ⚠ 3D 视图必须能吃到指针事件：点选入口靠它。父层若被设置为 none 会静默失效 */
+.dc-view3d-box { touch-action: none; }
+
+/* ---- PHASE 91（91.txt §18/§19）：3D 置顶 + 逐条 Path + A(s) 曲线 ----
+   首屏优先级：3D 模型 → 总体分析 → 流道截面积 → 冒口检查。
+   3D 明显比 PHASE 88/89/90 大（§18 明确要求），上限跟着视口走，不做死高度。 */
+.pi-hero3d { padding: 10px; }
+.pi-hero3d .dc-view3d { margin-top: 0; }
+.pi-hero3d .dc-view3d-box { height: clamp(320px, 54vh, 680px); }
+@media (max-width: 640px) { .pi-hero3d .dc-view3d-box { height: 46vh; } }
+
+.pi-flstat {
+  display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  font-size: .8rem; color: var(--text-secondary); margin-bottom: 8px;
+}
+.pi-flstat b { font-size: 1rem; color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* 一条流道一张可折叠卡（§19：先给"长度/最小/最大"，点开才看 A(s) 和明细） */
+.pi-path {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-card); margin-bottom: 8px; overflow: hidden;
+}
+.pi-path > summary {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 9px 12px; cursor: pointer; list-style: none; user-select: none;
+}
+.pi-path > summary::-webkit-details-marker { display: none; }
+.pi-path > summary:hover { background: var(--bg-card-hi); }
+.pi-path[open] > summary { border-bottom: 1px solid var(--border); }
+.pi-path-id { font-weight: 800; font-size: .84rem; color: var(--text); }
+.pi-path-kv { font-size: .76rem; color: var(--text-muted); white-space: nowrap; }
+.pi-path-kv b { color: var(--text); font-size: .84rem; font-variant-numeric: tabular-nums; }
+.pi-path-body { padding: 4px 12px 12px; }
+.pi-path-src { font-size: .76rem; color: var(--text-secondary); margin: 8px 0 4px; }
+
+/* A(s) 曲线（纯内联 SVG，无第三方图表库） */
+.pi-chart { width: 100%; height: auto; display: block; margin: 8px 0 4px; }
+.pi-chart-grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 4; }
+.pi-chart-line { fill: none; stroke: var(--primary); stroke-width: 2; stroke-linejoin: round; }
+.pi-chart-dot { fill: var(--primary); }
+.pi-chart-dot-dim { fill: var(--text-muted); opacity: .55; }
+.pi-chart-dot-min { fill: #ff5252; }
+.pi-chart-jump { stroke: #ffd54f; stroke-width: 1.4; stroke-dasharray: 4 3; }
+.pi-chart-tick, .pi-chart-axis { fill: var(--text-muted); font-size: 10px; font-family: Bahnschrift, Consolas, monospace; }
+/* ===== PHASE 92：浇注系统网络结构（§十四：正确几何网络 > 错误工程标签） ===== */
+.pi-net {
+  margin: 8px 0 10px; padding: 8px 10px;
+  background: var(--bg-soft, rgba(127,127,127,.06));
+  border: 1px solid var(--border); border-radius: 8px;
+  font-family: Bahnschrift, Consolas, monospace; font-size: 12px;
+}
+.pi-net-title { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; letter-spacing: .04em; }
+.pi-net-row {
+  display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+  padding: 2px 0 2px calc(var(--d, 0) * 14px);
+  line-height: 1.5;
+}
+.pi-net-arrow { color: var(--text-muted); }
+.pi-net-end { color: #34d399; }
+@media (max-width: 640px) { .pi-net { font-size: 11px; } .pi-net-row { padding-left: calc(var(--d, 0) * 9px); } }
+
+/* ============================================================
+   PHASE 93（93.txt）· 工艺检测中心：冒口检测主流程
+   ------------------------------------------------------------
+   布局原则（§十二/§十三）：上 3D、下结果；结果按**冒口**纵向排卡片；移动端优先。
+   配色全部走既有 token，不引入新调色板。
+   ============================================================ */
+
+/* ---- 侧栏「试用中」标记（§四：明显但克制；§十九：不是错误状态，故用中性灰而非警告色） ---- */
+.nav-trial {
+  margin-left: auto; flex: none;
+  font-size: .6rem; font-weight: 600; line-height: 1.6;
+  color: var(--text-muted); background: var(--bg-card-hi);
+  border: 1px solid var(--border); border-radius: 999px; padding: 0 6px;
+}
+
+/* ---- 页面标题旁的同一个标记 ---- */
+.pi-trial {
+  font-size: .66rem; font-weight: 600; vertical-align: middle; margin-left: 8px;
+  color: var(--text-muted); background: var(--bg-card-hi);
+  border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px;
+}
+
+/* ---- 检测模块行（§五：冒口检测 / 浇注系统检测「即将支持」） ---- */
+.pi-mods { display: flex; gap: 8px; flex-wrap: wrap; }
+.pi-mod {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 13px; border-radius: 999px; font-size: .8rem; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary);
+}
+.pi-mod.on { border-color: var(--primary); background: var(--primary-soft); color: var(--text); }
+.pi-mod.off { opacity: .62; }
+.pi-mod-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex: none; }
+.pi-mod.on .pi-mod-dot { background: var(--primary); }
+.pi-soon {
+  font-size: .66rem; font-weight: 600; color: var(--text-muted);
+  background: var(--bg-card-hi); border: 1px solid var(--border);
+  border-radius: 999px; padding: 1px 8px;
+}
+
+/* ---- ③ 开始检测（§六） ---- */
+.pi-runbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pi-runhint { font-size: .76rem; color: var(--text-muted); }
+
+/* ---- 结果卡片：一个冒口一张卡（§十三） ---- */
+.pi-rlist { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.pi-rcard {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-card-hi); padding: 11px 13px; cursor: pointer;
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.pi-rcard:hover { border-color: var(--border-strong); }
+.pi-rcard.on { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary-soft); }
+
+.pi-rchead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+.pi-rcid { font-size: .98rem; font-weight: 800; color: var(--text); letter-spacing: .3px; }
+.pi-rcname {
+  font-size: .72rem; color: var(--text-muted);
+  max-width: 42%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pi-rcverdict { margin-left: auto; font-size: .76rem; font-weight: 700; }
+.pi-rcverdict.pi-pass    { color: var(--success); }
+.pi-rcverdict.pi-warning { color: var(--warning); }
+.pi-rcverdict.pi-info    { color: var(--text-muted); font-weight: 600; }
+
+/* 四项读数：冒口模数 / 最近热点 / 热点模数 / 模数比 */
+.pi-rkgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.pi-rk { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pi-rk span { font-size: .68rem; color: var(--text-muted); }
+.pi-rk b {
+  font-size: .95rem; font-weight: 700; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.pi-rk-ratio b { color: var(--primary); }
+
+.pi-rcmeta {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: baseline;
+  margin-top: 9px; font-size: .72rem; color: var(--text-secondary);
+}
+.pi-hsref { color: var(--text); font-weight: 700; }
+.pi-hsref.on { color: #ff5252; }
+.pi-warn { color: var(--warning); }
+.pi-allbox .pi-allhead { color: var(--text-muted); font-size: .68rem; border-bottom: 1px solid var(--border); }
+.pi-allbox .pi-allrow[data-pi-sel] { cursor: pointer; border-radius: var(--radius-xs); }
+.pi-allbox .pi-allrow[data-pi-sel]:hover { background: var(--bg-hover); }
+
+/* ---- 移动端（§十三：移动端优先） ---- */
+@media (max-width: 640px) {
+  .pi-rkgrid { grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+  .pi-rcname { max-width: 100%; flex-basis: 100%; order: 3; }
+  .pi-rcverdict { margin-left: 0; flex-basis: 100%; order: 4; }
+  .pi-runbar .btn { flex: 1; }
+  .pi-runhint { flex-basis: 100%; }
+}
+/* 底部标签栏本来就只放得下图标 + 一行标题：试用标记在窄屏收进页面标题旁（仍在首屏可见） */
+@media (max-width: 768px) {
+  .nav-item .nav-trial { display: none; }
+}
+
+/* ============================================================
+   PHASE 94（94.txt）· 工艺检测中心：浇注系统检测（手动语义版）
+   ------------------------------------------------------------
+   布局纪律（§十二）：主界面只放 ①三类数量 ②三类总截面积 ③比例 ④占比 ⑤总截面积，
+   单件明细全部在「详细信息」折叠区里（§十）。配色沿用既有 token，不引入新调色板。
+   ============================================================ */
+
+/* ---- 模块页签（两个模块并列，点开哪个显示哪个） ---- */
+button.pi-mod { font-family: inherit; cursor: pointer; }
+.pi-panel { display: flex; flex-direction: column; gap: 12px; }
+
+/* ⚠ 必须显式写 [hidden]：
+   浏览器默认的 `[hidden] { display: none }` 是**元素选择器权重**，
+   而 `.card.section-card` 之类的 display 规则权重更高 —— 不写这条，
+   加在结果区块上的 hidden 属性会被无视，两个模块的结果会同时铺在页面上。
+   （这个 bug 截图才看得出来：断言查的是区块里的内容，内容在不在跟显不显示是两回事。） */
+[data-pi-panel][hidden] { display: none !important; }
+
+/* ---- 主结果：三类各一行（数量 + 总截面积） ---- */
+.pi-gsum { display: flex; flex-direction: column; gap: 0; margin-top: 4px; }
+.pi-grow {
+  display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  padding: 11px 2px; border-bottom: 1px solid var(--border);
+}
+.pi-grow:first-child { border-top: 1px solid var(--border); }
+.pi-grow.off { opacity: .55; }
+.pi-gname { font-size: .9rem; font-weight: 700; color: var(--text); min-width: 5.5em; }
+.pi-gcount { font-size: .82rem; color: var(--text-secondary); }
+.pi-gcount b { font-size: 1.05rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.pi-garea { font-size: .82rem; color: var(--text-secondary); margin-left: auto; }
+.pi-garea b { font-size: 1.05rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.pi-gnone { font-size: .8rem; color: var(--text-muted); }
+.pi-gwarn { font-size: .74rem; color: var(--warning); }
+
+/* ---- 总截面积（§七 主界面第一优先级里最重的那一行） ---- */
+.pi-gtotal {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin-top: 14px; padding: 12px 14px;
+  background: var(--bg-card-hi); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: .86rem; color: var(--text-secondary);
+}
+.pi-gtotal b {
+  font-size: 1.5rem; font-weight: 800; color: var(--primary);
+  font-variant-numeric: tabular-nums; letter-spacing: .5px;
+}
+.pi-gunit { font-size: .82rem; color: var(--text-muted); }
+
+/* ---- 比例 / 占比 ---- */
+.pi-gratio, .pi-gshare {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin-top: 8px; font-size: .84rem; color: var(--text-secondary);
+}
+.pi-glab {
+  flex: none; min-width: 3.2em; font-size: .72rem; font-weight: 600;
+  color: var(--text-muted);
+}
+.pi-gratio-v b { font-size: 1.05rem; color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* ---- 详细信息（§十：默认折叠；展开后是每个单元一行） ---- */
+.pi-gdetail .pi-dtitle small { margin-left: 8px; font-size: .7rem; font-weight: 500; color: var(--text-muted); }
+.pi-gtable { min-width: 720px; }
+.pi-gtable tbody tr[data-pi-sel] { cursor: pointer; }
+.pi-gtable tbody tr[data-pi-sel]:hover { background: var(--bg-hover); }
+.pi-gtable tbody tr.on { background: var(--primary-soft); }
+.pi-gtable td { font-variant-numeric: tabular-nums; }
+
+/* ---- 移动端（§十二：不要做成工程分析软件驾驶舱；窄屏保持一行读得完） ---- */
+@media (max-width: 640px) {
+  .pi-grow { gap: 8px 14px; padding: 10px 2px; }
+  .pi-gname { min-width: 100%; }
+  .pi-garea { margin-left: 0; }
+  .pi-gtotal b { font-size: 1.3rem; }
+  .pi-glab { min-width: 100%; }
+}
+
+/* ============================================================
+   PHASE 95（95.txt §四/§五/§七）· 浇注系统检测：工艺条件 + 核心结果
+   ------------------------------------------------------------
+   布局纪律：① 三类几何（数量 / 尺寸 / 面积）② 核心结果四个数
+             ③ 检测截面积比 ④ 重点提示。复杂表格继续留在「详细信息」里。
+   配色全部沿用既有 token，不引入新调色板。
+   ============================================================ */
+
+/* ---- 工艺条件（§七：用户能填的全部就这三个，都有默认值） ---- */
+.pi-conds {
+  display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap;
+  padding: 10px 12px;
+  background: var(--bg-card-hi); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.pi-cond { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text-secondary); }
+.pi-cond > span { flex: none; font-weight: 600; color: var(--text-muted); }
+.pi-cond select, .pi-cond input {
+  font-family: inherit; font-size: .78rem;
+  padding: 5px 8px; border-radius: var(--radius-xs);
+  border: 1px solid var(--border); background: var(--bg-input); color: var(--text);
+}
+.pi-cond input { width: 5.5em; text-align: right; font-variant-numeric: tabular-nums; }
+/* 出品率超范围：显式标出来（不许静默回退默认值 —— 输入框与结果必须对得上） */
+.pi-cond input.invalid { border-color: var(--warning); background: var(--warning-soft, rgba(217,119,6,.10)); }
+.pi-cond-unit { font-style: normal; font-size: .76rem; color: var(--text-muted); }
+
+/* ---- 几何行补充：截面尺寸 / 内浇口一致性（§五） ---- */
+.pi-gdim {
+  font-size: .78rem; color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  padding: 1px 8px; border-radius: 999px;
+  background: var(--bg-card-hi); border: 1px solid var(--border);
+}
+/* ⚠ .pi-garea 在 PHASE 89 里是"整行铺开的汇总块"（flex-basis:100% + 虚线），
+   PHASE 95 把它改成了行内的一项 —— 不显式清掉那几条遗留属性，
+   每一行都会莫名其妙多出一条虚线（两代 CSS 叠加，截图才看得出来）。 */
+.pi-garea { flex-basis: auto; margin-top: 0; padding-top: 0; border-top: none; }
+/* 第二行（内浇口一致性）才是真正整行铺开的那一条 */
+.pi-gsub {
+  flex-basis: 100%; font-size: .74rem; color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px; padding-top: 8px; border-top: 1px dashed var(--border);
+}
+
+/* ---- 核心结果（§四：浇注时间 / 总流量 / 内浇口总面积 / 平均内浇口速度） ---- */
+.pi-pour {
+  margin-top: 14px; padding: 12px 14px;
+  background: var(--bg-card-hi); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+.pi-pour-head {
+  font-size: .76rem; font-weight: 700; letter-spacing: .06em;
+  color: var(--text-muted); margin-bottom: 10px;
+}
+.pi-pour-grid {
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.pi-pour-cell {
+  display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap;
+  padding: 9px 11px; border-radius: var(--radius-xs);
+  background: var(--bg-card); border: 1px solid var(--border);
+}
+.pi-pour-lab { flex-basis: 100%; font-size: .72rem; color: var(--text-muted); }
+.pi-pour-cell b {
+  font-size: 1.4rem; font-weight: 800; color: var(--primary);
+  font-variant-numeric: tabular-nums; letter-spacing: .3px;
+}
+.pi-pour-cell i { font-style: normal; font-size: .76rem; color: var(--text-muted); }
+.pi-pour-src {
+  margin-top: 10px; font-size: .74rem; color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.pi-pour-def {
+  font-style: normal; margin-left: 4px; padding: 0 5px;
+  font-size: .64rem; font-weight: 600; border-radius: 999px;
+  background: var(--bg-input); color: var(--text-muted);
+}
+.pi-pour-miss { margin-top: 8px; font-size: .76rem; color: var(--warning); }
+
+@media (max-width: 640px) {
+  .pi-conds { gap: 10px; }
+  .pi-cond { flex: 1 1 auto; }
+  .pi-pour-cell b { font-size: 1.2rem; }
+}
+
+/* ============================================================
+   PHASE 96（96.txt §七/§十/§十二）· 浇注系统检测收口
+   ------------------------------------------------------------
+   ① 工艺条件要标出**来源**（生产场景 / 本次设置 / 默认值）—— 96.txt §十二/§十五
+      要求"不要让用户猜这个数字从哪里来的"；
+   ② 同规格的单元聚成一行（"20 × 5 mm × 2 / 单个面积 100 / 小计 200"）——
+      96.txt §七 的原文格式，主界面不再出现 N 行一模一样的；
+   ③ 截面方向未确认（平板件）只是一条**事实**标注，不做成红色告警。
+   ============================================================ */
+
+/* ---- ① 参数来源徽标 ---- */
+.pi-condsrc {
+  font-style: normal; flex: none;
+  padding: 1px 7px; border-radius: 999px;
+  font-size: .66rem; font-weight: 600;
+  background: var(--bg-input); color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.pi-condhint { margin-top: 8px; }
+
+/* ---- ② 几何行：抬头一行 + 规格分组若干行 ---- */
+.pi-grow { flex-wrap: wrap; }
+.pi-ghead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; flex-basis: 100%; }
+.pi-ggroups { flex-basis: 100%; display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.pi-ggrp {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 5px 10px; border-radius: var(--radius-xs);
+  background: var(--bg-card-hi); border: 1px solid var(--border);
+  font-size: .78rem; color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.pi-ggdim { font-weight: 700; color: var(--text); }
+.pi-ggn { font-weight: 700; color: var(--primary); }
+.pi-ggunit b, .pi-ggsum b { color: var(--text); }
+.pi-ggsum { margin-left: auto; }
+.pi-ggsp { font-size: .7rem; color: var(--text-muted); flex-basis: 100%; }
+/* 方向未确认：**事实**标注，不是错误（96.txt §六/§二十一 允许在这种情形下给实测面积） */
+.pi-gunc { flex-basis: 100%; margin-top: 4px; font-size: .74rem; color: var(--text-muted); }
+.pi-unc { color: var(--text-muted); }
+/* PHASE 97：方向由**真实连接面**定出来 —— 与"方向未确认"互斥，用正面色（不是告警） */
+.pi-gconn { flex-basis: 100%; margin-top: 4px; font-size: .74rem; color: var(--text-secondary); }
+.pi-conn { color: var(--text-secondary); }
+.pi-conn small { color: var(--text-muted); }
+
+@media (max-width: 640px) {
+  .pi-ghead { gap: 8px 12px; }
+  .pi-ghead .pi-garea { margin-left: 0; }
+  .pi-ggrp { gap: 6px 10px; }
+  .pi-ggsum { margin-left: 0; }
+}
+
+/* ============================================================
+   PHASE 94（94.txt 末尾补充）· 支持者板块
+   ① note 里的换行要能显示（数据来自投稿，用 pre-line 而不是解析 HTML）
+   ② 新增一段免责说明，视觉上比"一个重要说明"更轻，不抢版面
+   ============================================================ */
+.sr-person-note { white-space: pre-line; }
+.sr-disclaimer {
+  margin-top: 10px;
+  font-size: .74rem;
+  color: var(--text-muted);
+  background: transparent;
+  border-style: dashed;
+}
+.sr-disclaimer b { color: var(--text-secondary); }

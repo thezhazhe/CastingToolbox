@@ -33,6 +33,7 @@ It focuses on the **20% of problems that come up 80% of the time** (80/20 princi
 | **Charge Makeup** | Grade → automatic charge mix → live composition balance → makeup suggestions |
 | **Shakeout Time** | In-mold cooling range and shakeout temperature target |
 | **3D Sand Mold Clearance** | Clearance and minimum mold wall for 3D-printed sand molds |
+| **Casting Principles · Campbell's Ten Rules** | The ten rules across metal quality → filling → solidification → cooling: mechanism · key parameters · consequences of violation · check points (reference) |
 | **Defect Finder** | Find defects by name / alias / symptom — GB/T 5611 eight categories, features, causes, remedies, standards |
 | **Engineering Reference** | 172 traceable knowledge cards (materials, raw materials, molding sand, process & charge, defects, equipment) with source and confidence level |
 
@@ -84,7 +85,7 @@ Please read this before using the numbers in production:
 
 ## Installation
 
-**Windows (portable)** — download `CastingToolbox-v1.0.0-win64.zip`, unzip anywhere, run `CastingToolbox.exe`. The browser opens automatically. To stop the server, close its console window.
+**Windows (portable)** — download `CastingToolbox-v1.1.0-win64.zip`, unzip anywhere, run `CastingToolbox.exe`. The browser opens automatically. To stop the server, close its console window.
 
 **Android (APK)** — download `CastingToolbox-v1.0.0.apk`, allow installation from unknown sources, install and open. Fully usable offline. Reports you generate are saved to your Downloads folder.
 
@@ -143,6 +144,7 @@ Casting Toolbox 是一个**轻量、实用、开源的铸造工艺工程工具�
 | **熔炼加料** | 选牌号 → 自动配比 → 实时成分平衡 → 补料建议 |
 | **开箱时间** | 型内冷却时间范围与开箱温度目标 |
 | **3D 砂型吃砂量** | 3D 打印砂型吃砂量与砂型最小壁厚 |
+| **铸造原则 · Campbell 十规则** | 金属液质量 → 充型 → 凝固 → 冷却 四阶段十规则全景：机理 · 关键参数 · 违反后果 · 检查要点（展示型） |
 | **缺陷查找** | 按缺陷名/俗称/症状查：GB/T 5611 八大类 · 特征 · 原因 · 对策 · 标准 |
 | **工程参考** | 172 条可追溯知识卡片（材料/原辅材料/型砂/工艺与配料/缺陷/设备），每条带出处与置信度 |
 
@@ -194,7 +196,7 @@ Casting Toolbox 的定位是**工程辅助工具**，不是专业 CAE 仿真软�
 
 ## 安装
 
-**Windows（便携版）**——下载 `CastingToolbox-v1.0.0-win64.zip`，解压到任意目录，双击 `CastingToolbox.exe`，浏览器会自动打开。关闭它弹出的控制台窗口即停止服务。
+**Windows（便携版）**——下载 `CastingToolbox-v1.1.0-win64.zip`，解压到任意目录，双击 `CastingToolbox.exe`，浏览器会自动打开。关闭它弹出的控制台窗口即停止服务。
 
 **Android（APK）**——下载 `CastingToolbox-v1.0.0.apk`，允许"未知来源安装"，安装后直接打开，完全离线可用。生成的报告会保存到手机的「下载 / Download」目录。
 

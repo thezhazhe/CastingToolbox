@@ -194,3 +194,6 @@ export const TAGS = {
   campbell_deceleration_independent: ['calc:campbell_gating'],
   campbell_ratio_is_result: ['calc:campbell_gating'],
 };
+
+/** 允许的标签前缀白名单 */
+export const TAG_PREFIXES = ['mat', 'line', 'prod', 'method', 'calc', 'std', 'kw'];

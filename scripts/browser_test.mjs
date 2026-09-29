@@ -72,6 +72,11 @@ try {
   let r = await send('Runtime.evaluate', { expression: `JSON.stringify({
     title: document.title,
     navItems: Array.from(document.querySelectorAll('.nav-item')).filter(n => !n.hidden).length,
+    navInspection: (function () {
+      var n = document.querySelector('.nav-item[data-view="inspection"]');
+      if (!n || n.hidden) return null;
+      return n.querySelector('span[data-i18n="nav.inspection"]').textContent + '|' + n.querySelector('.nav-trial').textContent;
+    })(),
     toolCards: document.querySelectorAll('.tool-card').length,
     search: !!document.getElementById('globalSearch'),
     homeHero: !!document.querySelector('.home-hero'),
@@ -83,7 +88,11 @@ try {
   const shell = JSON.parse(r.result.value);
   console.log('\n[Shell]');
   check('页面标题', shell.title.includes('Casting Toolbox'), shell.title);
-  check('侧边栏 4 个导航（首页/计算器/向导/捐助）', shell.navItems === 4, String(shell.navItems));
+  // PHASE 93（93.txt §四）：工艺检测中心成为独立第五栏目 → 可见导航 4 → 5。
+  //   这是**结构性变更**（导航真的多了一项），不是为了让测试通过而放宽断言。
+  //   同时断言新增的那一项确实存在且带「试用中」标记，避免只改数字不认内容。
+  check('侧边栏 5 个导航（首页/计算器/设计中心/检测中心/支持）', shell.navItems === 5, String(shell.navItems));
+  check('导航含「工艺检测中心 [试用中]」', shell.navInspection === '工艺检测中心|试用中', String(shell.navInspection));
   check('首页渲染（大搜索框）', shell.homeHero && shell.homeSearch);
   check('首页导航高亮', shell.homeNavActive);
   check('首页常用工具 15 个（6 类分组）', shell.toolCards === 15, String(shell.toolCards));
@@ -683,19 +692,25 @@ try {
   await send('Runtime.evaluate', { expression: `document.getElementById('themeBtn').click()` });
   await wait(150);
 
-  // ---- 14b. 捐助页（73.txt：弹窗已改平铺页 #/donate）+ 二维码放大 ----
+  // ---- 14b. 支持与资源页（83.txt：原捐助页改版）+ 二维码放大 ----
   await send('Runtime.evaluate', { expression: `location.hash = '#/donate'` });
   await wait(500);
   r = await send('Runtime.evaluate', { expression: `JSON.stringify({
     pageOpen: !!document.querySelector('.donate-page'),
-    hasHeart: document.body.innerHTML.includes('完全开源、永久免费') && document.body.innerHTML.includes('愿中国的铸造行业'),
-    qrLoaded: (function(){ var im = document.querySelector('.donate-page .donate-qr'); return !!im && im.complete && im.naturalWidth > 0; })()
+    cards: document.querySelectorAll('.donate-page .sr-card').length,
+    hasAdNote: !!document.querySelector('.donate-page .sr-note'),
+    hasListZone: !!document.querySelector('.donate-page .sr-people, .donate-page .sr-empty'),
+    qrLoaded: (function(){ var im = document.querySelector('.donate-page .donate-qr'); return !!im && im.complete && im.naturalWidth > 0; })(),
+    author: !!document.querySelector('.donate-page .donate-author')
   })`, returnByValue: true });
   const dn = JSON.parse(r.result.value);
-  console.log('\n[捐助]');
-  check('捐助页打开', dn.pageOpen);
-  check('情怀话文案', dn.hasHeart);
+  console.log('\n[支持与资源]');
+  check('支持与资源页打开', dn.pageOpen);
+  check('三块结构齐全（支持方式 / 支持者展示 / 支持者名单）', dn.cards >= 3, `cards=${dn.cards}`);
+  check('非广告位声明在页面上', dn.hasAdNote);
+  check('支持者名单区存在（空态或列表）', dn.hasListZone);
   check('二维码完整加载', dn.qrLoaded);
+  check('作者署名行保留', dn.author);
   await send('Runtime.evaluate', { expression: `document.querySelector('.donate-page [data-open-lightbox]').click()` });
   await wait(300);
   r = await send('Runtime.evaluate', { expression: `!document.getElementById('qrLightbox').hidden`, returnByValue: true });

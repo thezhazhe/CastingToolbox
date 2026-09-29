@@ -32,6 +32,8 @@ const RATIO_APPLIC = {
   '开放式 标准型': '球铁/铜合金常规铸件（≤200kg）系统默认推荐',
   '开放式 宽大型': '大件（>200kg：球铁/铸钢/铝/铜）系统自动升档',
   '开放式 铝合金属': '铝合金铸件系统默认推荐',
+  // PHASE 98：新预设的适用范围一句话（与上面 6 条同格式；不进 recommendGatingRatio，系统不自动选它）
+  '坎贝勒推荐': 'Campbell 自然加压思路（内浇口总面积取最大，阻流留在直浇道），需手动选择',
 };
 const ratioFmt = (k) => (RATIO_PRESETS[k] ? RATIO_PRESETS[k].r.join(':') : '');
 const fmtRatio3 = (a, b, c) => `${+a.toFixed(2)}:${+b.toFixed(2)}:${+c.toFixed(2)}`;

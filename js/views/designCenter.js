@@ -7,7 +7,7 @@
 // ============================================================
 import { parseSTL, computeBounds } from '../engine/stl.js';
 import { validateMesh, deriveGeomStatus } from '../engine/meshValidation.js';
-import { buildMesh } from '../engine/mesh3d.js';
+import { buildMesh, isInside } from '../engine/mesh3d.js';
 import { analyzeGeometry, analyzeGeometrySliced } from '../engine/geometryAnalysis.js';
 import { analyzeHotspots, analyzeHotspotsSliced, HS_STATUS, HS_REASON } from '../engine/hotspot.js';
 import { analyzeHotspotsV3, analyzeHotspotsV3Sliced } from '../engine/v3/hotspotV3.js';
@@ -212,14 +212,55 @@ function monotonic(container, stage) {
   };
 }
 
+/* ============================================================
+   PHASE 86（86.txt）· 显示点微调 —— **纯显示层，引擎零改动**
+   问题：代表点 = 区域质心，在部分结构上会顺边界漂出热点区（实测 20 模型 47 个热点里
+        10 个飘出自己声明的厚区，1 个飘进别的热点厚区）。
+   方案（经过 S0/S1/S2/S3 四族策略在 20 模型上的对照实验选出，见 docs/PHASE86_REPORT.md）：
+        **把显示点朝峰点拉近，最多拉 1×Mpeak（模数值，单位 mm）；出材料则回落原代表点。**
+   为什么是这个：
+     · 不用峰点本身 —— 直接的峰点有 2 例会落到材料外，且 t01/t02/t09/t11 上代表点本来就更居中；
+     · 不用固定比例插值（S2）—— 各档都有 3 例落到材料外；
+     · k=1 是本轮**唯一**同时满足"0 出材料 / 0 飘进别的热点厚区 / 0 需护栏介入"的策略，
+       并把"飘出自己厚区"从 10 降到 5。
+   计算坐标 h.x/y/z 永不修改（30.txt 六）——CastingProject / 工艺计算报告仍用引擎原值。
+   ============================================================ */
+const DISPLAY_PULL_K = 1.0;   // 显示点朝峰点最大拉近量 = K × Mpeak
+
+/** 引擎峰点坐标：v3ViewAdapter 只把它写进 geometrySource 字符串（无独立字段）。
+ *  本阶段禁止改 js/engine/，故在此解析。取不到（Fake 热结/旧数据）→ 返回 null，显示行为不变。 */
+function peakPosOf(h) {
+  const m = /@\(([-\d.,\s]+)\)/.exec(String(h.geometrySource || ''));
+  if (!m) return null;
+  const p = m[1].split(',').map(Number);
+  return p.length === 3 && p.every(Number.isFinite) ? p : null;
+}
+
+/** 显示基准点 = 代表点朝峰点拉近（≤ DISPLAY_PULL_K × Mpeak），出材料则回落代表点 */
+function displayBaseOf(h) {
+  const rep = [h.x, h.y, h.z];
+  const peak = peakPosOf(h);
+  if (!peak) return rep;
+  const d = Math.hypot(peak[0] - rep[0], peak[1] - rep[1], peak[2] - rep[2]);
+  const maxPull = DISPLAY_PULL_K * (h.mc > 0 ? h.mc : 0);
+  if (!(d > 1e-6) || !(maxPull > 0)) return rep;
+  const cand = d <= maxPull ? peak
+    : [rep[0] + (peak[0] - rep[0]) * (maxPull / d),
+       rep[1] + (peak[1] - rep[1]) * (maxPull / d),
+       rep[2] + (peak[2] - rep[2]) * (maxPull / d)];
+  // 护栏：插值可能穿到型腔/模型外 —— 出材料就回落原代表点（实验里 k=1 从未触发，留作防线）
+  return state.geometry && !isInside(state.geometry, cand, 6) ? rep : cand;
+}
+
 /**
- * 热结 → 3D 视图对象（PHASE 22）：ENGINE 坐标 → 居中坐标；显示位置 = 引擎位置 +
- * 有界中面修正（displayCenterFor，只读计算坐标）；regionBBox 同步平移。
+ * 热结 → 3D 视图对象（PHASE 22；PHASE 86 加显示点微调）：ENGINE 坐标 → 居中坐标；
+ * 显示位置 = **微调后的点** + 有界中面修正（displayCenterFor，只读计算坐标）；regionBBox 同步平移。
  * 计算坐标 h.x/y/z 永不修改（30.txt 六：计算位置是真实数据）。
  */
 function toViewHotspot(h) {
   const c = state.analysis?.center || [0, 0, 0];
-  const dp = displayCenterFor(state.geometry, h, {});
+  const b = displayBaseOf(h);
+  const dp = displayCenterFor(state.geometry, { ...h, x: b[0], y: b[1], z: b[2] }, {});
   return {
     ...h,
     x: h.x - c[0], y: h.y - c[1], z: h.z - c[2],
@@ -252,6 +293,7 @@ export function render(container) {
         <span class="dc-topbar-spacer"></span>
         <button class="btn btn-ghost" id="dc_replaceStl" hidden>📥 ${tr('导入 STL')}</button>
         <button class="btn btn-ghost" id="dc_deleteStl" hidden>🗑️ ${tr('删除 STL')}</button>
+        <button class="btn btn-ghost" id="dc_toInspection" title="${esc(tr('工艺检测中心：检查已经完成的铸造工艺设计'))}">🔍 ${tr('工艺检测中心')}</button>
         <button class="btn btn-ghost" id="dc_manualLink">📝 ${tr('手动输入')}</button>
         <button class="btn btn-ghost" id="dc_backToStl" hidden>📄 ${tr('改用 STL')}</button>
       </div>
@@ -309,6 +351,7 @@ export function render(container) {
           <div class="dc-panel-sec" id="dc_hotspotsCard" hidden>
             <div class="dc-panel-title">${tr('dc.hotspotList')}<span class="chip">${tr('dc.hotspotListChip')}</span></div>
             <div id="dc_hotspotList"></div>
+            <div class="field-hint" id="dc_hsHint" style="margin-top:6px"></div>
           </div>
           <div class="dc-panel-sec" id="dc_paramsCard">
             <div class="dc-panel-title" data-fold="dc_paramsWrap">${tr('dc.params')}</div>
@@ -341,6 +384,8 @@ export function render(container) {
   // STL 替换/删除（18.txt 一/三：替换复用导入路径并先清理旧数据；删除回手动模式）
   container.querySelector('#dc_replaceStl').addEventListener('click', () => fileEl.click());
   container.querySelector('#dc_deleteStl').addEventListener('click', () => deleteStl(container));
+  // PHASE 88：工艺检验中心入口（设计 → 检验 是同一工作流，放在设计中心顶部最自然）
+  container.querySelector('#dc_toInspection').addEventListener('click', () => { location.hash = '#/inspection'; });
   // 手动输入模式入口（不导入 STL 也能用）
   container.querySelector('#dc_manualLink').addEventListener('click', () => showManual(container));
   container.querySelector('#dc_backToStl').addEventListener('click', () => backToStl(container));
@@ -709,12 +754,37 @@ async function importFile(container, file) {
   }
 }
 
+/* PHASE 87：网格问题文案的英文覆盖。
+   引擎的 `i.msg` 是硬编码中文（`js/engine/meshValidation.js`，本阶段禁改），
+   英文界面下这一块原来整段是中文 —— 而它是海外用户导入文件后第一眼看到的东西。
+   显示层按 `code` 出文案（中文基准即 key，英文查表），数字从原 msg 里取，不另算。
+   已知例外：`PARSE_WARNING` 的 msg 来自解析器（stl.js），模板多变，**不做覆盖，原样显示** ——
+   该分支只在文件损坏时出现。 */
+const MESH_ISSUE_TEXT = {
+  NO_TRIANGLES: 'STL 中没有有效三角形，文件可能损坏或为空',
+  NON_FINITE_VERTEX: '存在 {n} 个非法顶点坐标（已归零，结果可能受影响）',
+  DEGENERATE_TRIANGLE: '{n} 个退化三角形（面积≈0），已忽略其贡献',
+  OPEN_MESH: '网格未闭合（{n} 条边界边）。体积/壁厚/热结分析可能不准确。',
+  NON_MANIFOLD_EDGE: '存在 {n} 条非流形边（3 条及以上三角形共享，如双体共边/蝴蝶结）。体积与热结分析结果可能不可靠。',
+  INCONSISTENT_WINDING: '存在 {n} 处缠绕方向不一致（相邻三角形法向相对）。体积符号与射线内外判断可能出错。',
+  SELF_INTERSECTION: '检测到 {n} 处三角形自交（非相邻三角形相互穿越）。体积与热结分析结果可能不可靠。',
+  SELF_INTERSECTION_UNCHECKED: '自交检测因三角形数量/重叠度过大未完整完成（超出检测对上限），可能存在未检出的自交。',
+};
+
+/** 单条网格问题的展示文本：命中 code → 走 i18n；未命中 → 原样返回引擎 msg（不猜） */
+function meshIssueText(i) {
+  const key = MESH_ISSUE_TEXT[i.code];
+  if (!key) return i.msg;
+  const n = (String(i.msg).match(/\d+/) || [])[0];
+  return n != null ? tr(key, [n]) : tr(key);
+}
+
 function validateHtml(v) {
   const issues = v?.issues || [];
   if (!issues.length) return `<div class="dc-ok">✅ ${tr('STL 读取成功 · {n} 个三角面 · 网格闭合', [state.mesh?.triCount ?? 0])}</div>`;
   return `<div class="dc-${issues.some(i => i.level === 'error') ? 'warn' : 'ok'}">
     ${issues.some(i => i.level === 'error') ? '⚠️' : 'ℹ️'} ${tr('STL 几何存在问题（部分分析可能受影响）：')}
-    <ul>${issues.map(i => `<li><b>${i.code}</b>：${esc(i.msg)}</li>`).join('')}</ul>
+    <ul>${issues.map(i => `<li><b>${i.code}</b>：${esc(meshIssueText(i))}</li>`).join('')}</ul>
     ${tr('已显示 3D 模型，可继续分析或更换文件。')}</div>`;
 }
 
@@ -901,14 +971,23 @@ function renderHotspotList(container) {
   }
   card.hidden = false;
   const lowConf = hs.status === HS_STATUS.LOW_CONFIDENCE;
+  // 83.txt 三：三个数字加上用户能读懂的名字（原先只有 Mc / cm³ / 置信 三个缩写，
+  //   首次使用看不懂；单位是 cm³ 体积不是面积，置信度是算法评分不是概率——文案必须说清）。
   list.innerHTML = hs.hotspots.map((h, i) => `
     <button class="dc-hs-item" data-hs="${i}" title="${esc(h.displayCenterReliable === false
       ? tr('⚠ 该热结位置修正不可靠，当前显示计算坐标（复杂结构或开放边界）')
       : tr('显示位置已按局部壁厚中部修正；计算坐标不受影响'))}">
       <span class="dc-hs-id">${lowConf ? '?' : 'H' + (i + 1)}</span>
-      <span class="dc-hs-main">Mc <b>${fmt(h.mc, 1)}</b> mm</span>
-      <span class="dc-hs-sub">${fmt(h.regionVolumeCm3, 1)} cm³${h.confidence ? ` · ${tr('置信')} ${Math.round(h.confidence * 100)}%` : ''}</span>
+      <span class="dc-hs-main">${tr('模数')} <b>${fmt(h.mc, 1)}</b> mm</span>
+      <span class="dc-hs-sub">${tr('区域')} ${fmt(h.regionVolumeCm3, 1)} cm³${h.confidence ? ` · ${tr('置信度')} ${Math.round(h.confidence * 100)}%` : ''}</span>
     </button>`).join('');
+  // 一句话解释「置信度」的真实含义：算法内部评分，不是"正确概率"（83.txt 二·1 的结论）
+  const hint = container.querySelector('#dc_hsHint');
+  if (hint) {
+    hint.innerHTML = hs.hotspots.some(h => h.confidence)
+      ? tr('模数 = 热结区域的体积/表面积（越大越慢冷）；区域 = 热结体积；置信度 = 算法内部评分（模数、显著度、区域占比、多尺度稳定性加权），<b>不是"正确概率"</b>。')
+      : tr('模数 = 热结区域的体积/表面积（越大越慢冷）；区域 = 热结体积。');
+  }
   list.querySelectorAll('[data-hs]').forEach(btn => {
     btn.addEventListener('click', () => {
       const i = +btn.dataset.hs;
@@ -976,7 +1055,9 @@ function renderParams(container) {
   const hasStl = !!state.mesh && !manual;
   container.querySelector('#dc_unitChip').textContent = manual
     ? tr('单位：mm（手动输入固定 mm）')
-    : tr('单位：{u}（STL 无单位，按 {u} 计）', [state.unit]);
+    // PHASE 87 修复：该文案有两个 {u}，数组插值是**按顺序**替换的，
+    //   之前只传了 [state.unit] → 第二个 {u} 渲染成空白（页面显示"按 计"）。
+    : tr('单位：{u}（STL 无单位，按 {u} 计）', [state.unit, state.unit]);
   const size = proj.getV('geometry.size') || [0, 0, 0];
   const vol = proj.getV('geometry.volumeCm3') || 0;
   const wt = proj.getV('geometry.blankWeightKg') || 0;   // PHASE 28.3-A：毛坯重（计算口径）
@@ -1539,17 +1620,32 @@ function linkageHintHtml() {
   return `<div class="dc-link-hint">📎 ${tr('当前联动：')}${parts.join(' · ')}——${tr('改上面的材料/造型线/铸造方法，这些值会立即随动')}</div>`;
 }
 
-/** 材料大类 → 密度/出品率区间（材料表既有数值，不新增数据；冒口固态密度用 riser 表） */
+/**
+ * 材料大类 → 密度/出品率区间（材料表既有数值，不新增数据；冒口固态密度用 riser 表）。
+ *
+ * ★ PHASE 97 修复（97.txt §二）：**用户显式设过的参数不再被覆盖**。
+ *   本函数原先是**无条件** `proj.set(...)`，而它的孪生函数 `applyFamilyDefaults`（上面那个）
+ *   一直带着 `!isUserSetPath(path)` 守卫 —— 两个函数干同一件事，一个有守卫一个没有。
+ *   后果（浏览器实测，改材料大类时两个函数会先后各跑一次）：
+ *     用户在设计中心把「预估出品率」改成 78（src=USER_OVERRIDE）
+ *       → 改材料大类为「灰铁」 → yieldSug 被无条件改写成 75（表默认值）
+ *       → 再改回「球铁」 → 又变成 65
+ *     用户的 78 被**静默丢掉**，而且 src 被改成由材料表派生的值，
+ *     于是工艺检测中心的「来源」标签也跟着变 —— 用户会看到"我设的数不见了"。
+ *   ⚠ 语义仍然保留：**没被用户设过的**参数（src = DEFAULT/SCENARIO/DERIVED/…)照常随材料联动。
+ *   本函数与 `applyFamilyDefaults` 的分工（原先重复）不变，只补齐这一条守卫 —— 不是重构。
+ */
 function applyMaterialDefaults(fam, src = SRC.SCENARIO, conf = CONF.MEDIUM) {
   const md = GATING_MATS[matKeyOf(fam)];
   const rm = RISER_MATERIALS[fam];
+  const put = (path, v) => { if (!isUserSetPath(path) && v > 0) proj.set(path, v, src, conf); };
   if (md) {
-    proj.set('material.liquidDensity', md.rho, src, conf);
-    proj.set('material.yieldMin', md.y_min, src, conf);
-    proj.set('material.yieldMax', md.y_max, src, conf);
-    proj.set('material.yieldSug', md.y_sug, src, conf);
+    put('material.liquidDensity', md.rho);
+    put('material.yieldMin', md.y_min);
+    put('material.yieldMax', md.y_max);
+    put('material.yieldSug', md.y_sug);
   }
-  if (rm) proj.set('material.solidDensity', rm.rho, src, conf);
+  if (rm) put('material.solidDensity', rm.rho);
   proj.refreshWeight();
 }
 

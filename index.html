@@ -56,18 +56,25 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
         <span data-i18n="nav.designCenter">工艺设计中心</span>
       </button>
-      <button class="nav-item" data-view="donate" data-i18n-title="nav.donateTitle" title="捐助支持">
+      <!-- PHASE 93（93.txt §四）：工艺检测中心成为独立第五栏目。
+           「试用中」是**正常功能的能力范围说明**，不是错误状态（§十九），故用中性灰标签，不用警告色。 -->
+      <button class="nav-item" data-view="inspection" data-i18n-title="nav.inspectionTitle" title="工艺检测中心：检查已经完成的铸造工艺设计">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.6 15.6 21 21"/><path d="m7.6 10.7 2.2 2.2 3.8-4.3"/></svg>
+        <span data-i18n="nav.inspection">工艺检测中心</span><span class="nav-trial" data-i18n="nav.trial">试用中</span>
+      </button>
+      <button class="nav-item" data-view="donate" data-i18n-title="nav.donateTitle" title="支持与资源">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.8s-7.5-4.9-9.5-9.5C1 7.6 3.2 5 6 5c2 0 3.5 1.2 4.5 2.7L12 9l1.5-1.3C14.5 6.2 16 5 18 5c2.8 0 5 2.6 3.5 6.3-2 4.6-9.5 9.5-9.5 9.5z"/></svg>
-        <span data-i18n="nav.donate">捐助</span>
+        <span data-i18n="nav.donate">支持与资源</span>
       </button>
     </nav>
     <div class="sidebar-foot">
-      <div class="version"><b id="appVersion">v1.0.0</b><span data-i18n="app.versionSuffix"> · 完全离线 · 数据本地</span></div>
+      <div class="version"><b id="appVersion">v1.1.0</b><span data-i18n="app.versionSuffix"> · 完全离线 · 数据本地</span></div>
       <div class="sf-about">
-        <div class="sf-line" data-i18n="app.author">🧑‍💻 作者：感谢每一天的生活</div>
+        <div class="sf-line sf-author" data-i18n="app.author">🧑‍💻 作者：感谢每一天的生活</div>
         <div class="sf-line">📮 <a href="mailto:320451242@QQ.COM">320451242@QQ.COM</a></div>
         <div class="sf-line">📮 <a href="mailto:THEZHAZHE@gmail.com">THEZHAZHE@gmail.com</a></div>
         <div class="sf-line" data-i18n="app.qq">💬 QQ 交流群：1106396422</div>
+        <div class="sf-line" data-i18n="app.wechat">📱 微信公众号：铸造工具箱</div>
         <div class="sf-line sf-lite" data-i18n="app.mit">💚 免费开源（MIT）· 永久免费</div>
       </div>
       <button class="dev-badge" id="devBadge" hidden data-i18n-title="dev.lockTitle" title="退出开发者模式" data-i18n="dev.unlocked">🔓 开发者已解锁 · 点击锁定</button>
@@ -134,20 +141,20 @@
     <div class="donate-heart" style="font-size:.86rem;line-height:1.8" data-i18n-html="about.body">
       <p>🧑‍💻 <b>作者：</b>感谢每一天的生活<br>
          📮 <b>联系：</b>320451242@QQ.COM<br>
-         🏷️ <b>版本：</b>v1.0.0 · 完全离线 · 数据全部在本地，不上传任何服务器</p>
+         🏷️ <b>版本：</b>v1.1.0 · 完全离线 · 数据全部在本地，不上传任何服务器</p>
       <p>💚 <b>免费与开源：</b>本工具<b>完全开源（MIT 许可）、永久免费</b>，源码公开、可供学习研究。</p>
       <p>🚫 <b>请尊重作者的劳动：</b><br>
          · 任何使用、复制或分发时，必须保留本版权声明与作者署名，不得删除、遮挡、修改；<br>
          · 禁止将本工具或其修改版本<b>打包进商业产品、商业软件或收费服务</b>进行转售牟利；<br>
          · 工厂 / 个人用于自身内部的生产与工艺设计，完全允许。</p>
       <p>⚠️ <b>免责声明：</b>本工具按"现状"提供，作者不对其正确性或任何使用后果承担责任。推荐结果请结合本厂工艺复核。</p>
-      <p>☕ 如果它对你有一点用，欢迎在「捐助」里打赏支持；发现 bug 或数据问题，欢迎发邮件反馈。<br>
+      <p>☕ 如果它对你有一点用，欢迎在「支持与资源」里打赏支持；发现 bug 或数据问题，欢迎发邮件反馈。<br>
          <span style="color:var(--primary)">愿咱们的铸造行业，越走越亮 🌟</span></p>
     </div>
   </div>
 </div>
 
-<!-- ===== 二维码放大层（捐助平铺页的二维码由此放大，73.txt） ===== -->
+<!-- ===== 二维码放大层（「支持与资源」页的二维码由此放大，73.txt） ===== -->
 <div class="lightbox-overlay" id="qrLightbox" hidden>
   <button class="lightbox-close" data-close-lightbox data-i18n-aria="common.close" aria-label="关闭">✕</button>
   <img class="lightbox-img" src="assets/alipay_qr.png" data-i18n-alt="收款码放大" alt="收款码放大">

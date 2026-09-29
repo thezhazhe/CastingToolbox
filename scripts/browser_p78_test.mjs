@@ -140,7 +140,8 @@ try {
   const paramsTxt = await evalJs(`document.querySelector('#dc_params')?.textContent || ''`);
   check('B 参数区出现「浇注系统比例」下拉', await evalJs(`!!document.querySelector('#dc_m_ratio3')`));
   const ratioOpts = await evalJs(`[...document.querySelectorAll('#dc_m_ratio3 option')].map(o => o.textContent)`);
-  check('B 比例可选 6 档预设 + 自动推荐', ratioOpts.length === 7 && ratioOpts[0].includes('自动推荐') && ratioOpts.some(o => o.includes('封闭式 常用型')), `opt=${ratioOpts.length}`);
+  // PHASE 98：预设 6→7 档（新增「坎贝勒推荐」1:1:4），+ 自动推荐 = 8 项。断言仍是**精确计数**，未放宽。
+  check('B 比例可选 7 档预设 + 自动推荐', ratioOpts.length === 8 && ratioOpts[0].includes('自动推荐') && ratioOpts.some(o => o.includes('封闭式 常用型')) && ratioOpts.some(o => o.includes('坎贝勒推荐')), `opt=${ratioOpts.length}`);
   check('B 参数区不再有内浇道厚度/个数输入框', await evalJs(`!document.querySelector('#dc_m_gt2') && !document.querySelector('#dc_m_gc2')`), '');
   await setInput('#dc_m_ratio3', '开放式 宽大型');
   await wait(400);

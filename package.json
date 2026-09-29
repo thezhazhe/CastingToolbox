@@ -1,6 +1,6 @@
 {
   "name": "casting-toolbox",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Casting Toolbox 开源铸造工具箱：计算工具 + 知识库 + 工艺向导，完全离线、本地数据。",
   "main": "serve.js",
   "type": "module",

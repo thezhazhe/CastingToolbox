@@ -117,15 +117,13 @@ try {
   fs.writeFileSync(file, Buffer.from(shot.data, 'base64'));
   console.log('saved', file);
 
-  // 捐助弹窗截图
-  await send('Runtime.evaluate', { expression: `document.getElementById('btnDonate').click()` });
-  await wait(700);
+  // 支持与资源页截图（83.txt：原「捐助弹窗」已改为平铺页 #/donate）
+  await send('Runtime.evaluate', { expression: `location.hash = '#/donate'` });
+  await wait(900);
   shot = await send('Page.captureScreenshot', { format: 'png' });
-  file = path.join(OUT, '07b_捐助支持.png');
+  file = path.join(OUT, '07b_支持与资源.png');
   fs.writeFileSync(file, Buffer.from(shot.data, 'base64'));
   console.log('saved', file);
-  await send('Runtime.evaluate', { expression: `document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))` });
-  await wait(200);
 
   // 亮色主题截图
   await send('Runtime.evaluate', { expression: `document.documentElement.setAttribute('data-theme','light')` });

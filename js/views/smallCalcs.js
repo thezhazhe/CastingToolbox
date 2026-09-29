@@ -569,7 +569,7 @@ export function renderCastability(container, calc) {
     const hole = r.holeRow ? r.holeRow[batch] : null;
     q('#sc_results').innerHTML = `
       ${ex.exampleNote()}
-      ${row('📏 最小壁厚建议', r.mw.text, 'mm', 'ok', `${mat} · ${r.mw.bucketLabel}`)}
+      ${row('📏 最小壁厚建议', r.mw.text, 'mm', 'ok', `${mat} · ${t(r.mw.bucketLabel)}`)}
       ${row('🔺 临界壁厚（≈3×最小）', fmt(r.crit, 1), 'mm', '', '适宜壁厚在两者之间')}
       ${row('🔘 铸造圆角 · 外', 'R' + fmt(r.fillet.outer, 1), 'mm', '', `壁均值 ${fmt(avg,1)}（${w1}+${w2}）/2 · 取 1/5~1/3（${r.fillet.outerRange}）${r.fillet.outer === 2 ? ' · 已达工艺最小圆角 2mm，不随比例缩小' : ''}`)}
       ${row('🔘 铸造圆角 · 内', 'R' + fmt(r.fillet.inner, 1), 'mm', '', `壁均值 ${fmt(avg,1)} · 取 1/3~1/2（${r.fillet.innerRange}）${r.fillet.inner === 3 ? ' · 已达工艺最小圆角 3mm，不随比例缩小' : ''}`)}

@@ -7,6 +7,7 @@ import * as calculatorsView from './views/calculators.js';
 import * as knowledgeView from './views/knowledge.js';
 import * as wizardView from './views/wizard.js';
 import * as designCenterView from './views/designCenter.js';
+import * as inspectionCenterView from './views/inspectionCenter.js';   // PHASE 88/93：工艺检测中心
 import * as homeView from './views/home.js';
 import * as donateView from './views/donateView.js';
 import * as searchView from './views/search.js';
@@ -30,6 +31,7 @@ const VIEWS = {
   knowledge: knowledgeView,
   wizard: wizardView,
   designCenter: designCenterView,
+  inspection: inspectionCenterView,   // PHASE 88：#/inspection 工艺检测中心（PHASE 93 §四 起是侧栏独立栏目）
   donate: donateView,
   search: searchView,
 };

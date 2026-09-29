@@ -32,7 +32,7 @@
 // 用法: node tests/engineering-generated/gen_engineering.mjs
 // ============================================================
 import { tetMC, BOX, CYL_Y, union, subtract } from '../helpers/stlGen.js';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -202,18 +202,37 @@ export const MODELS = [
       const sdf = union(plate(...pl), ...steps.map(([x0, x1, dh]) =>
         BOX([x0, -pl[1] / 2, pz], [x1, pl[1] / 2, pz + dh])));
       const thickEnd = [112.5, 0, pz + 20];   // 60mm 厚段中心（z 中心 = 10+20=30）
+      // PHASE 85 修正（85.txt 十一）：下面三个「台阶」厚区的 centerMm 原先与 build() 实际
+      //   生成的 box 对不上（沿用了板中心 z=0，且 s20/s30 的 x 也错位）。这些字段只用于
+      //   描述与区域归属判定，不参与 pass/fail，因此错误一直没暴露。
+      //   现改为**由同一个 steps 数组推导**（与 SDF 同源，不是手填）：
+      //     台阶盒 = BOX([x0,-W/2,pz] → [x1,W/2,pz+dh])，几何中心 = ((x0+x1)/2, 0, pz+dh/2)
+      const stepZone = ([x0, x1, dh]) => ({
+        id: `s${20 + dh}`, kind: 'box',
+        sizeMm: [x1 - x0, pl[1], dh],
+        centerMm: [(x0 + x1) / 2, 0, pz + dh / 2],
+        vaRatioTheory: boxVAratio(x1 - x0, pl[1], dh),
+      });
+      const stepZones = steps.map(stepZone);          // s30 / s40 / s60（台阶部分）
+      const s60 = { ...stepZone(steps[2]), id: 's60', sizeMm: [75, 150, 60], centerMm: thickEnd, rank: 1 };
       return {
         sdf,
         bounds: [[-pl[0] / 2, -pl[1] / 2, -pz], [pl[0] / 2, pl[1] / 2, pz + 40]],
         manifest: {
           structure: { overallSizeMm: pl.concat(pl[2] + 40), bodyWallMm: pl[2] },
           thickZones: [
-            { id: 's20', kind: 'box', sizeMm: [150, 150, 20], centerMm: [-150, 0, 0] },
-            { id: 's30', kind: 'box', sizeMm: [75, 150, 30], centerMm: [-37.5, 0, 0] },
-            { id: 's40', kind: 'box', sizeMm: [75, 150, 40], centerMm: [37.5, 0, 5] },
-            { id: 's60', kind: 'box', sizeMm: [75, 150, 60], centerMm: thickEnd, vaRatioTheory: boxVAratio(75, 150, 60), rank: 1 },
+            // 板本体（20mm）——不是热点，但作为厚区记录保留
+            { id: 's20', kind: 'box', sizeMm: [pl[0], pl[1], pl[2]], centerMm: [0, 0, 0], vaRatioTheory: boxVAratio(...pl) },
+            stepZones[0], stepZones[1], s60,
           ],
           expectedHotspots: [{ thickZoneId: 's60', positionMm: thickEnd, toleranceMm: 35, rank: 1 }],
+          // PHASE 85（85.txt 十一）：generator 自己的 notes 早就写明"观察项，非必然 FAIL"，
+          //   但三个次厚台阶既没进 expectedHotspots 也没进任何可选集合 → V3 报出来就被算成误报。
+          //   现按 notes 的原意把它们列为 optionalHotspots（检出/不检出都不判失败）。
+          optionalHotspots: [
+            { thickZoneId: 's40', positionMm: stepZones[1].centerMm, toleranceMm: 35, kind: 'box', reason: '次厚台阶（局部厚度 40+20）；generator notes 声明"观察项，非必然 FAIL"' },
+            { thickZoneId: 's30', positionMm: stepZones[0].centerMm, toleranceMm: 35, kind: 'box', reason: '次厚台阶（局部厚度 30+20）；同上' },
+          ],
           notes: '物理热结 = 最厚端。若 V3 把 30/40 段也报出 = 渐变全报问题（观察项，非必然 FAIL）',
         },
       };
@@ -253,7 +272,10 @@ export const MODELS = [
         manifest: {
           structure: { overallSizeMm: [fRo * 2, L, fRo * 2], bodyWallMm: ro - ri },
           thickZones: [
-            { id: 'flange70', kind: 'ring', sizeMm: [fRo * 2, ro * 2, fH], centerMm: [0, 0, 0], vaRatioTheory: ringVAratio(fRo, ro, fH), rank: 1 },
+            // PHASE 85（85.txt 三/四）：ring 厚区补上 axis —— 区域归属判定需要它才知道
+            //   "哪条轴是环的轴向"。由构造它的 CYL_Y_AT 直接推导，不是手填。
+            //   sizeMm 沿用既有含义 = [外径, 内径, 高]（不另造一套字段）。
+            { id: 'flange70', kind: 'ring', axis: [0, 1, 0], sizeMm: [fRo * 2, ro * 2, fH], centerMm: [0, 0, 0], vaRatioTheory: ringVAratio(fRo, ro, fH), rank: 1 },
             { id: 'tubeWall', kind: 'tube', sizeMm: [ro * 2, ri * 2, L], centerMm: [0, 0, 0] },
           ],
           expectedHotspots: [{
@@ -544,16 +566,22 @@ export const MODELS = [
         manifest: {
           structure: { overallSizeMm: [fRo * 2, L + fH, fRo * 2], bodyWallMm: ro - ri },
           thickZones: [
-            { id: 'flangeU', kind: 'ring', sizeMm: [fRo * 2, fRi * 2, fH], centerMm: [0, L / 2, 0], vaRatioTheory: ringVAratio(fRo, fRi, fH), rank: 1 },
-            { id: 'flangeD', kind: 'ring', sizeMm: [fRo * 2, fRi * 2, fH], centerMm: [0, -L / 2, 0], vaRatioTheory: ringVAratio(fRo, fRi, fH), rank: 1 },
-            { id: 'midRing', kind: 'ring', sizeMm: [mRo * 2, mRi * 2, mH], centerMm: cM, vaRatioTheory: ringVAratio(mRo, mRi, mH), rank: 3 },
-            { id: 'stub', kind: 'ring', sizeMm: [sRo * 2, sRi * 2, sH], centerMm: [ro + sH / 2, 0, 0], vaRatioTheory: ringVAratio(sRo, sRi, sH), rank: 2 },
+            { id: 'flangeU', kind: 'ring', axis: [0, 1, 0], sizeMm: [fRo * 2, fRi * 2, fH], centerMm: [0, L / 2, 0], vaRatioTheory: ringVAratio(fRo, fRi, fH), rank: 1 },
+            { id: 'flangeD', kind: 'ring', axis: [0, 1, 0], sizeMm: [fRo * 2, fRi * 2, fH], centerMm: [0, -L / 2, 0], vaRatioTheory: ringVAratio(fRo, fRi, fH), rank: 1 },
+            { id: 'midRing', kind: 'ring', axis: [0, 1, 0], sizeMm: [mRo * 2, mRi * 2, mH], centerMm: cM, vaRatioTheory: ringVAratio(mRo, mRi, mH), rank: 3 },
+            { id: 'stub', kind: 'ring', axis: [1, 0, 0], sizeMm: [sRo * 2, sRi * 2, sH], centerMm: [ro + sH / 2, 0, 0], vaRatioTheory: ringVAratio(sRo, sRi, sH), rank: 2 },
           ],
+          // PHASE 85 修正（85.txt 十）：原先 stub/midRing 同时出现在 expectedHotspots 与
+          //   下面的 observations（"非必报"）里 —— 自相矛盾：既然非必报，就不该进必检集，
+          //   否则 V3 不报就记漏检、报了又可能记误报。现按 observations 的原意拆成
+          //   optionalHotspots（允许检出、允许不检出，两边都不判失败）。
           expectedHotspots: [
             { thickZoneId: 'flangeU', kind: 'ring', axis: [0, 1, 0], centerMm: [0, L / 2, 0], innerR: fRi, outerR: fRo, halfH: fH / 2, toleranceMm: 40, rank: 1 },
             { thickZoneId: 'flangeD', kind: 'ring', axis: [0, 1, 0], centerMm: [0, -L / 2, 0], innerR: fRi, outerR: fRo, halfH: fH / 2, toleranceMm: 40, rank: 1 },
-            { thickZoneId: 'stub', positionMm: [ro + sH / 2, 0, 0], toleranceMm: 30, rank: 2 },
-            { thickZoneId: 'midRing', kind: 'ring', axis: [0, 1, 0], centerMm: cM, innerR: mRi, outerR: mRo, halfH: mH / 2, toleranceMm: 30, rank: 3 },
+          ],
+          optionalHotspots: [
+            { thickZoneId: 'stub', kind: 'ring', axis: [1, 0, 0], centerMm: [ro + sH / 2, 0, 0], innerR: sRi, outerR: sRo, halfH: sH / 2, toleranceMm: 30, rank: 2, reason: '弱次级热结（M≈0.4×法兰，置信度 ~0.49 < 0.5 拒）——generator observations 声明"非必报"' },
+            { thickZoneId: 'midRing', kind: 'ring', axis: [0, 1, 0], centerMm: cM, innerR: mRi, outerR: mRo, halfH: mH / 2, toleranceMm: 30, rank: 3, reason: '同上' },
           ],
           observations: 'stub/midRing 为弱次级热结（M≈0.4×法兰）：置信度 ~0.49 < 0.5 拒——记录（14.txt 测试19），非必报',
           rankingBasis: `理论 V/A：法兰 ${ringVAratio(fRo, fRi, fH).toFixed(2)} > 短管 ${ringVAratio(sRo, sRi, sH).toFixed(2)} > 中环 ${ringVAratio(mRo, mRi, mH).toFixed(2)}`,
@@ -585,7 +613,8 @@ export const MODELS = [
             { id: 'inner80', kind: 'box', sizeMm: [100, 100, 80], centerMm: cInner, vaRatioTheory: boxVAratio(100, 100, 80), rank: 1 },
             { id: 'basePad40', kind: 'box', sizeMm: [200, 200, 40], centerMm: cBase, vaRatioTheory: boxVAratio(200, 200, 40), rank: 2 },
             { id: 'sideBoss', kind: 'box', sizeMm: [100, 100, 60], centerMm: cSide, vaRatioTheory: boxVAratio(100, 100, 60), rank: 3 },
-            { id: 'topFlange', kind: 'ring', sizeMm: [240, 120, 60], centerMm: cFlange, vaRatioTheory: ringVAratio(120, 60, 60), rank: 4 },
+            // axis 由构造它的 CYL_Z 推导（PHASE 85，85.txt 四：区域归属判定需要轴向）
+            { id: 'topFlange', kind: 'ring', axis: [0, 0, 1], sizeMm: [240, 120, 60], centerMm: cFlange, vaRatioTheory: ringVAratio(120, 60, 60), rank: 4 },
           ],
           expectedHotspots: [
             { thickZoneId: 'inner80', positionMm: cInner, toleranceMm: 35, rank: 1 },
@@ -607,6 +636,16 @@ const isMain = !!process.argv[1] && import.meta.url === pathToFileURL(process.ar
 /* ================= 生成 ================= */
 const pad2 = (b, e = 4) => [b[0].map(v => v - e), b[1].map(v => v + e)];
 
+// PHASE 85（85.txt 十五/十六）：--meta-only 只重写 manifest.json / expected.json，
+//   **完全不碰 model.stl**（也不跑 tetMC）。GT metadata 的修订不该牵动网格，
+//   否则 legacy 9/20 就不再可比。
+const META_ONLY = isMain && process.argv.includes('--meta-only');
+
+/** 从已有 manifest.json 里取回 mesh 块（meta-only 时无网格信息，必须沿用旧值） */
+function existingMeshBlock(dir) {
+  try { return JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')).mesh || null; } catch { return null; }
+}
+
 if (isMain) for (const m of MODELS) {
   const { sdf, bounds, manifest } = m.build();
   const dir = join(MODELS_DIR, m.id);
@@ -616,58 +655,84 @@ if (isMain) for (const m of MODELS) {
   const walls = manifest.structure?.thickZones?.length ? manifest.structure.thickZones.map(z => z.sizeMm) : [];
   const minF = Math.min(...walls.flat().filter(v => v > 0), manifest.structure.bodyWallMm);
   const res = pickRes(mdim, minF);
-  const mesh = { vertices: tetMC(sdf, pad2(bounds), res), triCount: 0 };
-  mesh.triCount = mesh.vertices.length / 9;
+  let meshBlock;
 
-  // model.stl（ASCII）
-  const lines = ['solid eng'];
-  for (let t = 0; t < mesh.triCount; t++) {
-    lines.push('  facet normal 0 0 0', '    outer loop');
-    for (let k = 0; k < 3; k++) {
-      const i = t * 9 + k * 3;
-      lines.push(`      vertex ${mesh.vertices[i].toFixed(5)} ${mesh.vertices[i + 1].toFixed(5)} ${mesh.vertices[i + 2].toFixed(5)}`);
+  if (META_ONLY) {
+    meshBlock = existingMeshBlock(dir) || { res, triCount: 0, bounds, mdim };
+  } else {
+    const mesh = { vertices: tetMC(sdf, pad2(bounds), res), triCount: 0 };
+    mesh.triCount = mesh.vertices.length / 9;
+    meshBlock = { res, triCount: mesh.triCount, bounds, mdim };
+
+    // model.stl（ASCII）
+    const lines = ['solid eng'];
+    for (let t = 0; t < mesh.triCount; t++) {
+      lines.push('  facet normal 0 0 0', '    outer loop');
+      for (let k = 0; k < 3; k++) {
+        const i = t * 9 + k * 3;
+        lines.push(`      vertex ${mesh.vertices[i].toFixed(5)} ${mesh.vertices[i + 1].toFixed(5)} ${mesh.vertices[i + 2].toFixed(5)}`);
+      }
+      lines.push('    endloop', '  endfacet');
     }
-    lines.push('    endloop', '  endfacet');
+    lines.push('endsolid eng');
+    writeFileSync(join(dir, 'model.stl'), lines.join('\n'));
+
+    // 网格密度变体（14.txt 六.10）：t08/t16 额外生成 res 90/120 的 STL
+    if (m.id === 't08_pipeFlange70' || m.id === 't16_extreme_10_100') {
+      for (const r2 of [90, 120]) {
+        const m2 = { vertices: tetMC(sdf, pad2(bounds), r2), triCount: 0 };
+        m2.triCount = m2.vertices.length / 9;
+        const l2 = ['solid eng'];
+        for (let t = 0; t < m2.triCount; t++) {
+          l2.push('  facet normal 0 0 0', '    outer loop');
+          for (let k = 0; k < 3; k++) {
+            const i = t * 9 + k * 3;
+            l2.push(`      vertex ${m2.vertices[i].toFixed(5)} ${m2.vertices[i + 1].toFixed(5)} ${m2.vertices[i + 2].toFixed(5)}`);
+          }
+          l2.push('    endloop', '  endfacet');
+        }
+        l2.push('endsolid eng');
+        writeFileSync(join(dir, `model_r${r2}.stl`), l2.join('\n'));
+      }
+    }
   }
-  lines.push('endsolid eng');
-  writeFileSync(join(dir, 'model.stl'), lines.join('\n'));
 
   // manifest.json（几何参数 + 厚区定义 + 测试目的）
   const manifestFull = {
     name: m.id, category: m.category, testId: Number(m.id.slice(1, 3)), purpose: m.purpose,
     generatedBy: 'tests/engineering-generated/gen_engineering.mjs',
-    mesh: { res, triCount: mesh.triCount, bounds, mdim },
+    mesh: meshBlock,
     ...manifest,
   };
   writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifestFull, null, 2));
 
   // expected.json（GT：全部由几何参数解析计算，独立于任何 V3 运行）
+  //   PHASE 85：新增 optionalHotspots（允许检出、不判失败）；并把**上一版的 expectedHotspots
+  //   原样冻结进 legacy 块** —— 85.txt 九/十五 要求 legacy 9/20 必须仍可复现，而新体系
+  //   修正了 t19 的定义矛盾，两者不能共用一套判定集。
+  const legacyPrev = (() => {
+    try {
+      const old = JSON.parse(readFileSync(join(dir, 'expected.json'), 'utf8'));
+      return Array.isArray(old.legacy?.expectedHotspots) ? old.legacy.expectedHotspots : old.expectedHotspots;
+    } catch { return undefined; }
+  })();
   const expected = {
     name: m.id, testId: Number(m.id.slice(1, 3)), category: m.category,
     independence: 'GT 由 build() 内几何参数解析计算（boxVAratio/ringVAratio 解析公式），在运行 V3 之前写入；禁止依据 V3 结果修改',
+    gtRevision: 2,
     ...manifest,
   };
+  if (legacyPrev) {
+    // 只在**首次升级**时冻结；此后每次 meta-only 都沿用已冻结的那份（否则跑两次就丢了原始基线）
+    expected.legacy = {
+      frozenAt: 'PHASE 85 (2026-09-23)',
+      note: 'PHASE 85 之前的 expectedHotspots 原样冻结，仅供复现 legacy 判定（85.txt 九：legacy score 是历史指标，不因新体系改变）',
+      expectedHotspots: legacyPrev,
+    };
+  }
   writeFileSync(join(dir, 'expected.json'), JSON.stringify(expected, null, 2));
 
-  // 网格密度变体（14.txt 六.10）：t08/t16 额外生成 res 90/120 的 STL
-  if (m.id === 't08_pipeFlange70' || m.id === 't16_extreme_10_100') {
-    for (const r2 of [90, 120]) {
-      const m2 = { vertices: tetMC(sdf, pad2(bounds), r2), triCount: 0 };
-      m2.triCount = m2.vertices.length / 9;
-      const l2 = ['solid eng'];
-      for (let t = 0; t < m2.triCount; t++) {
-        l2.push('  facet normal 0 0 0', '    outer loop');
-        for (let k = 0; k < 3; k++) {
-          const i = t * 9 + k * 3;
-          l2.push(`      vertex ${m2.vertices[i].toFixed(5)} ${m2.vertices[i + 1].toFixed(5)} ${m2.vertices[i + 2].toFixed(5)}`);
-        }
-        l2.push('    endloop', '  endfacet');
-      }
-      l2.push('endsolid eng');
-      writeFileSync(join(dir, `model_r${r2}.stl`), l2.join('\n'));
-    }
-  }
-
-  console.log(`${m.id.padEnd(22)} ${String(mesh.triCount).padStart(8)} tri  res=${res}  H${expected.expectedHotspots.length}  ${m.category}`);
+  console.log(`${m.id.padEnd(22)} ${String(meshBlock.triCount).padStart(8)} tri  res=${meshBlock.res}  ` +
+    `必检${expected.expectedHotspots.length} 可选${(expected.optionalHotspots || []).length}  ${m.category}${META_ONLY ? '   [meta-only]' : ''}`);
 }
-if (isMain) console.log(`\n已生成 ${MODELS.length} 个模型 → ${MODELS_DIR}`);
+if (isMain) console.log(`\n已生成 ${MODELS.length} 个模型 → ${MODELS_DIR}${META_ONLY ? '（仅 metadata，model.stl 未改动）' : ''}`);

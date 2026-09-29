@@ -161,7 +161,9 @@ export function buildPage1Data(pack) {
   if (matKey && maxDim > 0) {
     const mw = minWallOf(matKey, maxDim);
     const crit = criticalWallOf(mw.mid);
-    const lines = [{ cls: 'ok', text: tr('建议最小壁厚 {a} mm（{b} · {c}砂型档）', [mw.text, tr(matKey), mw.bucketLabel]) }];
+    // PHASE 87：bucketLabel（'轮廓＞500mm' 这类）之前**没有包 tr()** 直接插进模板，
+    //   所以 en-US.js 里早就有的词条从来没生效过 —— 英文界面上它是整块中文里唯一漏出来的。
+    const lines = [{ cls: 'ok', text: tr('建议最小壁厚 {a} mm（{b} · {c}砂型档）', [mw.text, tr(matKey), tr(mw.bucketLabel)]) }];
     if (crit > 0) lines.push({ cls: 'info', text: tr('临界壁厚 ≈ {v} mm：超过后需重点考虑补缩与圆角（该档为中值推算）', [fmtN(crit, 1)]) });
     if (thinLine) lines.unshift({ cls: 'warn', text: thinLine.text });
     bRow(tr('最小壁厚'), thinLine ? tr('检测 + 建议') : tr('建议参考'), thinLine ? 'warn' : 'info', lines);

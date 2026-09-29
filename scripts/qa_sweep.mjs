@@ -168,16 +168,12 @@ try {
   const gatingModalClosed = await evalJ(`document.getElementById('g_modal').hidden`);
   check('浇注报告弹窗默认隐藏/可开/可关', gatingModalHidden0 && gatingModalOpen && gatingModalClosed);
 
-  // 捐助弹窗
-  await send('Page.navigate', { url: URL });
-  await wait(1000);
-  await evalJ(`document.getElementById('btnDonate').click()`);
-  await wait(400);
-  const donateOpen = await evalJ(`!document.getElementById('donateModal').hidden`);
-  await evalJ(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))`);
-  await wait(200);
-  const donateClosed = await evalJ(`document.getElementById('donateModal').hidden`);
-  check('捐助弹窗可开/可关', donateOpen && donateClosed);
+  // 支持与资源页（83.txt：原「捐助弹窗」73.txt 已改平铺页 #/donate，此处同步）
+  await send('Page.navigate', { url: URL + '#/donate' });
+  await wait(1200);
+  const donateOpen = await evalJ(`!!document.querySelector('.donate-page')`);
+  const donateQr = await evalJ(`(function(){ var im = document.querySelector('.donate-page .donate-qr'); return !!im && im.complete && im.naturalWidth > 0; })()`);
+  check('支持与资源页打开 + 二维码加载', donateOpen && donateQr);
 
   // ---- 汇总 ----
   console.log('');
