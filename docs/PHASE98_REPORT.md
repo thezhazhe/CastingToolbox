@@ -308,3 +308,54 @@ zip 实际内容：**292 个条目**，顶层只有 `assets/ calcs/ css/ data/ j
 - 术语三写并存（热节 / 热结 / 热点）
 - `large thin` 性能 9~12s > 8s（§5.1，独立未计分脚本）
 - 英文覆盖缺口（动态 key 需手工登记）
+
+---
+
+## 9. Git commit 与 GitHub V1.1 发布结果
+
+### 9.1 commit
+
+```
+07001b3  release: CastingToolbox v1.1.0 —— 工艺检测中心 + 浇注系统检测 + 坎贝勒推荐预设
+         73 个文件（44 新增 / 29 修改，+24993 / −282）
+```
+
+这一次提交把 `ce7e87b` 之后积压的 **PHASE 83~98 全部入库**（此前一直是 untracked/modified，
+一次 `git clean` 就会全丢）。提交前逐项核对：无 `_p98_*` / `_edge_*` / `screenshots/` / `dist/` /
+`*.exe` / `node_modules` 混入（脚本化 grep 命中 0）。
+
+### 9.2 推送（走 API 通道）
+
+`github.com` 的 git 传输在本机被阻断，沿用既有 `scripts/publish_via_api.mjs`：
+
+```
+远端 main  d517fe00 → 8c883f3562fd3c490fe4134449dd83b88a1e389c
+需上传 73 个 / 删除 0 个      ← 与本地 commit 的文件数精确吻合
+```
+
+（按 98.txt §八 的禁令：**全程未执行** `git clean -fd` / `git reset --hard` / 任何删除未跟踪文件的命令。）
+
+### 9.3 Release
+
+| 项 | 值 |
+|---|---|
+| Tag | `v1.1.0`（指向 `8c883f3`） |
+| 标题 | `Casting Toolbox v1.1.0 · 工艺检测中心 + 内浇口连接面定向 + 坎贝勒推荐预设` |
+| URL | https://github.com/thezhazhe/CastingToolbox/releases/tag/v1.1.0 |
+| 状态 | **Latest** · 非草稿 · 非预发布 |
+| 附件 | `CastingToolbox-v1.1.0-win64.zip` · 34.1 MB · state=`uploaded` |
+
+命名与正文结构**逐项沿用 v1.0.0**（标题句式 / 中英双语 / Highlights / Reliability / Downloads 表 / Notes / 作者署名），
+未自创格式。**本次未附 APK**（98.txt §七：只打 Windows），正文里已如实写明。
+
+### 9.4 线上验证（实测）
+
+| 检查 | 结果 |
+|---|---|
+| 下载链接 | `…/releases/download/v1.1.0/CastingToolbox-v1.1.0-win64.zip` → 302 → **200**，`Content-Length: 35823832`（与本地 zip 逐字节同尺寸） |
+| 仓库 main `js/version.js` | `export const VERSION = '1.1.0'` ✓ |
+| 仓库 main `calcs/gating.js` | 含 `坎贝勒推荐` ✓ |
+| **GitHub Pages**（自动重建） | `https://thezhazhe.github.io/CastingToolbox/` 已是 `v1.1.0`，且 `index.html` 含 `data-i18n="app.wechat">📱 微信公众号：铸造工具箱`、`calcs/gating.js` 含 `坎贝勒推荐` ✓ |
+| v1.0.0 及更早产物 | **未删除**，`dist/` 下 v0.15 / v0.16 / v1.0.0 原样保留 ✓ |
+
+> GitHub Pages 为 legacy 构建器（源 = main 分支根目录），重建是自动的；本次重建已在数分钟内完成。
