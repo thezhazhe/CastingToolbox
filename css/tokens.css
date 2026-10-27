@@ -45,6 +45,12 @@
 
   --border:        rgba(148,163,184,0.14);
   --border-strong: rgba(148,163,184,0.26);
+  /* 三维视口（145 §四）：与页面同族、比页面底色略亮一档 ⇒ 既是"窗口"又不形成黑洞 */
+  --view-bg:           #0F1522;
+  --view-ctrl-bg:      rgba(15,21,34,0.74);
+  --view-ctrl-btn-bg:  rgba(255,255,255,0.06);
+  --view-ctrl-fg:      rgba(255,255,255,0.86);
+  --view-ctrl-border:  rgba(255,255,255,0.16);
 
   --radius:    12px;
   --radius-sm: 8px;
@@ -109,6 +115,12 @@
 
     --border:        rgba(15,23,42,0.12);
     --border-strong: rgba(15,23,42,0.22);
+    /* 三维视口：柔和中性浅色（不用纯白——纯白 + 浅灰模型会糊在一起） */
+    --view-bg:           #E7EDF6;
+    --view-ctrl-bg:      rgba(255,255,255,0.86);
+    --view-ctrl-btn-bg:  rgba(15,23,42,0.05);
+    --view-ctrl-fg:      #33415C;
+    --view-ctrl-border:  rgba(15,23,42,0.16);
 
     --shadow-sm: 0 1px 2px rgba(15,23,42,0.08);
     --shadow-md: 0 4px 16px rgba(15,23,42,0.12);
@@ -147,6 +159,12 @@
   --border:        rgba(15,23,42,0.12);
   --border-strong: rgba(15,23,42,0.22);
 
+  --view-bg:           #E7EDF6;
+  --view-ctrl-bg:      rgba(255,255,255,0.86);
+  --view-ctrl-btn-bg:  rgba(15,23,42,0.05);
+  --view-ctrl-fg:      #33415C;
+  --view-ctrl-border:  rgba(15,23,42,0.16);
+
   --shadow-sm: 0 1px 2px rgba(15,23,42,0.08);
   --shadow-md: 0 4px 16px rgba(15,23,42,0.12);
   --shadow-lg: 0 16px 48px rgba(15,23,42,0.18);
@@ -154,6 +172,12 @@
 }
 
 /* ---- Reset ---- */
+/* ★ `[hidden]` 必须真的隐藏：它是属性选择器，与 .btn/.chip 这类类选择器**同权重**，
+   作者样式排在 UA 之后 ⇒ `.btn{display:inline-flex}` 会把 hidden 顶掉。
+   本仓库原先靠逐个补 `.nav-item[hidden]` / `.dev-badge[hidden]` 守卫，漏一个就漏一个
+   （实测：移动端顶栏的 #devLockBtn 明明 hidden 却占 44px 并且**真的显示出来**，把
+    顶栏挤到没有余量）。这里一次性兜住。 */
+[hidden] { display: none !important; }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 15px; -webkit-text-size-adjust: 100%; transition: background-color var(--t) var(--ease), color var(--t) var(--ease); }
 body {

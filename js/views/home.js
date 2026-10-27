@@ -110,9 +110,15 @@ export async function render(container) {
       </div>
 
       <div id="homeReco"></div>
+      <!-- 168 A：窄屏底部导航会隐藏侧栏信息区；在首页复制同一份分组链接，避免手机上完全看不到产品/联系信息。 -->
+      <div class="home-siteinfo" id="homeSiteInfo" aria-label="${esc(t('产品、联系与开源信息'))}"></div>
     </div>
   `;
   if (prevQuery) container.querySelector('#homeSearch').value = prevQuery;   // 切语言不丢已输入的搜索词
+  // 复制侧栏已渲染的分组 HTML（不复制 id / 不新增第二套数据）；侧栏在窄屏隐藏，但内容仍可访问。
+  const sfAbout = document.querySelector('.sidebar-foot .sf-about');
+  const homeInfo = container.querySelector('#homeSiteInfo');
+  if (sfAbout && homeInfo) homeInfo.innerHTML = sfAbout.innerHTML;
 
   // 搜索：回车 + 按钮 + 实时下拉（与顶栏共用一套逻辑）
   container.querySelector('#homeSearchBtn').addEventListener('click', () => doSearch(container.querySelector('#homeSearch').value));

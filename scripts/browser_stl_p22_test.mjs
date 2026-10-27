@@ -173,42 +173,85 @@ try {
 
   // ④ 概览卡 + 面板顺序
   r = await send('Runtime.evaluate', { expression: `(() => {
-    const titles = [...document.querySelectorAll('#dc_panel .dc-panel-title')].map(t => t.textContent.trim().replace(/\\s+/g, ' '));
+    // R6 §3.1.1：常驻左栏 .dc-rail 已取消，两块内容迁入右侧按需任务面板。
+    //   ⚠ 面板**默认收起** ⇒ 先展开再取标题，否则量到的是空列表（那就成了"真空通过"）。
+    //   ⚠⚠ 本段是**模板字符串**——注释里**绝不能出现反引号**（会提前闭合字符串，见 R6-S1 踩坑）。
+    const btn = document.querySelector('#dc_taskToggle');
+    if (btn && document.querySelector('#dc_ws')?.dataset.task !== 'open') btn.click();
+    const titles = [...document.querySelectorAll('#dc_taskPanel .dc-panel-title, #dc_panel .dc-panel-title')].map(t => t.textContent.trim().replace(/\\s+/g, ' '));
     const ov = document.getElementById('dc_overviewCard');
     return JSON.stringify({
       titles,
       overviewHidden: ov ? ov.hidden : true,
       overviewText: (document.getElementById('dc_overview') || {}).textContent || '',
       order: titles.join('→'),
+      railGone: !document.querySelector('#dc_rail'),   // R6：左栏必须**真的没有了**
     });
   })()`, returnByValue: true });
   const panel = JSON.parse(r.result.value);
   check('概览卡可见且有内容', !panel.overviewHidden && panel.overviewText.includes('热结数量'), panel.overviewText.slice(0, 60));
-  check('面板顺序：概览（模型信息枢纽）→热结→参数与执行条件（PHASE 71.7：模型信息并入概览）',
-    panel.order.startsWith('① 分析结果概览') && panel.order.includes('② 热结列表') && panel.order.includes('③ 参数与执行条件') && !panel.order.includes('分析任务') && !panel.order.includes('④ 模型信息'), panel.order);
+  /* V2.0-P1-01 D2/D3：概览/热结迁入左栏、参数区移到工作区下方，并在左栏首位新增「设计步骤」卡。
+     断言的**原意**是"概览 → 热结 → 参数 的相对顺序 + 不得出现分析任务/④模型信息"，
+     在此改为按相对位置判定（原 `startsWith` 会因为前面多了一张步骤卡而误报）。 */
+  /* 146 §4.1/§4.3：左栏精简为**两个主体区域**（① 分析结果概览 → ② 热结列表），
+     独立的「设计步骤」「分析条件」内容块已删除（引导改由顶部主按钮 + 状态 chip 承担）。
+     原判据的**原意**（概览在热结之前、不得出现"分析任务"、不得有重复的模型信息卡）逐条保留。 */
+  /* ⚠ 2026-10-16 · R6.txt §3.1.1 取代了判据的**载体**（原落在 `#dc_rail`，现落在 `#dc_taskPanel`）。
+     原意**逐条保留**：概览在热结之前、两个主体区域、无步骤卡 / 无分析条件块 / 无参数区 / 无分析任务。
+     另补一条：**左栏本身确实没有了**（不是"两处都有"）。 */
+  check('R6 §3.1.1 右面板只剩两个主体区域：概览（模型信息枢纽）→ 热结；且无步骤卡/无分析条件块/无参数区/无分析任务/无左栏',
+    !panel.order.includes('设计步骤') && !panel.order.includes('分析条件')
+    && panel.order.indexOf('① 分析结果概览') >= 0
+    && panel.order.indexOf('① 分析结果概览') < panel.order.indexOf('② 热结列表')
+    && !panel.order.includes('参数与执行条件') && !panel.order.includes('分析任务') && !panel.order.includes('④ 模型信息')
+    && panel.railGone === true, panel.order + ' | railGone=' + panel.railGone);
 
   // ⑤ 最大化窗口：右侧内容不超出父容器（30.txt 十六）
-  r = await send('Runtime.evaluate', { expression: `(() => {
-    const main = document.querySelector('.dc-main');
-    const panel = document.querySelector('.dc-panel');
-    const panelSecs = [...document.querySelectorAll('.dc-panel-sec')];
-    const mRect = main.getBoundingClientRect();
-    const pRect = panel.getBoundingClientRect();
-    return JSON.stringify({
-      docScrollW: document.documentElement.scrollWidth,
-      docClientW: document.documentElement.clientWidth,
-      mainRight: +mRect.right.toFixed(1),
-      panelRight: +pRect.right.toFixed(1),
-      panelWidth: +pRect.width.toFixed(1),
-      secOverflow: panelSecs.filter(s => s.getBoundingClientRect().right > mRect.right + 0.5).length,
-      paramsGridOverflow: (() => { const g = document.querySelector('.dc-params-grid'); if (!g) return 0; const gr = g.getBoundingClientRect(); const pr = panel.getBoundingClientRect(); return +(gr.right - pr.right).toFixed(1); })(),
-    });
-  })()`, returnByValue: true });
+  r = await send('Runtime.evaluate', { expression: `JSON.stringify({
+    docScrollW: document.documentElement.scrollWidth,
+    docClientW: document.documentElement.clientWidth,
+  })`, returnByValue: true });
   const ovf = JSON.parse(r.result.value);
   check('页面无水平溢出（scrollWidth ≤ clientWidth）', ovf.docScrollW <= ovf.docClientW, `scroll=${ovf.docScrollW} client=${ovf.docClientW}`);
-  check('右侧面板未超出主网格', ovf.panelRight <= ovf.mainRight + 0.5, `panel=${ovf.panelRight} main=${ovf.mainRight}`);
-  check('面板内各节未溢出', ovf.secOverflow === 0, `溢出节数=${ovf.secOverflow}`);
-  check('参数网格未超出面板', ovf.paramsGridOverflow <= 0.5, `超出=${ovf.paramsGridOverflow}px`);
+  /* ⚠ 146 修（**R3 起就存在、一直没人跑到的真缺陷**）：下面这段原来引用 `.dc-panel`
+     （R2 的参数区浮层）与 `.dc-params-grid` —— 这两个元素在 R3 就随参数窗口一起没了，
+     `panel.getBoundingClientRect()` 抛 TypeError ⇒ 整个脚本在这里**中断**，
+     后面所有断言根本没执行（"只错 1 条"的观感是假的：那是**跑挂之前**的最后一条）。
+     现在改为对**真实存在的两个工作区**（左栏 `.dc-rail` + 三维 `.dc-stage`）做同一件事：
+     不超出工作台、内部各节不溢出。 */
+  /* ⚠ `await send(...).result.value` 是**错的**：成员访问优先级高于 await，
+     实际算的是 `await (send(...).result.value)` —— 对 Promise 取 .result 得 undefined，
+     再取 .value 直接抛 TypeError（本脚本自 R3 起就一直崩在这一行，后面几十条断言从未执行）。
+     必须写成 `(await send(...)).result.value`。 */
+  /* ⚠ R6 §3.1.1 取代：判据载体由 `#dc_rail` 改为 `#dc_taskPanel`（左栏已取消）。
+     原意逐条保留：**区域内各节不溢出自身 + 恰好 2 节（概览 + 热结）+ 工作区不超出工作台**。
+     面板默认收起 ⇒ 先展开再量（否则量到 0×0，等于什么都没验）。 */
+  await send('Runtime.evaluate', { expression: `(() => { const b = document.querySelector('#dc_taskToggle');
+    if (b && document.querySelector('#dc_ws')?.dataset.task !== 'open') b.click(); return 1; })()`, returnByValue: true });
+  await wait(600);
+  const layout = JSON.parse((await send('Runtime.evaluate', { expression: `(() => {
+    const ws = document.querySelector('.dc-ws').getBoundingClientRect();
+    const rail = document.querySelector('#dc_taskPanel').getBoundingClientRect();
+    const stage = document.querySelector('.dc-stage').getBoundingClientRect();
+    /* R6-S2：面板里另有 ②/③ 的编辑卡片（#dc_condEditCard / #dc_paramEditCard）。
+       本条的"恰好 2 节"说的是**从左栏迁过来的那两块**，所以统计范围收到 ① 模型步骤。 */
+    const secs = [...document.querySelectorAll('#dc_modelStep .dc-panel-sec')];
+    return JSON.stringify({ wsRight: +ws.right.toFixed(1), railRight: +rail.right.toFixed(1), stageRight: +stage.right.toFixed(1),
+      railW: +rail.width.toFixed(1), railOverflow: secs.filter(s => s.getBoundingClientRect().right > rail.right + 0.5).length,
+      railN: secs.length }); })()`, returnByValue: true })).result.value);
+  check('R6 §3.1.1 右面板 / 三维工作区均未超出工作台 .dc-ws',
+    layout.railRight <= layout.wsRight + 0.5 && layout.stageRight <= layout.wsRight + 0.5, JSON.stringify(layout));
+  check('R6 §3.1.1 模型步骤内各节未溢出面板自身，且恰好 2 节（概览 + 热结）',
+    layout.railOverflow === 0 && layout.railN === 2 && layout.railW > 100, `节数=${layout.railN} 溢出=${layout.railOverflow} 宽=${layout.railW}`);
+  /* 146 §3：旧那套"参数区"（#dc_panel / #dc_params）仍然不存在；
+     参数编辑改走**新窗口** #dc_paramDlg（§3.2 三模块）——两者不是一回事，不能混为一谈。 */
+  /* ⚠ 2026-10-16 · R6-S2：判据载体由浮层窗口 `#dc_paramDlg` 改为面板的编辑步骤。
+     原意逐条保留：**旧参数区（#dc_panel / #dc_params）不得回来**，参数编辑必须有明确入口。
+     新增一条：浮层那份 DOM 已经**彻底不存在**（不是"两份都在、只是不用"）。 */
+  check('146 §3 · 旧参数区不存在，参数编辑走面板的 ②/③ 编辑步骤（浮层 #dc_paramDlg 已删除）',
+    await send('Runtime.evaluate', { expression: `!document.querySelector('#dc_panel') && !document.querySelector('#dc_params')
+      && !document.querySelector('#dc_paramDlg') && !!document.querySelector('#dc_condStep')
+      && !!document.querySelector('#dc_paramStep') && !!document.querySelector('#dc_paramsBtn')`, returnByValue: true }).then(r => r.result.value), '');
 
   // ⑥ 采样状态与 JS 异常
   r = await send('Runtime.evaluate', { expression: `document.body.textContent.includes('距离场无有效采样') || (document.getElementById('dc_geomInfo')?.textContent || '').includes('距离场无有效采样')`, returnByValue: true });

@@ -54,18 +54,48 @@
 .nav-icon { width: 18px; height: 18px; flex-shrink: 0; }
 .nav-item.active .nav-icon { color: var(--primary); }
 
-.sidebar-foot { padding: 10px 8px 2px; border-top: 1px solid var(--border); }
-.version { font-size: .7rem; color: var(--text-muted); }
-.version b { color: var(--text-secondary); font-weight: 500; }
+.sidebar-foot {
+  padding: 10px 8px 2px; border-top: 1px solid var(--border);
+  max-height: 50vh; overflow-y: auto; overscroll-behavior: contain;
+}
+.version { font-size: .72rem; color: var(--text-secondary); }
+.version b { color: var(--text); font-weight: 700; }
 
-/* 侧栏底部「关于」信息块（73.txt：作者/邮箱/QQ 群/开源声明，随 4 个导航专栏常显） */
-.sf-about { margin-top: 6px; padding: 6px 2px 2px; border-top: 1px dashed var(--border); font-size: .68rem; line-height: 1.8; color: var(--text-muted); }
-.sf-about a { color: var(--text-secondary); text-decoration: none; }
+/* 侧栏底部「产品与下载 / 作者与联系 / 社区 / 开源」信息区。
+   所有实际信息统一字号与字重；分组标题仅作轻量层级提示，不再单独突出作者行。 */
+.sf-about {
+  margin-top: 8px; padding: 8px 2px 2px;
+  border-top: 1px dashed var(--border);
+  font-size: .72rem; line-height: 1.55; color: var(--text-secondary);
+  display: grid; gap: 8px; min-width: 0;
+}
+.sf-group { min-width: 0; }
+.sf-group + .sf-group { border-top: 1px dashed var(--border); padding-top: 7px; }
+.sf-group-title {
+  font-size: .63rem; font-weight: 700; letter-spacing: .04em;
+  color: var(--text-muted); margin-bottom: 3px;
+}
+.sf-line, .sf-linkline {
+  font-size: .72rem; font-weight: 600; color: var(--text-secondary);
+  line-height: 1.55; min-width: 0; overflow-wrap: anywhere;
+}
+.sf-linkline { display: flex; flex-direction: column; gap: 1px; }
+.sf-k { font-weight: 600; color: var(--text-secondary); }
+.sf-about a {
+  color: var(--text-secondary); text-decoration: none;
+  overflow-wrap: anywhere; word-break: break-word;
+}
+.sf-linkline a { font-size: .68rem; color: var(--text-muted); }
 .sf-about a:hover { color: var(--primary); text-decoration: underline; }
-/* PHASE 98：作者署名行稍微放大加粗（.68→.78rem / 600 / secondary 色）——
-   只动这一行，其余行与整体风格不变；不上大标题、不加背景 */
-.sf-author { font-size: .78rem; font-weight: 600; color: var(--text-secondary); }
-.sf-lite { opacity: .8; }
+.sf-pass { font-size: .68rem; font-weight: 600; color: var(--text-muted); }
+.sf-pass code {
+  font-family: var(--font-mono); font-size: .7rem; color: var(--text);
+  background: var(--bg-card-hi); border: 1px solid var(--border);
+  padding: 0 4px; border-radius: 4px;
+}
+.sf-note { font-size: .68rem; line-height: 1.6; color: var(--text-muted); font-weight: 500; margin-top: 3px; }
+.sf-lite { opacity: .85; }
+.sf-subtle { opacity: .78; }
 
 /* 开发者模式 */
 .nav-item[hidden] { display: none; }
@@ -105,7 +135,7 @@
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
-.search-wrap { position: relative; flex: 1; max-width: 620px; }
+.search-wrap { position: relative; flex: 1 1 auto; max-width: 620px; min-width: 0; }
 .search-icon {
   position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
   width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;
@@ -126,7 +156,10 @@
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(79,140,255,0.18);
 }
-.topbar-actions { display: flex; gap: 8px; margin-left: auto; }
+/* ⚠ 窄屏缺陷修复（144 §二 移动端验收实拍）：右侧动作组默认会被 flex 压扁 ⇒
+   "关于 / 反馈"四个字被挤成两行竖排。动作组不参与收缩，让左侧搜索框去让位。 */
+.topbar-actions { display: flex; gap: 8px; margin-left: auto; flex: 0 0 auto; }
+.topbar-actions > * { flex: 0 0 auto; white-space: nowrap; }
 
 /* ---- 搜索下拉（Raycast 式） ---- */
 .search-drop {
@@ -166,6 +199,58 @@
 /* 首页渐进展示：去掉通用上下内边距，让 hero 撑满整屏首屏（推荐区自然落在屏下） */
 .view-home .view { padding: 0 30px; }
 @keyframes viewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* 168 A：手机上侧栏底部信息区会随底部导航隐藏；首页末尾提供同一份分组信息。 */
+.home-siteinfo { display: none; }
+@media (max-width: 768px) {
+  .home-siteinfo {
+    display: block; margin: 24px 0 18px; padding: 16px 14px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .home-siteinfo .sf-about { margin: 0; padding: 0; border-top: 0; }
+}
+
+/* ---- 168 B：三维模块按需加载（原生 import 无法可靠取得字节数 → 不确定进度） ---- */
+.view-loading {
+  min-height: min(560px, calc(100vh - 170px));
+  display: grid; place-items: center; padding: 32px 20px;
+}
+.view-loading-card {
+  width: min(430px, 100%); display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 10px;
+  padding: 28px 24px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.view-loading-spinner {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 3px solid var(--border); border-top-color: var(--primary);
+  animation: lazySpin .8s linear infinite;
+}
+@keyframes lazySpin { to { transform: rotate(360deg); } }
+.view-loading-title { font-size: .98rem; font-weight: 700; color: var(--text); }
+.view-loading-sub { font-size: .78rem; line-height: 1.65; color: var(--text-secondary); }
+.view-loading-track {
+  width: min(250px, 100%); height: 4px; margin-top: 4px;
+  border-radius: 999px; overflow: hidden; background: var(--border);
+}
+.view-loading-track > span {
+  display: block; width: 38%; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  animation: lazyTrack 1.2s ease-in-out infinite;
+}
+@keyframes lazyTrack { 0% { transform: translateX(-110%); } 100% { transform: translateX(300%); } }
+.view-loading-error-icon { font-size: 1.8rem; line-height: 1; }
+.view-loading-error {
+  max-width: 100%; font-size: .72rem; line-height: 1.55;
+  color: var(--danger); overflow-wrap: anywhere;
+}
+.view-loading-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  .view-loading-spinner, .view-loading-track > span { animation: none; }
+  .view-loading-track > span { width: 100%; }
+}
 
 .page-head { margin-bottom: 22px; }
 .page-title { font-size: 1.45rem; font-weight: 700; letter-spacing: .2px; }
@@ -906,18 +991,17 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .dc-ok { color: var(--success); }
 .dc-warn { color: var(--warning); }
 .dc-view3d { margin-top: 12px; }
-.dc-view3d-box { position: relative; height: 300px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: #0b0f1a; }
+.dc-view3d-box { position: relative; height: 300px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: var(--view-bg, #0f1522); }
 .dc-view-reset {
-  position: absolute; right: 10px; bottom: 10px; z-index: 5;
-  padding: 5px 10px; font-size: .72rem; cursor: pointer;
-  border: 1px solid rgba(255,255,255,.18); border-radius: 6px;
-  background: rgba(11,15,26,.72); color: rgba(255,255,255,.82);
+  position: absolute; right: 10px; bottom: 10px; z-index: 6;   /* 必须高过画布与浮层控件 */
+  padding: 5px 10px; font-size: .72rem; min-height: 28px; cursor: pointer;
+  border: 1px solid var(--view-ctrl-border, rgba(255,255,255,.18)); border-radius: 6px;
+  background: var(--view-ctrl-bg, rgba(15,21,34,.74)); color: var(--view-ctrl-fg, rgba(255,255,255,.82));
   backdrop-filter: blur(4px); transition: background .15s;
 }
 .dc-view-reset:hover { background: rgba(11,15,26,.95); color: #fff; }
 .dc-meta-chip { margin-left: 6px !important; font-variant-numeric: tabular-nums; }
 
-.dc-analysis-hint { padding: 18px; text-align: center; color: var(--text-secondary); font-size: .85rem; }
 /* PHASE 22 分析进度条（30.txt 十三：分阶段真实进度，不伪造百分比） */
 .dc-progress {
   margin-top: 10px; padding: 10px 14px;
@@ -940,53 +1024,692 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 @keyframes dc-progress-slide { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
 .dc-progress-text { margin-top: 6px; font-size: .76rem; color: var(--text-secondary); }
 
-/* PHASE 22 分析结果概览卡（30.txt 十五 ②） */
-.dc-overview-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
-.dc-overview-grid > div {
   background: var(--bg-card-hi); border: 1px solid var(--border);
   border-radius: 8px; padding: 8px 10px; min-width: 0;
 }
-.dc-overview-grid span { display: block; font-size: .68rem; color: var(--text-muted); }
-.dc-overview-grid b { font-size: .82rem; color: var(--text); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 
-.dc-hs-badge { margin-top: 10px; padding: 8px 12px; border-radius: var(--radius-xs); font-size: .8rem; line-height: 1.6; }
-.dc-hs-badge.ok { background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary); }
-.dc-hs-badge.none { background: var(--bg-card-hi); color: var(--text-secondary); border: 1px solid var(--border); }
-.dc-hs-badge.dbg { background: #3a2f14; color: #ffd54f; border: 1px dashed #ffd54f; }
-.dc-hs-badge.warn { background: #3a3013; color: #ffc94f; border: 1px solid #ffc94f; }
+/* 168 D2：三维视口顶部状态只保留文字，不再套卡片/边框/背景容器。 */
+.dc-hs-badge { margin-top: 10px; padding: 0; border: 0; background: none; font-size: .8rem; line-height: 1.6; }
+.dc-hs-badge.ok { color: var(--primary); }
+.dc-hs-badge.none { color: var(--text-secondary); }
+.dc-hs-badge.dbg { color: #ffd54f; }
+.dc-hs-badge.warn { color: var(--warning); }
 .dc-import-alt { margin-top: 10px; text-align: center; }
 
-/* 工作台布局（命令文件：3D 主视图 70% + 右侧 Analysis Panel 30%） */
-.dc-ws { display: flex; flex-direction: column; gap: 12px; }
+/* ============================================================
+   144.txt：固定视口工程工作台（V2.0-P1 第二轮）
+   A 顶部紧凑主工具栏 · B 左侧信息栏 · C 中央三维工作区 · D 底部状态栏 · E 参数对话框
+   页面本身不滚动；滚动只发生在工作台内部指定的区域里。
+   ============================================================ */
+
+/* ---- 外壳：主体高度锁死到视口（144 §二.1/2）---- */
+body.view-dc .main { height: 100vh; overflow: hidden; }
+body.view-dc .topbar { flex: 0 0 auto; }
+body.view-dc .view {
+  flex: 1 1 auto; min-height: 0; min-width: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  padding: 8px 12px 10px;
+  max-width: none;
+  /* 固定视口下不要入场位移动画：动画期间 transform 会成为固定/绝对定位的包含块 */
+  animation: none;
+}
+
+.dc-ws {
+  position: relative;
+  flex: 1 1 auto; min-height: 0; min-width: 0;
+  display: grid;
+  /* 工具栏 / **流程条**（R6 §3.2）/ **共享提示行**（R6-S4）/ 主体 / 过期横幅 / 状态栏
+     ↳ 提示行必须在 .dc-body 之前：校验提示/分析进度原来只占三维列高度，会把左列顶边
+       往下推，而右侧面板从 .dc-body 顶边开始 ⇒ 两侧顶部错位（实测约 23px）。 */
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+}
+/* S1：结果视图下 .dc-chrome 被 display:none、过期横幅也可能 hidden ⇒ 若只靠
+   grid-template-rows 的“按顺序占行”，后面的 .dc-body/.dc-statusbar 会前移，
+   状态栏落进 1fr 行并被拉成 150px 高（实测 page1）。显式指定行号，隐藏项不再挪位。 */
+.dc-ws > .dc-topbar { grid-row: 1; }
+.dc-ws > .dc-flowbar { grid-row: 2; }
+.dc-ws > .dc-chrome { grid-row: 3; }
+.dc-ws > .dc-body { grid-row: 4; }
+.dc-ws > .dc-stale-bar { grid-row: 5; }
+.dc-ws > .dc-statusbar { grid-row: 6; }
+/* ★ 工作台内 `hidden` 一律生效（HANDOFF 环境坑 §8.3：`[hidden]` 是属性选择器，
+   与 .chip/.btn 这类类选择器同权重，作者样式会盖掉它）。
+   本组件里 display:flex/inline-flex 的元素很多（.dc-import-zone/.dc-view3d/.chip/…），
+   逐个加守卫容易漏 ⇒ 在组件根节点上统一压制，一次性消灭这一类 bug。 */
+.dc-ws [hidden] { display: none !important; }
+
+/* ---- A. 顶部紧凑主工具栏（目标 44～52px，按真实字体与控件微调）---- */
 .dc-topbar {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 5px 10px; min-height: 46px; min-width: 0;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  /* 工具栏永远压在参数对话框之上 ⇒ 对话框打开时出口/入口按钮仍然点得到 */
+  position: relative; z-index: 75;
+}
+.dc-topbar-spacer { flex: 1 1 auto; min-width: 0; }
+.dc-tb-title { font-size: .84rem; font-weight: 700; letter-spacing: .2px; white-space: nowrap; margin: 0; }
+.dc-tbgrp { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.dc-tbsep { width: 1px; align-self: stretch; margin: 6px 5px; background: var(--border); flex: 0 0 auto; }
+/* 工具栏按钮统一压到工程软件密度（比 .btn 的 10/18 紧，但保持 ≥30px 高度不牺牲可点性）*/
+.dc-topbar .btn { padding: 4px 9px; font-size: .74rem; gap: 5px; min-height: 30px; }
+.dc-topbar .dc-tbrun { padding: 6px 14px; font-size: .78rem; white-space: nowrap; }
+.dc-topbar .chip { font-size: .68rem; }
+.dc-file-chip { display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+
+/* ============================================================
+   R6.txt §3.2 · 顶部流程导航
+   它是"我在第几步 / 下一步做什么"的**唯一答案**，必须常驻、必须一眼可见。
+   ⚠ 状态点**不靠颜色单独表意**：每个点带符号（✓ ! ✕ ⋯ ○ 🔒）+ 悬停给出一句原因。
+   ============================================================ */
+.dc-flowbar {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 2px; flex-wrap: wrap;
+  margin-top: 8px; padding: 5px 8px; min-width: 0;
+  background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius); box-shadow: var(--shadow-sm);
 }
-.dc-topbar-spacer { flex: 1; }
-/* PHASE 78（78.txt 一）：**始终单列**——原先宽屏（>1100px）会切成 STL 左 / 参数右两栏，
-   用户全屏后布局突变、左右来回看很麻烦。现在无论窗口多宽都按"没放大时"的样子从上到下一列排。 */
-.dc-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }
-.dc-stage { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.dc-view3d .dc-view3d-box { height: min(64vh, 720px); }   /* 10.txt 六：全屏时 3D 区域过小 → 上限放宽（最小处理） */
+.dc-flow-sep { color: var(--text-muted); font-size: .8rem; padding: 0 2px; flex: 0 0 auto; }
+.dc-flow-node {
+  display: inline-flex; align-items: center; gap: 5px; min-width: 0;
+  /* §八：触摸目标 ≥28px（flow bar 是主流程入口，手机上必须点得中）。
+     只靠 padding 会随字体缩放漂移 ⇒ 直接给 min-height 兜底。 */
+  min-height: 30px; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid transparent; background: transparent; color: var(--text-secondary);
+  font-size: .76rem; font-weight: 600; white-space: nowrap;
+}
+.dc-flow-node:hover { border-color: var(--border-strong); color: var(--text); }
+.dc-flow-node.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.dc-flow-node[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+.dc-flow-n { font-weight: 700; opacity: .8; }
+.dc-flow-mark { font-weight: 700; font-size: .78rem; }
+.dc-flow-node[data-state="ok"]    .dc-flow-mark { color: #059669; }
+.dc-flow-node[data-state="warn"]  .dc-flow-mark { color: var(--warning, #b45309); }
+.dc-flow-node[data-state="bad"]   .dc-flow-mark { color: var(--danger, #c0392b); }
+.dc-flow-node[data-state="busy"]  .dc-flow-mark { color: var(--primary); }
+.dc-flow-node[data-state="lock"]  .dc-flow-mark { font-size: .68rem; }
+
+/* ---- B/C. 主体：模型工作区（三维）与 结果工作区 二选一（§五）----
+   R6 §3.1.1：**常驻左栏已取消** —— `.dc-body` 现在是「三维 + 右侧按需面板」两列。
+   面板收起时（data-task="closed"）只有一列 ⇒ 三维拿到全宽（1366 屏 1106px，比原来的 798px +39%）。 */
+.dc-body {
+  position: relative; min-height: 0; min-width: 0; margin-top: 8px;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  /* R6-S4 / 155 §六：三维与右侧面板之间必须有稳定留白，不能靠两条 1px 边框相接。
+     8px 与工具栏/流程条/状态栏的 8px 节奏一致；只缩 1fr 三维列，面板宽度不变。 */
+  column-gap: 8px;
+}
+
+/* 共享提示行（R6-S4）：位于流程条与主体之间、横跨左右两列。
+   空时高度为 0（子元素均 hidden）；有提示时两列仍从同一条基线开始。 */
+.dc-chrome { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.dc-chrome > .dc-validate { margin-top: 8px; font-size: .74rem; line-height: 1.5; max-height: 3.2em; overflow: auto; min-width: 0; }
+.dc-chrome > .dc-validate ul { margin: 2px 0 0 16px; }
+/* S4：几何/网格问题只在主界面留一行摘要；错误默认展开，警告可展开看完整 code。 */
+.dc-validate-fold > summary { cursor: pointer; font-weight: 600; user-select: none; }
+.dc-validate-fold > div { color: var(--text-muted); }
+.dc-chrome > .dc-progress { margin-top: 8px; }
+.dc-ws[data-wsview="results"] .dc-chrome { display: none; }
+/* R6-S3（153.txt §十一）：用户实测 520–560px 面板"没有明显改善、视觉上甚至更差"。
+   本阶段不再扩大面板，改为 400px（任务给的参考区间 380–440）：
+     应用侧栏 236px + 面板 400px ⇒ 1366 屏三维仍有 730px（够旋转/定位）；
+     超宽屏 1600px+ 只微调到 420px，仍在参考区间内，不追求"越大越好"。
+   参数面板字段已从 19 个精简为 14 个（内浇道/横浇道/排气移到结果页），
+   因此 400px 下的标签/输入/说明换行比旧版更从容。
+   <960px 的移动端全宽浮层规则不受影响。 */
+.dc-ws[data-task="open"] .dc-body { grid-template-columns: minmax(0, 1fr) 400px; }
+@media (min-width: 1600px) {
+  .dc-ws[data-task="open"] .dc-body { grid-template-columns: minmax(0, 1fr) 420px; }
+}
+.dc-main { grid-column: 1; height: 100%; min-height: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+.dc-ws[data-wsview="results"] .dc-main { display: none; }
+/* 结果视图**与参数状态解耦**：它占满整行，面板在结果视图下不出现（§3.1.6 不与工作台争空间） */
+.dc-resview { grid-column: 1 / -1; }
+.dc-ws[data-wsview="model"] .dc-resview { display: none !important; }
+.dc-ws[data-wsview="results"] .dc-taskp { display: none !important; }
+/* R6-S3：结果视图下必须**同时取消两列**。只 display:none 面板、却保留
+   `data-task="open"` 的第二列（旧 360 / 现 400）⇒ 窄屏上第二列本身比视口宽，
+   结果视图（grid-column:1/-1）被撑到 400px，出现 8~10px 横向溢出。
+   面板在结果视图本来就不可见，列宽必须归还给三维/结果。 */
+.dc-ws[data-wsview="results"] .dc-body { grid-template-columns: minmax(0, 1fr); }
+
+/* ---- R6 §3.3：右侧按需任务面板（原常驻左栏 .dc-rail 的替代）---- */
+.dc-taskp {
+  grid-column: 2; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.dc-taskp-head {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-bottom: 1px solid var(--border); min-width: 0;
+}
+.dc-taskp-title { flex: 1 1 auto; min-width: 0; font-size: .82rem; font-weight: 700; color: var(--text); }
+.dc-taskp-x {
+  /* ⚠ 28×28 是 §八 的触摸目标下限（browser_responsive_test 会实测）。
+     面板默认收起时这个 ✕ 尺寸为 0、测不到；一旦展开就必须达标 —— 别改小。 */
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: var(--radius-xs);
+  border: 1px solid var(--border); background: var(--bg-card-hi); color: var(--text-secondary);
+  font-size: .78rem; line-height: 1;
+}
+.dc-taskp-x:hover { border-color: var(--primary); color: var(--primary); }
+.dc-taskp-body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  padding: 10px; display: flex; flex-direction: column; gap: 10px;
+}
+/* R6-S2：步骤容器（① 模型 / ② 分析条件 / ③ 工艺参数）**互斥显示**，由 hidden 控制。
+   用包容器而不是直接 hidden 里面的卡：`#dc_overviewCard` / `#dc_hotspotsCard` 的 hidden
+   归 renderOverview / renderHotspotList 所有（"没有热结数据"），两种原因不能互相覆盖。 */
+.dc-taskp-step { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.dc-taskp-step[hidden] { display: none !important; }
+/* ② / ③ 的小标题（不用 .dc-panel-title：那个带 ▾ 折叠箭头，这里是固定标题不可折叠，会误导） */
+.dc-taskp-sech {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: .76rem; font-weight: 700; color: var(--text); letter-spacing: .4px; margin-bottom: 8px;
+}
+/* ③ 内的 B/C 子模块切换（`.dc-param-tabs` 吸附在滚动区顶部，滚到表单深处也够得着） */
+.dc-param-tabs {
+  position: sticky; top: -10px; z-index: 2; display: flex; gap: 6px;
+  padding: 8px 0 6px; margin: -10px 0 6px;
+  background: var(--bg-card-hi); border-bottom: 1px solid var(--border);
+}
+.dc-param-tab {
+  flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 1px; text-align: left;
+  padding: 5px 8px; border-radius: var(--radius-xs);
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary);
+  font-size: .74rem; font-weight: 600; line-height: 1.25;
+}
+.dc-param-tab:hover { border-color: var(--border-strong); color: var(--text); }
+.dc-param-tab.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.dc-param-tab-sub { font-size: .64rem; font-weight: 400; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-param-tab.on .dc-param-tab-sub { color: var(--primary); opacity: .8; }
+/* 编辑态页脚（只在 ②/③ 出现）：提示 + 取消 + 保存（S4 起保存不触发分析）。
+   它是 .dc-taskp 的**第三个 flex 子项** ⇒ 内容滚动而页脚常驻，保存按钮永远可达（§八）。 */
+.dc-taskp-foot {
+  flex: 0 0 auto; border-top: 1px solid var(--border); background: var(--bg-card-hi);
+  padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;
+}
+.dc-taskp-foot[hidden] { display: none !important; }
+.dc-taskp-foot .dc-dlg-hint { font-size: .7rem; color: var(--text-muted); line-height: 1.5; }
+.dc-taskp-footbtn { display: flex; gap: 6px; }
+.dc-taskp-footbtn .btn { flex: 1 1 auto; min-width: 0; }
+/* 面板 360px：字段一律**单列**（`.dc-dlg-grid` 的 auto-fill 到这一宽度本来也是 1 列，
+   这里显式写死是防止某些字号下挤成两列 —— 360px 里两列会窄到填不进数字）。 */
+.dc-taskp-body .dc-dlg-grid { grid-template-columns: minmax(0, 1fr); padding: 8px 0 0; }
+/* 面板内的 `.dc-dlg-sec` 去掉自家的卡片外框：外层 #dc_condCard / #dc_paramCard 已经是
+   `.dc-panel-sec` 卡片，再套一层就成了"卡中卡"，在 360px 宽里白吃两级内边距。
+   字段结构一字未动，只是外观隶属外层卡片。 */
+.dc-taskp-body .dc-dlg-sec { border: 0; background: transparent; border-radius: 0; }
+.dc-tb.on { border-color: var(--primary); color: var(--primary); }
+/* ============================================================
+   146.txt §8：结果卡片层级 = 标题 → 核心结论卡 → 关键数值与单位 → 「详细信息」入口
+     · .dc-core-row/.dc-core-card  每类页**内部**的核心结论卡（每张只回答一个主要问题）
+     · .dc-adv-detail              「详细信息」折叠入口（完整数值 / 单位 / 来源 / 依据 / 适用条件 / 警告）
+   ⚠ 顶部的 .dc-core-strip（本页结论速览）已删除（§8.3：不得与下方详细结果重复三遍）；
+     顶部只留类别导航。状态一律 **文字 + 颜色** 双表达，不靠颜色单独承载信息。
+   ============================================================ */
+.dc-core-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 6px; margin-bottom: 4px; }
+.dc-core-card {
+  min-width: 0; padding: 8px 10px 9px;
+  background: var(--bg-card-hi); border: 1px solid var(--border); border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+.dc-core-card.ok  { border-left-color: #059669; }
+.dc-core-card.bad { border-left-color: var(--danger, #c0392b); }
+.dc-core-card.warn { border-left-color: #d97706; }
+.dc-core-card.ref { border-left-color: var(--text-muted); }
+.dc-core-label { font-size: .68rem; color: var(--text-muted); margin-bottom: 3px; }
+.dc-core-value {
+  font-size: 1rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums;
+  line-height: 1.35; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+/* 工艺性类核心卡承载的是"一句结论"而不是一个大数字 ⇒ 用小一号字并放宽行数（§九：不裁切文字） */
+.dc-core-value-sm { font-size: .78rem; font-weight: 600; -webkit-line-clamp: 4; }
+.dc-core-unit { font-size: .72rem; font-weight: 600; color: var(--text-secondary); margin-left: 3px; }
+.dc-core-state { margin-top: 4px; font-size: .68rem; font-weight: 600; color: var(--text-muted); }
+.dc-core-state.ok  { color: #34d399; }
+.dc-core-state.bad { color: #ff8a80; }
+.dc-core-state.warn { color: #fbbf24; }
+.dc-core-state.ref { color: var(--text-muted); }
+
+/* R6-S3.1 · 提示分级（154.txt §七）
+   P0 异常/失败/过期/重大风险：主界面；P1 必须复核：主界面简洁；
+   P2 公式与适用条件：详细信息；P3 长篇理论：默认折叠。 */
+.dc-hint-p0, .dc-hint-p1, .dc-hint-p2, .dc-hint-p3 {
+  margin: 6px 0; padding: 7px 10px; border-radius: 7px; border: 1px solid transparent;
+  font-size: .76rem; line-height: 1.6;
+}
+.dc-hint-p0 { background: rgba(192,57,43,.10); border-color: rgba(192,57,43,.38); color: var(--text); }
+.dc-hint-p1 { background: rgba(217,119,6,.10); border-color: rgba(217,119,6,.35); color: var(--text); }
+.dc-hint-p2 { background: var(--bg-soft, rgba(127,127,127,.06)); border-color: var(--border); color: var(--text-secondary); }
+.dc-hint-p3 { background: transparent; border-color: var(--border); color: var(--text-muted); }
+.dc-risk-strip { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 8px; }
+.dc-risk-item {
+  display: flex; align-items: flex-start; gap: 7px; min-width: 0;
+  padding: 6px 9px; border-radius: 7px; border: 1px solid transparent;
+  font-size: .75rem; line-height: 1.55;
+}
+.dc-risk-item.p0 { background: rgba(192,57,43,.10); border-color: rgba(192,57,43,.38); }
+.dc-risk-item.p1 { background: rgba(217,119,6,.10); border-color: rgba(217,119,6,.35); }
+.dc-risk-level {
+  flex: none; font-size: .62rem; font-weight: 800; letter-spacing: .04em;
+  padding: 1px 5px; border-radius: 4px; background: var(--danger, #c0392b); color: #fff;
+}
+.dc-risk-item.p1 .dc-risk-level { background: #b45309; }
+.dc-risk-text { flex: 1; min-width: 0; color: var(--text); }
+.dc-risk-item .dc-mini-btn { flex: none; }
+[data-theme="dark"] .dc-hint-p0 { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.4); }
+[data-theme="dark"] .dc-hint-p1 { background: rgba(251,191,36,.10); border-color: rgba(251,191,36,.35); }
+/* 「详细信息」折叠区（§8.2）：默认收起，展开后给出完整数值/单位/来源/依据/适用条件/警告 */
+.dc-adv-detail {
+  margin-top: 10px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+  padding: 8px 10px; background: var(--bg-card);
+}
+.dc-adv-detail > summary {
+  cursor: pointer; font-size: .78rem; font-weight: 700; color: var(--text-secondary);
+  user-select: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.dc-adv-detail[open] > summary { margin-bottom: 6px; }
+/* 第二层：详细结果卡——统一边框/圆角/间距，去掉"每张卡各写一套圆角"的旧观感 */
+.dc-resview .dc-result-sec {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm); padding: 12px 14px; margin-bottom: 10px; min-width: 0;
+}
+.dc-resview .dc-result-sec .dc-sec-title { margin-bottom: 8px; }
+/* 第三层：计算说明与警告（弱化 + 可折叠）*/
+.dc-resview .field-hint { color: var(--text-muted); }
+.dc-note {
+  margin: 8px 0 2px; padding: 7px 10px;
+  border: 1px dashed var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-soft, rgba(127,127,127,.06));
+  font-size: .74rem; line-height: 1.7; color: var(--text-secondary);
+}
+.dc-note > summary { cursor: pointer; font-weight: 600; color: var(--text-muted); user-select: none; }
+.dc-note[open] > summary { margin-bottom: 5px; }
+
+/* 结果工作区：占满主体、内部滚动（§五.2）——不像以前那样在页面下方再铺一长条 */
+.dc-resview .page-head { margin: 0 0 8px; }
+/* 结果视图页首：标题在左、**返回三维工作台**在右（§五：返回入口必须明显） */
+.dc-resview .dc-reshead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.dc-resview .page-title { font-size: 1.05rem; }
+.dc-resview {
+  height: 100%; min-height: 0; min-width: 0;
+  overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+/* R6 §3.1.1：原常驻左栏 `.dc-rail` 已**取消**（内容迁入右侧按需面板 .dc-taskp）。
+   `.dc-rail` 的桌面/窄屏/抽屉三套规则一并移除 —— 类名已无 DOM 生产者。
+   ⚠ 那条"未导入 STL 时不给空列占位"的教训**保留**：面板默认收起，
+     且 `data-flow="A"`（无 STL）下面板入口本身不出现（见 syncFlowChrome）。 */
+.dc-ws[data-flow="A"] .dc-body { grid-template-columns: minmax(0, 1fr); }
+
+/* 中央三维工作区（§三.3）：占满剩余高度与宽度 */
+.dc-stage { display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 0; }
+.dc-stage .dc-hs-badge { flex: 0 0 auto; }
+.dc-import-zone {
+  flex: 1 1 auto; min-height: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.dc-import-zone.drag { border-color: var(--primary); background: var(--primary-soft); }
+.dc-view3d { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; margin-top: 0; }
+/* 3D 承载盒：撑满 .dc-view3d（D1 的 ResizeObserver 负责把画布同步过来）*/
+.dc-view3d-box {
+  position: relative; flex: 1 1 auto; min-height: 180px; height: auto;
+  /* 145 §四：背景随主题（由 modelView3D 同步 canvas clear color，二者必须同源） */
+  background: var(--view-bg, #0f1522);
+  transition: background-color var(--t) var(--ease);
+}
+/* 视口内浮层：显示模式 + 视角预设（原先是 3D 下方单独一行，固定视口下改为浮层省掉一行高度）*/
 .dc-view-controls {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  padding: 8px 10px; background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  position: absolute; left: 8px; bottom: 8px; right: 8px; z-index: 6;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 5px 8px; margin: 0;
+  background: var(--view-ctrl-bg, rgba(15,21,34,.74)); border: 1px solid var(--view-ctrl-border, rgba(255,255,255,.14));
+  border-radius: var(--radius-sm); box-shadow: none;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
 }
 .dc-disp-mode {
-  background: var(--bg-card-hi); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; padding: 5px 8px; font-size: .78rem; cursor: pointer;
+  background: var(--view-ctrl-btn-bg, rgba(255,255,255,.06)); color: var(--view-ctrl-fg, rgba(255,255,255,.86));
+  border: 1px solid var(--view-ctrl-border, rgba(255,255,255,.16));
+  border-radius: 6px; padding: 4px 7px; font-size: .74rem; cursor: pointer;
 }
-.dc-view-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.dc-view-btns { display: flex; gap: 3px; flex-wrap: wrap; }
+/* 触控目标 ≥28px（responsive 体检判据）。⚠ 别用 max-width 判"是不是手机"：
+   手机**横屏** 844px 宽根本命中不了 768px 断点，按钮就会缩回 24px（实测踩到）。 */
 .dc-view-btns button {
-  padding: 5px 9px; font-size: .72rem; cursor: pointer;
-  border: 1px solid var(--border); border-radius: 6px;
-  background: var(--bg-card-hi); color: var(--text-secondary); transition: all .15s;
+  padding: 5px 9px; font-size: .72rem; min-height: 28px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--view-ctrl-border, rgba(255,255,255,.16)); border-radius: 6px;
+  background: var(--view-ctrl-btn-bg, rgba(255,255,255,.06)); color: var(--view-ctrl-fg, rgba(255,255,255,.82));
+  transition: all .15s;
 }
-.dc-view-btns button:hover { border-color: var(--primary); color: var(--primary); }
-/* 右侧 Analysis Panel */
-.dc-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.dc-view-btns button:hover { border-color: var(--primary); color: #fff; background: rgba(79,140,255,.28); }
+/* 热结状态条浮在视口左上角，与右下角的"重置视角"互不遮挡 */
+.dc-view3d > .dc-hs-badge {
+  position: absolute; left: 8px; top: 8px; right: 96px; z-index: 6;
+  margin: 0; padding: 0; border: 0; background: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .62);
+  /* S4：视口状态条只留一句，完整原因在 title / ① 模型信息 / 参数面板；
+     否则 NO_HOTSPOT 的两行警告会遮住半个模型（人工截图实拍）。 */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dc-view-reset { top: 8px; bottom: auto; right: 8px; }
+
+/* ---- D. 底部状态栏（§三.D / §六）：单位 · 模型 · 热结 · 参数与结果状态 ---- */
+.dc-statusbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 8px; padding: 4px 10px; min-height: 34px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  font-size: .74rem; min-width: 0;
+}
+.dc-statusbar .chip { font-size: .7rem; }
+.dc-st-item { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+/* ---- 145 §三 / 146 §四：三步流程（步骤卡已删，本块只剩导入区与提示条）---- */
+.dc-import-title { font-size: .95rem; font-weight: 600; margin-bottom: 8px; }
+.dc-flow-note {
+  margin-top: 8px; padding: 7px 10px; font-size: .76rem; line-height: 1.6;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--bg-card-hi); color: var(--text-secondary);
+}
+/* ⚠ 用主题变量而不是硬编码深色：亮色主题下 #3a2f14 的深棕底 + #ffd54f 黄字几乎不可读 */
+.dc-flow-note.warn { background: var(--warning-soft); color: var(--warning); border-color: var(--warning); }
+.dc-flow-note.busy { background: var(--info-soft); color: var(--primary); border-color: var(--primary); }
+.dc-req { font-size: .66rem; font-weight: 700; color: var(--warning, #d97706); border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; }
+/* 分析完成 → 主按钮短暂高亮（代替"自动跳视图"的就绪反馈） */
+.dc-topbar .btn.ready { border-color: #059669; color: #34d399; box-shadow: 0 0 0 2px rgba(5,150,105,.22); }
+/* 热结列表 + "参与冒口设计"勾选（勾选即生效，无弹窗、无草稿） */
+/* 146 §九：热结行在 300px 左栏里必须**纵向分层**，不能把 ID / 主要数值 / 副信息挤成一行。
+   人工截图实拍到过：一行布局把「模数」压成竖排、"参与冒口"折成两行 —— 正是 §九 点名的
+   "中文字段名不能因布局问题挤成竖排"。改为 2×2 网格（ID 跨两行，数值与副信息各占一行）。 */
+.dc-hs-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: start; }
+.dc-hs-row .dc-hs-item { min-width: 0; margin-bottom: 0; }
+/* R6-S2.2-B：左栏这里是**只读状态**（哪些热结参与冒口设计），不再是勾选入口。
+   编辑入口只在 ③ → B 冒口设计（草稿，保存并分析后生效）。 */
+.dc-hs-pick {
+  display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto;
+  font-size: .66rem; color: var(--text-muted); white-space: nowrap; cursor: default;
+  padding: 0 4px; border: 1px dashed var(--border); border-radius: var(--radius-xs);
+}
+.dc-hs-pick.on { color: var(--primary); border-style: solid; border-color: var(--primary); }
+.dc-hs-pick input { margin: 0; }
+
+/* 状态 chip（D8）：五态各有配色，**文字本身即状态**，不靠图标/颜色猜 */
+.dc-state-chip { font-weight: 600; }
+.dc-state-chip.ok { background: #059669; color: #fff; }
+.dc-state-chip.warn { background: #3a2f14; color: #ffd54f; border: 1px solid #ffd54f; }
+.dc-state-chip.bad { background: #3a1414; color: #ff8a80; border: 1px solid #ff8a80; }
+.dc-state-chip.busy { background: var(--info-soft); color: var(--primary); }
+
+/* 导航按钮（工具栏内的分组切换）*/
+/* 分析完成后「结果」入口短暂高亮——代替"自动跳视图"的就绪反馈（144 §五） */
+/* ---- V2.0-P1-01 D8：结果过期 / 分析失败横幅 ----
+   旧结果继续显示，但必须显式说明"这不是当前参数算出来的"，并给重算入口。*/
+.dc-stale-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 8px; padding: 8px 12px; font-size: .78rem; line-height: 1.6;
+  background: #3a2f14; color: #ffd54f; border: 1px solid #ffd54f; border-radius: var(--radius);
+}
+.dc-stale-bar.bad { background: #3a1414; color: #ff8a80; border-color: #ff8a80; }
+.dc-stale-bar .btn { margin-left: auto; }
+
+/* R6-S3（153.txt §十.C）：结果页内部的四态条（有效 / 待重新分析 / 参数不足 / 分析失败）。
+   与外壳 #dc_staleBar 同源判定（computeState），但它保证用户**在结果页内**看得到状态。 */
+.dc-res-status {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 0 0 10px; padding: 7px 11px; font-size: .78rem; line-height: 1.6;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-soft, rgba(127,127,127,.06)); color: var(--text-secondary);
+}
+.dc-res-status.ok { border-color: #2e7d32; color: #2e7d32; background: rgba(46,125,50,.08); }
+.dc-res-status.warn { border-color: #ffd54f; color: #ffd54f; background: #3a2f14; }
+.dc-res-status.bad { border-color: #ff8a80; color: #ff8a80; background: #3a1414; }
+.dc-res-status.busy { border-color: var(--primary); color: var(--primary); }
+.dc-res-status .dc-mini-btn { margin-left: auto; }
+.dc-weight-ledger { margin-top: 4px; }
+.dc-warn-note { line-height: 1.7; }
+
+/* ---- E. 参数二次输入对话框（§四）----
+   浮层只覆盖"工具栏以下、状态栏以上"的工作区（它在 .dc-body 内），
+   因此顶部工具栏与底部状态栏始终可见可点，不必用 JS 去算工具栏高度。*/
+.dc-panel {
+  position: absolute; inset: 0; z-index: 71;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 10px; min-width: 0;
+  pointer-events: none;   /* 只有对话框本体吃事件 */
+}
+/* 标题沿用 .dc-panel-title（既有"面板顺序"断言按该类名取标题），但去掉折叠箭头与手型 */
+
+/* ---- D5/D6：参数区模块页签 + 草稿/保存 ----
+   ⚠ [hidden] 必须显式压过 display（HANDOFF 环境坑：属性选择器优先级低于类选择器）*/
+
+/* ============================================================
+   146.txt §三 → **R6-S2 改造**：分析条件与工艺参数**不再是浮层窗口**
+   结构 = 参数**面板**里的两个步骤（② A 分析条件 / ③ B 冒口设计 + C 浇注系统）+ 面板页脚动作。
+   `.dc-dlg-sec/.dc-dlg-grid/.dc-dlg-fld/.dc-dlg-note/.dc-dlg-help` 等**字段级样式全部沿用**
+   （字段表一字未改，只是宿主从浮层换成 `#dc_taskPanel` 的常驻区）。
+   ⚠ 参数**内部滚动**是允许的（§九）；整个应用页面仍然不滚（固定视口）。
+   ============================================================ */
+.dc-dlg-sec { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card-hi); }
+.dc-dlg-sec { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card-hi); }
+.dc-dlg-sec > .dc-dlg-sechead {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+}
+.dc-dlg-sechead b { font-size: .82rem; }
+.dc-dlg-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px 14px; padding: 12px;
+}
+.dc-dlg-fld { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dc-dlg-fld > label {
+  font-size: .74rem; color: var(--text-secondary); font-weight: 600;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.dc-dlg-fld .f-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.dc-dlg-fld .f-row > input, .dc-dlg-fld .f-row > select { flex: 1 1 auto; min-width: 0; }
+.dc-dlg-fld .f-unit { flex: 0 0 auto; font-size: .72rem; color: var(--text-muted); white-space: nowrap; }
+.dc-dlg-ro { font-size: .8rem; color: var(--text); padding: 4px 0; word-break: break-word; }
+.dc-dlg-note { grid-column: 1 / -1; font-size: .72rem; color: var(--text-muted); line-height: 1.6; }
+.dc-dlg-warn {
+  grid-column: 1 / -1; font-size: .74rem; line-height: 1.6; padding: 6px 9px;
+  border-radius: var(--radius-xs); background: var(--warning-soft); color: var(--warning);
+  border: 1px solid var(--warning);
+}
+.dc-dlg-hint { font-size: .72rem; color: var(--text-muted); line-height: 1.5; }
+@media (max-width: 768px) {
+  .dc-dlg-grid { grid-template-columns: minmax(0, 1fr); padding: 10px; }
+}
+
+/* ============================================================
+   149.txt §二：参数帮助内容恢复 —— 样式（**不新造视觉语言**，全部沿用既有 token 与控件密度）
+   · 来源图例 / 参数共享说明 → v1.1.0 的 `.dc-src-legend`（当时被一并删掉了样式）
+   · 浇注方向示意图 → v1.1.0 的 `.dc-gating-diagram`（**样式一直都在，没删过**，见文件末尾）
+   · ↺ 恢复自动原值 → v1.1.0 的 `.dc-reset-orig`（同上，样式还在）
+   · 新增的只有：可按需展开的帮助块、逐热结行、比例适用范围行、五态来源说明的警示配色
+   ============================================================ */
+
+/* 来源图例（参数窗口顶部一行） */
+.dc-src-legend {
+  grid-column: 1 / -1; font-size: .72rem; line-height: 1.6; color: var(--text-secondary);
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-xs);
+  background: var(--surface-2);
+}
+
+/* 五态 Mc 来源说明：正常 / 需留意 / 阻断，三档配色（阻断态必须一眼看出来） */
+.dc-dlg-note-warn { color: var(--warning, #b45309); }
+.dc-dlg-note-bad {
+  color: var(--danger, #c0392b); font-weight: 600;
+  padding: 6px 9px; border-radius: var(--radius-xs);
+  background: var(--danger-soft, rgba(192,57,43,.08));
+  border: 1px solid var(--danger, #c0392b);
+}
+
+/* 按需展开的帮助块（Mc 的四种估法 / 浇注比例怎么选 / 浇注系统工程原则） */
+.dc-dlg-help {
+  grid-column: 1 / -1; border: 1px solid var(--border); border-radius: var(--radius-xs);
+  background: var(--surface-2); padding: 6px 9px;
+}
+.dc-dlg-help > summary { cursor: pointer; font-size: .72rem; font-weight: 600; color: var(--text-secondary); }
+.dc-dlg-help > summary:hover { color: var(--primary); }
+.dc-dlg-help-body { padding: 6px 2px 2px; display: flex; flex-direction: column; gap: 5px; }
+.dc-dlg-help-body ul { margin: 0; padding-left: 18px; font-size: .72rem; color: var(--text-secondary); line-height: 1.7; }
+.dc-dlg-help-sub { font-size: .72rem; font-weight: 700; color: var(--text-secondary); margin-top: 2px; }
+.dc-dlg-help-tip {
+  font-size: .72rem; line-height: 1.6; color: var(--text-secondary);
+  background: var(--warning-soft, rgba(180,83,9,.10)); border-radius: var(--radius-xs); padding: 6px 9px;
+}
+
+/* 浇注比例预设一览（设计中心侧；与独立计算器弹窗同一份数据，样式按对话框密度收紧） */
+.dc-ratio-row {
+  font-size: .72rem; line-height: 1.6; color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius-xs);
+  background: var(--bg-card); padding: 5px 8px;
+}
+.dc-ratio-applic { font-size: .7rem; color: var(--text-muted); margin-top: 2px; }
+
+/* 「↺ 恢复自动原值」待生效状态行 */
+.dc-restore-pending { color: var(--primary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dc-restore-undo {
+  font-size: .7rem; padding: 1px 7px; border-radius: var(--radius-xs);
+  border: 1px solid var(--border); background: var(--bg-card-hi); color: var(--text-secondary); cursor: pointer;
+}
+.dc-restore-undo:hover { border-color: var(--primary); color: var(--primary); }
+
+/* R6-S3：RH 是**浇注系统需要的高度差**（可手动指定），不再是只读回写值。
+   保留虚线框，强调它横跨冒口/浇注两个领域、只有一份权威值。 */
+.dc-rh-linked {
+  grid-column: 1 / -1; padding: 8px 10px;
+  border: 1px dashed var(--border-strong); border-radius: var(--radius-xs);
+  background: var(--surface-2);
+}
+.dc-rh-linked .dc-dlg-ro { font-size: .95rem; font-weight: 700; color: var(--text); }
+.dc-rh-linked .dc-mini-btn { margin-left: 6px; }
+
+/* R6-S3：生产条件分组标题（置于浇注系统设计顶部） */
+.dc-dlg-subhead {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 4px 0 2px; margin-top: 2px;
+  border-bottom: 1px dashed var(--border);
+}
+.dc-dlg-subhead b { font-size: .78rem; color: var(--text); }
+.dc-mc-adopt { background: var(--surface-2); border-radius: var(--radius-xs); padding: 5px 8px; }
+.dc-hd-readonly { border-left: 3px solid var(--border-strong); padding-left: 8px; }
+.dc-model-link, .dc-edit-in-results { grid-column: 1 / -1; }
+
+/* R6-S2.2-A：当前形状公式/效率（随草稿即时刷新；待保存提示单独一行） */
+.dc-shape-note { display: flex; flex-direction: column; gap: 4px; }
+
+/* 逐热结行：勾选 + ID + 区域信息 + 该热结自己的「冒口设计 Mc」 */
+.dc-hsp {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius-xs);
+  background: var(--bg-card);
+}
+.dc-hsp.on { border-color: var(--primary); background: var(--primary-soft, rgba(79,140,255,.08)); }
+.dc-hsp-main { display: flex; align-items: center; gap: 6px; flex: 1 1 240px; min-width: 0; cursor: pointer; }
+.dc-hsp-main input[type="checkbox"] { margin: 0; flex: 0 0 auto; }
+.dc-hsp-id { font-weight: 700; font-size: .74rem; color: var(--text); flex: 0 0 auto; }
+.dc-hsp-sub { font-size: .72rem; color: var(--text-secondary); min-width: 0; overflow-wrap: anywhere; }
+.dc-hsp-edit { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.dc-hsp-editlabel { font-size: .72rem; color: var(--text-secondary); white-space: nowrap; }
+.dc-hsp-mc {
+  width: 68px; flex: 0 0 auto; font-size: .74rem; padding: 3px 6px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-xs);
+  background: var(--bg-input, var(--bg-card-hi)); color: var(--text);
+}
+.dc-hsp-mc:disabled { opacity: .45; cursor: not-allowed; }
+.dc-hsp-mc.bad { border-color: var(--danger, #c0392b); }
+.dc-hsp-reset {
+  font-size: .72rem; line-height: 1; padding: 3px 5px; border-radius: var(--radius-xs);
+  border: 1px solid var(--border); background: var(--bg-card-hi); color: var(--text-secondary); cursor: pointer;
+}
+.dc-hsp-reset:hover { border-color: var(--primary); color: var(--primary); }
+
+/* 浇注方向示意图容器（内层 `.dc-gating-diagram` 是既有样式，见文件末尾）：
+   ⚠ 图纸本身是**白底浅色工程图**（SVG 内联 style，PHASE 45 审核定稿），深色主题下**保留白底**
+   —— 这里只把外围文字与容器适配主题，不改图内的墨色（§二.1 明确允许保留白底）。 */
+.dc-gating-diagram-wrap {
+  grid-column: 1 / -1; border: 1px solid var(--border); border-radius: var(--radius-xs);
+  background: var(--surface-2); padding: 6px 9px;
+}
+.dc-gating-diagram-wrap .chip { font-weight: 400; }
+.dc-gating-diagram-wrap .dc-gating-diagram { background: #fafafa; border-radius: var(--radius-xs); }
+
+@media (max-width: 768px) {
+  .dc-hsp-main { flex: 1 1 100%; }
+  .dc-hsp-edit { flex: 1 1 100%; }
+}
+
+/* 概览卡片状态色（原先只定义在 .dc-overview-grid / .dc-cast-stats 下，
+   而实际渲染用的是 .dc-ov-grid ⇒ 概览里的"分析正常 / 通过"一直是灰 chip）。*/
+#dc_overview .chip-ok { background: #059669; color: #fff; }
+#dc_overview .dc-chip-warn { background: #d97706; color: #fff; }
+#dc_overview .dc-chip-bad { background: var(--danger, #c0392b); color: #fff; }
+
+/* ---- 146.txt §七：原「放大三维工作区」（.dc-ws.zoom3d / body.dc-zoomed）已按用户要求移除。
+   ⚠ 只删了这一个视口放大入口与其专属状态；ResizeObserver、渲染生命周期、资源释放
+   （modelView3D.js）一行未动 —— 它们与放大功能无关，是画布尺寸适配的必要逻辑。 ---- */
+
+/* ---- 窄屏（<960px）：任务面板改**全宽浮层**，三维优先（§八 移动端要求）----
+   R6：机制与原来的左栏抽屉**同源**（absolute + translateY 位移 + visibility），
+   只是改由 `data-task="open"` 驱动 —— §3.3 允许"移动端使用与桌面端不同的面板呈现方式"。 */
+@media (max-width: 959px) {
+  .dc-body { grid-template-columns: minmax(0, 1fr); overflow: hidden; }
+  /* R6-S3：结果视图的 4px 滚动条让位在移动端会把内容右边界推过视口 4px
+     （responsive 体检实测 right=394 > vw=390）。移动端不需要这条装饰性留白。 */
+  .dc-resview { padding-right: 0; }
+  /* .dc-body 必须 overflow:hidden —— 否则"收起"时浮层只是被 translate 到 body 上方，
+     仍会盖住工具栏（人眼看不到但会挡点击）。这条教训来自 144 §二，原样保留。 */
+  .dc-taskp {
+    position: absolute; inset: 0; z-index: 66;
+    padding: 0; background: var(--bg);
+    visibility: hidden;
+    transform: translateY(-102%);
+    transition: transform .18s var(--ease), visibility .18s var(--ease);
+  }
+  .dc-ws[data-task="open"] .dc-taskp { visibility: visible; transform: none; display: flex; }
+  .dc-taskp-body { padding: 8px; }
+  /* 流程条在窄屏横向可滚，不折成多行（多行会挤掉三维高度）*/
+  .dc-flowbar { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; }
+}
+/* 中等宽度：先收起模块二级入口，保住工具栏一行（1600px 及以下会折行 → 实拍验证后取 1500）*/
+@media (max-width: 1180px) { .dc-tb-title { display: none; } }
+@media (max-width: 980px) {
+  .dc-file-chip, #dc_metaChip { display: none !important; }
+  .dc-tbsep { display: none; }
+}
+/* 手机：底部标签栏是 fixed 的（侧栏翻转），工作台必须给它让出高度，
+   否则底部状态栏被压在标签栏下面（人工截图实拍到）。 */
+@media (max-width: 768px) {
+  body.view-dc .view { padding: 6px 8px calc(62px + env(safe-area-inset-bottom)); }
+  /* 手机：工具栏按触控密度收一档（≥28px 触摸目标），尽量压到 2 行，把高度让给三维 */
+  .dc-topbar { padding: 4px 6px; gap: 4px; min-height: 38px; }
+  .dc-topbar .btn { padding: 3px 7px; font-size: .68rem; min-height: 28px; border-radius: 6px; }
+  .dc-topbar .dc-tbrun { padding: 4px 10px; }
+  .dc-topbar .chip { font-size: .64rem; padding: 1px 7px; }
+  .dc-statusbar { padding: 3px 8px; gap: 6px; min-height: 30px; font-size: .68rem; }
+  .dc-view3d-box { min-height: 160px; }
+  /* 手机：视口浮层控件按触控密度放大到 ≥28px。
+     ⚠ 146 修：删掉那套重复的 .dc-view-controls 规则后，按钮回落到"浮层紧凑档"
+     （padding 4px 8px ⇒ 24px 高），responsive 体检立刻报触摸目标过小 —— 桌面紧凑是对的，
+     手机上必须补回来。 */
+  .dc-view-controls { padding: 6px 8px; gap: 6px; }
+  .dc-view-btns button { padding: 6px 11px; font-size: .74rem; min-height: 28px; }
+  .dc-disp-mode { padding: 6px 9px; min-height: 28px; }
+  .dc-view-reset { min-height: 28px; padding: 6px 10px; }
+}
+/* ⚠ 146.txt §五 修复的正是这里：R3 把 .dc-view-controls 移进 #dc_view3dBox（= OrbitControls
+   的 domElement）后，OrbitControls 在 pointerdown 时 setPointerCapture，pointerup/click 被
+   重定向到容器，按钮自己的 click 处理器永不触发 ⇒ 前后左右/重置视角全部失效。
+   现在控件回到 #dc_view3d 下（容器之外），因此**必须**用视口浮层配色（--view-ctrl-*），
+   原来那套 --bg-card 通用主题配色（会跟 3D 视口背景撞色）已随重复规则一并删除。*/
+
+/* 右侧 Analysis Panel —— 144 起参数区改为对话框浮层，旧的 .dc-panel 布局规则已删除 */
 .dc-panel-sec {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 12px 14px;
@@ -1001,7 +1724,8 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .dc-panel-title::after { content: '▾'; margin-left: auto; color: var(--text-muted); }
 /* 热结列表（H1/H2，点击 ↔ 3D 联动） */
 .dc-hs-item {
-  display: flex; align-items: center; gap: 8px; width: 100%;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1px 8px; align-items: center;
+  width: 100%;
   padding: 8px 10px; margin-bottom: 6px; cursor: pointer;
   border: 1px solid var(--border); border-radius: 8px;
   background: var(--bg-card-hi); color: var(--text-secondary);
@@ -1010,11 +1734,12 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .dc-hs-item:hover { border-color: var(--primary); }
 .dc-hs-item.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
 .dc-hs-id {
+  grid-row: 1 / span 2; align-self: center;
   min-width: 30px; text-align: center; padding: 3px 6px; border-radius: 6px;
   background: #ff5252; color: #fff; font-weight: 700; font-size: .74rem;
 }
-.dc-hs-main { flex: 1; }
-.dc-hs-sub { color: var(--text-muted); font-size: .72rem; }
+.dc-hs-main { grid-column: 2; min-width: 0; }
+.dc-hs-sub { grid-column: 2; min-width: 0; color: var(--text-muted); font-size: .72rem; overflow-wrap: anywhere; }
 /* 模型信息（GeometryResult 展示） */
 .dc-geom-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
 .dc-geom-grid > div {
@@ -1044,26 +1769,14 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .dc-task-status.stale { color: #d97706; }
 .dc-task-status.wait { color: var(--text-muted); }
 
-/* 16-C：铸件信息卡（19.txt 三） */
-.dc-cast-card {
   display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
   background: var(--bg-card-hi); border: 1px solid var(--border); border-radius: 10px;
   padding: 10px 14px; margin: 10px 0 4px;
 }
-.dc-cast-name { font-weight: 700; font-size: .85rem; color: var(--text); }
-.dc-cast-stats { font-size: .76rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.dc-cast-stats .chip-ok { background: #059669; color: #fff; }
-.dc-cast-stats .dc-chip-warn { background: #d97706; color: #fff; }   /* PHASE 17：🟡 局部薄特征 */
-.dc-overview-grid .chip-ok { background: #059669; color: #fff; }
-.dc-overview-grid .dc-chip-warn { background: #d97706; color: #fff; }
-.dc-overview-grid .dc-chip-bad { background: var(--danger, #c0392b); color: #fff; }
+/* ⚠ 既有缺陷（人工截图验收发现）：本元素 `display:flex` 会盖掉浏览器默认的 `[hidden]{display:none}`，
+   导入 STL 之前它一直渲染成一个空的描边横条。交接书 §8.3 记的同一个坑。 */
 
 /* 16-C：参数来源徽章（19.txt 五：🟢🔵🟡🟠） */
-.dc-src-badge {
-  font-size: .68rem; color: var(--text-secondary); white-space: nowrap;
-  border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; background: var(--surface-2);
-  margin-left: 6px;
-}
 
 /* 16-C：三方向尺寸输入（线收缩率） */
 .dims3-row { gap: 6px; flex-wrap: wrap; }
@@ -1078,24 +1791,16 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 }
 .dc-result-nav-btn.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); font-weight: 600; }
 
-.dc-params-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; margin-top: 4px; }
 /* V2.3.1 STL 诊断面板（命令 10.txt 第一节） */
 .dc-diag { margin-top: 10px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; background: var(--surface-2); }
 .dc-diag-line { display: flex; align-items: baseline; gap: 6px; font-size: .76rem; margin: 3px 0; flex-wrap: wrap; }
 .dc-diag-line span { color: var(--text-secondary); min-width: 72px; flex-shrink: 0; }
-.dc-diag-line b { font-weight: 600; }
+/* b 必须能换行：诊断值里有 "gs=48³ · vs=8.33 mm · 内部点 2160/110592" 这类长串，
+   不换行会把左栏撑出横向滚动条（人工截图验收实拍到）。 */
+.dc-diag-line b { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .dc-diag-bad { color: var(--danger, #c0392b); }
 .dc-chip-bad { background: var(--danger, #c0392b); color: #fff; }
 
-/* V2.3 分页步骤条（命令 9.txt STEP 4） */
-.dc-steps { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-.dc-step { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text-secondary);
-  padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); }
-.dc-step span { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
-  border-radius: 50%; background: var(--border); color: var(--text-secondary); font-size: .68rem; font-weight: 700; }
-.dc-step.done { border-color: var(--primary); color: var(--primary); }
-.dc-step.done span { background: var(--primary); color: var(--surface); }
-@media (max-width: 760px) { .dc-params-grid { grid-template-columns: 1fr; } }
 /* PHASE 29（P1-40）：高级参数折叠区（设计中心 optionalInputs 生命周期落点） */
 .dc-advanced { margin-top: 12px; border: 1px dashed var(--border); border-radius: 8px; padding: 8px 10px; }
 .dc-advanced summary { cursor: pointer; font-size: .78rem; font-weight: 700; color: var(--text-secondary); user-select: none; }
@@ -1164,7 +1869,6 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 
 /* ================= PHASE 71.5（75.txt）：统一输入区 + Page1 铸件工艺分析样式 ================= */
 /* ---- 输入区来源图例（§十四：颜色 + 文字，双通道） ---- */
-.dc-src-legend { font-size: .66rem; color: var(--txt-dim, #64748b); line-height: 1.7; margin: 2px 0 8px; padding: 4px 8px; background: var(--bg-soft, rgba(127,127,127,.06)); border-radius: 6px; }
 .dc-group { margin-bottom: 10px; }
 .dc-group-title { font-size: .8rem; font-weight: 700; margin: 8px 0 4px; display: flex; align-items: center; gap: 6px; }
 .dc-group-title .chip { font-weight: 500; }
@@ -1191,6 +1895,28 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 /* ---- Page1：板块分隔 + 风险条 ---- */
 .dc-p1-parthead { font-size: .8rem; font-weight: 700; margin: 4px 0 6px; display: flex; align-items: center; gap: 6px; }
 .dc-p1-risks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+/* S2：六张卡片分三组（产品结构 / 收缩率 / 加工余量推荐）。只做间距与组标题，
+   不加重边框、不重复说明。 */
+.dc-p1-group { margin-top: 10px; }
+.dc-p1-grouphead { font-size: .76rem; font-weight: 700; color: var(--text-secondary); margin: 0 0 6px; }
+.dc-core-note { font-size: .68rem; line-height: 1.5; color: var(--text-muted); margin-top: 4px; }
+.dc-core-note.warn { color: var(--warning, #b45309); }
+
+/* 冒口颈 / 补缩距离经验参考：两张独立卡片，沿用结果卡语言，不新造大组件 */
+.dc-ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; margin-top: 12px; }
+.dc-ref-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card-hi); padding: 10px 12px; min-width: 0; }
+.dc-ref-title { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: .8rem; font-weight: 700; margin-bottom: 6px; }
+.dc-ref-current { font-size: .72rem; color: var(--text-muted); line-height: 1.6; }
+.dc-ref-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+.dc-ref-controls .field-select { width: auto; min-width: 110px; }
+.dc-ref-main { font-size: .78rem; line-height: 1.7; color: var(--text-secondary); }
+.dc-ref-main b { color: var(--text); font-size: .9rem; }
+.dc-ref-bad { color: var(--warning, #b45309); }
+.dc-ref-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.dc-ref-stat { flex: 1 1 110px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: var(--bg-soft, rgba(127,127,127,.05)); padding: 6px 8px; font-size: .68rem; color: var(--text-muted); }
+.dc-ref-stat b { color: var(--text); font-size: .9rem; }
+.dc-ref-note { margin-top: 8px; line-height: 1.6; }
+.dc-gating-areas > .dc-ref-card { grid-column: 1 / -1; }
 .dc-p1-agrid { display: grid; grid-template-columns: 1fr; gap: 2px 0; }
 .dc-p1-arow { display: grid; grid-template-columns: minmax(120px, 34%) 1fr auto; align-items: center; gap: 6px; padding: 3px 2px; border-bottom: 1px dashed rgba(127,127,127,.18); font-size: .78rem; }
 .dc-p1-arow .dc-p1-ak { color: var(--txt-dim, #64748b); }
@@ -1215,10 +1941,6 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .dc-src-line { font-size: .68rem; color: var(--txt-dim, #64748b); margin-top: 8px; padding-top: 5px; border-top: 1px dashed rgba(127,127,127,.25); }
 
 /* ---- PHASE 71.7（77.txt）：概览枢纽 / 参数分组 / 热结选择 / 内浇道推荐 / 浇注示意图 ---- */
-.dc-overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; font-size: .76rem; }
-.dc-overview-grid > div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px dashed rgba(127,127,127,.18); }
-.dc-overview-grid span { color: var(--txt-dim, #64748b); }
-.dc-overview-grid b { font-weight: 600; text-align: right; }
 .dc-gating-diagram { max-width: 330px; margin: 4px auto 2px; }
 .dc-gating-diagram svg { width: 100%; height: auto; }
 .dc-rec-box { margin-top: 6px; padding: 6px 9px; background: var(--bg-soft, rgba(127,127,127,.06)); border: 1px dashed var(--border, rgba(127,127,127,.3)); border-radius: 6px; font-size: .74rem; line-height: 1.6; }
@@ -1232,21 +1954,13 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .dc-rec-title { font-weight: 700; margin-bottom: 2px; }
 .dc-rec-line b { color: var(--primary, #2563eb); }
 .dc-rec-dim { color: var(--txt-dim, #64748b); }
-.dc-hsp-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
-.dc-hsp { display: flex; align-items: center; gap: 6px; padding: 4px 7px; border: 1px solid var(--border, rgba(127,127,127,.28)); border-radius: 6px; font-size: .76rem; }
-.dc-hsp.on { border-color: var(--primary, #2563eb); background: rgba(37,99,235,.07); }
-.dc-hsp-main { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; }
-.dc-hsp-id { font-weight: 700; color: var(--primary, #2563eb); }
-.dc-hsp-sub { color: var(--txt-dim, #64748b); font-size: .7rem; }
-.dc-hsp-edit { border: 1px solid var(--border, rgba(127,127,127,.3)); background: transparent; color: var(--txt, inherit); border-radius: 5px; font-size: .7rem; padding: 2px 6px; cursor: pointer; }
-.dc-hsp-edit:hover { background: var(--bg-hover, rgba(127,127,127,.12)); }
 .dc-p1-cval { font-size: 1.05rem; font-weight: 700; color: var(--primary, #2563eb); margin: 2px 0 4px; }
 
 /* ---- PHASE 78（78.txt 九）：概览卡片分组（几何 / 重量与壁厚 / 分析结果） ---- */
 .dc-ov-group { margin-bottom: 8px; }
 .dc-ov-group:last-of-type { margin-bottom: 2px; }
 .dc-ov-gtitle { font-size: .7rem; font-weight: 700; color: var(--text-muted); letter-spacing: .4px; margin: 0 0 4px; }
-.dc-ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 6px; }
+.dc-ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 6px; }
 .dc-ov-card {
   background: var(--bg-card-hi); border: 1px solid var(--border); border-radius: 8px;
   padding: 7px 10px; min-width: 0;
@@ -1287,13 +2001,36 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
   font-variant-numeric: tabular-nums;
 }
 .dc-edit-inp:focus { outline: none; border-color: var(--primary); }
+.dc-edit-select { width: auto; min-width: 104px; text-align: left; padding-right: 4px; }
 .dc-edit-unit { font-size: .72rem; color: var(--text-muted); }
 .dc-edit-res { font-size: .78rem; color: var(--text-secondary); }
 .dc-edit-res b { color: var(--primary); font-variant-numeric: tabular-nums; }
 .dc-edit-hint { margin-top: 6px; font-size: .72rem; color: var(--text-muted); line-height: 1.6; }
+/* R6-S3.1（154.txt §六.2）：直浇道 / 横浇道 / 内浇道三段统一卡片。
+   主结果用同一套标题/数值/单位/状态样式；详细过程仍留在折叠区。 */
+.dc-gating-areas {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px; align-items: stretch;
+}
+.dc-gating-area { margin-top: 0; min-width: 0; display: flex; flex-direction: column; }
+.dc-gating-metrics { display: flex; flex-direction: column; gap: 4px; }
+.dc-gating-metrics > div { display: flex; justify-content: space-between; gap: 8px; font-size: .74rem; color: var(--text-secondary); }
+.dc-gating-metrics b { color: var(--text); font-variant-numeric: tabular-nums; text-align: right; }
+@media (max-width: 1100px) { .dc-gating-areas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .dc-gating-areas { grid-template-columns: minmax(0, 1fr); } }
+
+/* RH 测量基准图（R6-S3.1）：只用 currentColor/变量，明暗主题自动适配 */
+.dc-rh-fig { width: 100%; max-width: 320px; height: auto; display: block; margin: 6px auto; }
+.dc-rh-fig .rh-cast { fill: var(--bg-soft, rgba(127,127,127,.08)); stroke: var(--border-strong, #94a3b8); stroke-width: 1; }
+.dc-rh-fig .rh-riser { fill: rgba(79,140,255,.18); stroke: var(--primary, #4f8cff); stroke-width: 1; }
+.dc-rh-fig .rh-line { stroke: var(--text-muted, #64748b); stroke-width: 1; }
+.dc-rh-fig .rh-dim { stroke: var(--primary, #4f8cff); stroke-width: 1.5; }
+.dc-rh-fig .rh-text { fill: var(--text-secondary, #475569); font-size: 10px; font-family: system-ui, sans-serif; }
 .dc-mini-btn {
   margin-left: 4px; padding: 2px 8px; font-size: .7rem; cursor: pointer;
   border: 1px solid var(--border); border-radius: 5px; background: transparent; color: var(--primary);
+  /* R6-S3：移动端触摸目标 ≥28px（responsive 体检实测 20px 未达标）。 */
+  min-height: 28px; display: inline-flex; align-items: center; justify-content: center;
 }
 .dc-mini-btn:hover { background: var(--primary-soft); }
 
@@ -1500,6 +2237,12 @@ button.df-chip.active { background: var(--primary); color: #fff; border-color: v
 .pi-fldiag > summary { cursor: pointer; color: var(--text-muted); user-select: none; }
 .pi-fldiag .pi-dgrid { margin: 8px 0; }
 .pi-warnline-inline b { color: var(--warning, #fbbf24); }
+/* S4：原来只有 inline 变体有样式，普通 .pi-warnline 完全裸奔（三处使用）。 */
+.pi-warnline {
+  margin: 6px 0; padding: 6px 10px; border-radius: 7px;
+  background: rgba(217,119,6,.10); border: 1px solid rgba(217,119,6,.35);
+  font-size: .76rem; line-height: 1.55;
+}
 
 /* ---- ⑤ 3D 图例 ---- */
 .pi-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-left: auto; font-size: .72rem; color: var(--text-secondary); }

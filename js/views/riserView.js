@@ -2,6 +2,7 @@
 // 冒口设计 · 视图（重建于工具箱统一设计系统）
 // ============================================================
 import { RISER_MATERIALS, RISER_EFF, RISER_SHAPES, calcMc, runRiser } from '../../calcs/riser.js';
+import { riserWarning, riserConverged, fillWarning } from './riserStatus.js';
 import { prefillMaterial } from '../context.js';
 import { renderNextSteps } from './nextSteps.js';
 import { saveFile } from '../download.js';
@@ -10,6 +11,11 @@ import { installExampleTags } from './exampleTag.js';
 // PHASE 72（80.txt §八）：核心计算器 UI 中英双语（公式/变量/单位不动）
 import { t as tr } from '../i18n/index.js';
 import { setRecompute } from '../i18n/viewState.js';
+import * as proj from '../model/CastingProject.js';
+import {
+  renderRiserReferenceCards, bindRiserReference, referenceNote, riserTopNote,
+  applyInsulatedRiserResult, insulatedFormulaNote, insulatedLimitNote, insulatedNoEfficiencyNote,
+} from './riserReference.js';
 
 const DEFAULTS = {
   mat: '球铁', cast_wt: 10,
@@ -83,10 +89,11 @@ export function renderRiser(container, calc) {
                   <option value="sphere_head" selected>${tr('球顶圆柱暗冒口')}</option>
                   <option value="sphere">${tr('球形')}</option>
                   <option value="square">${tr('正方柱')}</option>
+                  <option value="insulated">${tr('发热/保温冒口（经验估算）')}</option>
                 </select>
               </div>
             </div>
-            <div class="field">
+            <div class="field" id="r_hd_field">
               <label class="field-label">📐 H / D ${tr('比')}</label>
               <div class="f-row">
                 <select class="field-select" id="r_hd">
@@ -98,14 +105,9 @@ export function renderRiser(container, calc) {
               </div>
             </div>
           </div>
-          <div class="divider"></div>
-          <div class="field-hint" style="margin-bottom:8px">${tr('冒口补缩效率（可修改，源自《铸造手册》第5卷）')}</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div class="f-row"><span class="field-label" style="flex:1">🏕 ${tr('明顶圆柱/方柱')}</span><input class="field-input" type="number" id="r_eff_open" value="${DEFAULTS.eff_open}" style="width:70px" min="1" max="60"><span class="f-unit">%</span></div>
-            <div class="f-row"><span class="field-label" style="flex:1">🕳️ ${tr('暗侧圆柱')}</span><input class="field-input" type="number" id="r_eff_blind" value="${DEFAULTS.eff_blind}" style="width:70px" min="1" max="60"><span class="f-unit">%</span></div>
-            <div class="f-row"><span class="field-label" style="flex:1">🔵 ${tr('球顶柱暗冒口')}</span><input class="field-input" type="number" id="r_eff_sph" value="${DEFAULTS.eff_sph}" style="width:70px" min="1" max="60"><span class="f-unit">%</span></div>
-            <div class="f-row"><span class="field-label" style="flex:1">🔥 ${tr('发热保温')}</span><input class="field-input" type="number" id="r_eff_heat" value="${DEFAULTS.eff_heat}" style="width:70px" min="1" max="80"><span class="f-unit">%</span></div>
-          </div>
+          <div class="field-hint" id="r_hd_note" hidden>${tr('球形冒口由球径唯一确定（H ≡ D），不存在独立 H/D 设计自由度；切到圆柱/球顶圆柱/方柱后可选 H/D。')}</div>
+          <div class="field-hint" id="r_insulated_note" hidden>${tr('发热/保温冒口沿用当前 H/D；目标体积 V1 = 0.4 × 普通圆柱几何体积 V0，再按 D = ∛(4V1/(πk))、H = kD 反算。')}</div>
+          <div class="field-hint" style="margin-top:8px">${tr('补缩效率按形状固定（当前算法采用的模型系数，不可编辑）；详细数值见结果区的计算依据。')}</div>
         </div>
       </div>
 
@@ -154,7 +156,11 @@ export function renderRiser(container, calc) {
   let lastResult = null;
   const read = () => {
     const q = (id) => container.querySelector(id);
-    const shape = q('#r_shape').value;
+    const selectedShape = q('#r_shape').value;
+    const insulated = selectedShape === 'insulated';
+    // 发热/保温的基准仍是普通圆柱 V0；H/D 从当前选择器读取并沿用（164 §4.3）。
+    // 未知的 'insulated' 不传给冻结算法，核心只负责给出普通圆柱 V0。
+    const shape = insulated ? 'cyl' : selectedShape;
     return {
       mat: q('#r_mat').value,
       cast_wt: parseFloat(q('#r_cast_wt').value) || 0,
@@ -165,8 +171,8 @@ export function renderRiser(container, calc) {
       cast_v: parseFloat(q('#r_cast_v').value) || 0,
       cast_a: parseFloat(q('#r_cast_a').value) || 0,
       shape,
-      hd_ratio: q('#r_hd').value,
-      eff: parseFloat(q('#r_eff_' + (RISER_SHAPES[shape].effKey).replace('eff_', '')).value),
+      hd_ratio: parseFloat(q('#r_hd').value) || 1.0,
+      eff: RISER_EFF[RISER_SHAPES[shape].effKey],
     };
   };
   // PHASE 63：示例默认值标记（铸件重量/Mc 组）；P0-1 门禁
@@ -180,10 +186,6 @@ export function renderRiser(container, calc) {
     const mode = mcModeSel.value;
     const checks = [
       checkNum($('#r_cast_wt').value, { label: tr('铸件重量'), min: 0 }),
-      checkNum($('#r_eff_open').value, { label: tr('明顶圆柱/方柱效率'), min: 0, max: 100 }),
-      checkNum($('#r_eff_blind').value, { label: tr('暗侧圆柱效率'), min: 0, max: 100 }),
-      checkNum($('#r_eff_sph').value, { label: tr('球顶柱暗冒口效率'), min: 0, max: 100 }),
-      checkNum($('#r_eff_heat').value, { label: tr('发热保温效率'), min: 0, max: 100 }),
     ];
     if (mode === 'direct') checks.push(checkNum($('#r_mc').value, { label: tr('热节模数 Mc'), gt: 0, required: true }));
     else if (mode === 'hot_spot') checks.push(checkNum($('#r_hot_d').value, { label: tr('热节圆直径 d'), gt: 0, required: true }));
@@ -196,14 +198,36 @@ export function renderRiser(container, calc) {
     const err = firstErr(checks);
     if (err) { lastResult = null; renderInvalid(err); return; }
     const input = read();
-    lastResult = runRiser(input);
+    const base = runRiser(input);
+    const insulated = container.querySelector('#r_shape')?.value === 'insulated';
+    lastResult = insulated && base
+      ? applyInsulatedRiserResult(base, { hdRatio: input.hd_ratio })
+      : base;
     renderResults(lastResult);
     renderJudge(lastResult);
   };
   let timer;
   const debounced = () => { clearTimeout(timer); timer = setTimeout(update, 180); };
 
+  /* R6-S3.1（154.txt §三.8/§九）：球形没有独立高度自由度，H/D 选择器对它无效——
+     显式隐藏并说明，不再让用户以为选了 0.8/1.5 会改变球形几何。 */
+  const applyShapeUi = () => {
+    const shape = container.querySelector('#r_shape')?.value;
+    const fixed = shape === 'sphere';   // 164 §4.3：发热/保温沿用当前 H/D，不隐藏
+    const hdField = container.querySelector('#r_hd_field');
+    const hdNote = container.querySelector('#r_hd_note');
+    const insNote = container.querySelector('#r_insulated_note');
+    if (hdField) hdField.hidden = fixed;
+    if (hdNote) {
+      hdNote.hidden = !fixed;
+      if (!hdNote.hidden) hdNote.textContent = tr('球形冒口由球径唯一确定（H ≡ D），不存在独立 H/D 设计自由度；切到圆柱/球顶圆柱/方柱后可选 H/D。');
+    }
+    if (insNote) insNote.hidden = shape !== 'insulated';
+  };
   mcModeSel.addEventListener('change', () => { toggleMc(); debounced(); });
+  container.querySelector('#r_shape').addEventListener('change', () => { applyShapeUi(); debounced(); });
+  /* 164 §4.3：H/D 是发热/保温主结果的有效输入，change 与 input 都触发重算（合成事件/键盘操作均覆盖）。 */
+  container.querySelector('#r_hd').addEventListener('change', debounced);
   container.querySelectorAll('.section-card input, .section-card select').forEach(el =>
     el.addEventListener('input', debounced));
 
@@ -215,84 +239,154 @@ export function renderRiser(container, calc) {
   function renderResults(r) {
     const el = container.querySelector('#r_results');
     if (!r) { el.innerHTML = `<div class="empty" style="padding:26px"><span class="empty-sub">${tr('请输入有效的热节模数')}</span></div>`; return; }
+    const insulated = container.querySelector('#r_shape')?.value === 'insulated';
     const md = r.md, sd = r.sd;
-    // 灰铸铁低补缩需求工程提示（59.txt；仅灰铁显示，防绝对化：保留工程条件限制）
+    /* R6-S3.1（154.txt §七）：P1 提醒在主界面压缩成一句；完整原理/适用条件进可展开区。
+       灰铁提示只在灰铁出现，不隐藏工程条件。 */
     const grayIronNote = md.name === '灰铁(HT)'
-      ? `<div class="field-hint" style="padding:8px 4px 4px;background:#fffbeb;border-radius:8px;margin:4px 0 8px">🧊 <b>${tr('工程提示')}</b>${tr('：灰铸铁具有石墨化膨胀特性，接近共晶成分时净补缩需求通常较低，部分铸件可采用无冒口或小冒口工艺。对于热节明显、壁厚差较大的铸件，仍应结合冷铁及实际补缩条件进行校核。')}</div>`
+      ? `<div class="dc-hint-p1">🧊 ${tr('灰铸铁石墨化膨胀可降低净补缩需求；热节明显或壁厚差大的铸件仍需结合冷铁与补缩条件校核。完整说明见下方“计算依据”。')}</div>`
       : '';
-    // Campbell《Complete Casting Handbook》：冒口位置理论（T 字交叉 vs 侧上方错位连接）。
-    // 纯提示层（59.txt 模式），不参与计算；措辞保留工程条件（顶置可用、侧放更优），防绝对化。
-    const campbellNote = `<div class="field-hint" style="padding:8px 4px 4px;background:#eef4fb;border-radius:8px;margin:4px 0 8px">${tr('riser.note.campbell')}</div>`;
+    const campbellNote = `<div class="dc-hint-p1">📌 ${tr('Campbell 提示：冒口优先错位侧上方接入热节；T 字交叉会自成热节、需要更大模数。完整原理见下方“计算依据”。')}</div>`;
+    /* 164 §4：发热/保温已经选择为**当前设计类型**，主结果只显示换算后的这一套几何。
+       普通圆柱 V0 只作为基准体积出现在明细，不再作为第二套尺寸展示。 */
+    if (insulated) {
+      if (r.insulatedError) {
+        el.innerHTML = `<div class="empty" style="padding:26px"><span class="empty-sub">⚠️ ${tr('无法计算：缺少有效的普通圆柱基准体积或 H/D。')}</span></div>`;
+        return;
+      }
+      const hdAct = r.D > 0 ? r.H / r.D : null;
+      el.innerHTML = `
+        ${ex.exampleNote()}
+        ${grayIronNote}
+        ${campbellNote}
+        <div class="group-title" data-insulated-main>${tr('发热/保温冒口（经验估算）')}</div>
+        ${row(`🏗️ ${tr('当前方案')}`, `⌀${r.D}×H${r.H}`, '', '', tr('按目标体积反算并回算几何'))}
+        ${row(`📐 ${tr('直径 D')}`, r.D, 'mm')}
+        ${row(`📏 ${tr('高度 H')}`, r.H, 'mm')}
+        ${row(`📐 ${tr('实际 H/D')}`, fmt(hdAct, 2), '', '', tr('沿用名义 H/D = {k}', [fmt(r.hd, 2)]))}
+        ${row(`📦 ${tr('普通圆柱基准体积 V0')}`, fmt(r.V0 / 1000, 1), 'cm³', '', tr('普通圆柱几何体积，不含补缩效率修正'))}
+        ${row(`🎯 ${tr('目标体积 V1 = 0.4 × V0')}`, fmt(r.V1 / 1000, 1), 'cm³', '', tr('40% 为本产品经验系数'))}
+        ${row(`🧊 ${tr('实际几何体积（按显示尺寸回算）')}`, fmt(r.Vactual / 1000, 1), 'cm³', r.volumeOk ? 'ok' : 'warn', r.volumeOk ? tr('≥ 目标体积') : tr('小于目标体积，请复核'))}
+        ${row(`🧲 ${tr('几何模数（参考）')}`, fmt(r.Mr_act, 2), 'mm', '', tr('由新几何 D×H 计算；不作普通目标模数判定'))}
+        ${row(`🧲 ${tr('铸件热节模数 Mc')}`, fmt(r.Mc, 2), 'mm')}
+        ${r.weightKg != null ? row(`⚖️ ${tr('冒口重量（按几何体积与密度）')}`, fmt(r.weightKg, 3), 'kg') : ''}
+        ${r.cw > 0 && r.yieldPct != null ? row(`📊 ${tr('单件（铸件+冒口）出品率（参考）')}`, fmt(r.yieldPct, 1), '%', '', tr('按换算后的冒口体积计算')) : ''}
+        ${renderRiserReferenceCards({ modulus: r.Mr_act, wallThickness: proj.getV('process.wallUsed') })}
+        <div class="field-hint dc-ref-note" data-ref-note>${referenceNote()}</div>
+        <div class="field-hint dc-top-note" data-top-note>${riserTopNote()}</div>
+        <details class="sc-fold">
+          <summary>📖 ${tr('计算依据 / 经验性质（展开）')}</summary>
+          <div class="field-hint p72-cn" style="line-height:1.7">${insulatedFormulaNote()}</div>
+          <div class="field-hint p72-cn" style="line-height:1.7">${insulatedNoEfficiencyNote()}</div>
+          <div class="field-hint p72-cn" style="line-height:1.7">${insulatedLimitNote()}</div>
+          <div class="field-hint p72-cn" style="line-height:1.7">${tr('· 尺寸反算：')}D = ∛(4V1/(πk))，H = kD；D 取整数 mm，H 按 kD 取整，最后按显示尺寸回算体积。<br>${tr('· 普通圆柱基准：')}${tr('D0/H0 仅用于取得 V0，不作为当前主结果。')}</div>
+        </details>`;
+      bindRiserReference(el);
+      return;
+    }
     // PHASE 73：输入极小（如 Mc < 0.1mm）时迭代把 D/H 取整到 0，形状模数 0/0 会产出 NaN。
     //   不改计算（公式冻结），改为**明确告知输入不适用**，不让 NaN 流到界面。
     const degenerate = !Number.isFinite(r.Mr_act) || !(r.D > 0) || !(r.H > 0);
+    // PHASE V2.0-15（126.txt §三）：独立计算器此前**完全看不到未收敛** ——
+    //   renderJudge 只给模数/体积两个 ✓/✗ 徽标，标题还写「自动迭代最优解」。
+    const w = riserWarning(r);
+    const okConv = riserConverged(r) !== false;
+    // PHASE V2.0-22（138.txt §五）：`Mr_target` 为本阶段新增字段；旧结果对象回退到 `Mr_need`
+    //   （两者恒等，见 `calcs/riser.js` 返回对象注释）。
+    const MrT = r.Mr_target != null ? r.Mr_target : r.Mr_need;
     el.innerHTML = `
       ${ex.exampleNote()}
-      ${degenerate ? `<div class="field-hint p72-cn" style="padding:8px 10px;background:#fffbeb;border-radius:8px;margin:4px 0 8px;color:#b45309">⚠️ 输入值过小（当前热节模数 Mc = ${fmt(r.Mc, 3)} mm），迭代后的冒口尺寸取整为 0，无法给出有效的模数/体积校核。<br>请检查输入：实际铸件的热节模数通常为 1~80 mm 量级。</div>` : ''}
+      ${degenerate ? `<div class="field-hint p72-cn" style="padding:8px 10px;background:#fffbeb;border-radius:8px;margin:4px 0 8px;color:#b45309">⚠️ 输入值过小（当前热节模数 Mc = ${fmt(r.Mc, 3)} mm），反求后的冒口尺寸取整为 0，无法给出有效的模数校核。<br>请检查输入：实际铸件的热节模数通常为 1~80 mm 量级。</div>` : ''}
+      ${w ? `<div class="field-hint p72-cn" style="padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin:4px 0 10px;color:#b91c1c;line-height:1.75">${tr(w.key, w.params)}</div>` : ''}
       ${grayIronNote}
       ${campbellNote}
-      <div class="group-title">${tr('推荐冒口（自动迭代最优解）')}</div>
-      ${row('🏗️ ' + tr(sd.name), sd.label(r.D, r.H), '', '', tr('f 迭代至校核通过'))}
+      <div class="group-title">${tr(okConv ? '推荐冒口（按目标模数反求）' : '计算所得冒口（未收敛，非最终建议）')}</div>
+      ${row('🏗️ ' + tr(sd.name), sd.label(r.D, r.H), '', '', tr('由目标模数 Mr_target 反求'))}
       ${row('📐 ' + tr(r.dimLabel), r.D, 'mm')}
-      ${row(`📏 ${tr('高度 H')}`, r.H, 'mm')}
-      ${row(`📐 ${tr('H/D 比')}`, (r.H / r.D).toFixed(1))}
-      ${row(`🔢 ${tr('模数放大系数 f')}`, r.final_f.toFixed(2), '', '', tr('从1.10迭代'))}
+      ${r.shapeKey === 'sphere'
+        ? row(`📐 ${tr('球形几何')}`, tr('由球径唯一确定（H ≡ D）'))
+        : `${row(`📏 ${tr('高度 H')}`, r.H, 'mm')}${row(`📐 ${tr('H/D 比')}`, (r.H / r.D).toFixed(1))}`}
+      ${row(`🔢 ${tr('目标模数比 Mr/Mc')}`, (r.targetRatio != null ? r.targetRatio : 1.2).toFixed(2), '', '', tr('设计规则常量，不再迭代'))}
       ${row(`🧲 ${tr('铸件热节模数 Mc')}`, r.Mc.toFixed(2), 'mm')}
-      ${row(`🎯 ${tr('所需冒口模数 Mr_need')}`, r.Mr_need.toFixed(2), 'mm')}
-      ${row(`✅ ${tr('实际冒口模数 Mr_act')}`, r.Mr_act.toFixed(2), 'mm', r.modOk ? 'ok' : 'bad', r.modOk ? `≥${r.Mr_need.toFixed(2)} ✓` : `< ${r.Mr_need.toFixed(2)} ✗`)}
-      <div class="group-title">💧 ${tr('体积校验')}</div>
+      ${row(`🎯 ${tr('目标冒口模数 Mr_target')}`, MrT.toFixed(2), 'mm')}
+      ${row(`✅ ${tr('实际冒口模数 Mr_actual')}`, r.Mr_act.toFixed(2), 'mm', r.modOk ? 'ok' : 'bad', r.modOk ? `≥${MrT.toFixed(2)} ✓` : `< ${MrT.toFixed(2)} ✗`)}
+      <div class="group-title">💧 ${tr('冒口体积与补缩量')}</div>
       ${row(`📦 ${tr('冒口体积')}`, (r.Vr / 1000).toFixed(1), 'cm³')}
       ${row(`💧 ${tr('补缩效率')}`, (r.eff * 100).toFixed(1), '%', '', tr(sd.name))}
       ${row(`🫗 ${tr('有效补缩量')}`, (r.effV / 1000).toFixed(1), 'cm³')}
-      ${r.cw > 0 ? `
-        ${row(`📦 ${tr('铸件体积（补缩区）')}`, (r.Vc / 1000).toFixed(0), 'cm³')}
-        ${row(`📉 ${tr('收缩率')}`, (md.shrink * 100).toFixed(1), '%', '', tr(md.name))}
-        ${row(`🎯 ${tr('所需补缩量')}`, (r.needVol / 1000).toFixed(1), 'cm³')}
-        ${row(`✅ ${tr('补缩判定')}`, (r.effV / 1000).toFixed(1) + ' ≥ ' + (r.needVol / 1000).toFixed(1), 'cm³', r.volOk ? 'ok' : 'bad', tr(r.volOk ? '充足 ✓' : '不足 ✗'))}
-        ${row(`📊 ${tr('工艺出品率')}`, r.yieldPct !== null ? fmt(r.yieldPct, 1) : '—', '%')}
-      ` : `<div class="field-hint" style="padding:4px">${tr('输入铸件重量后可做体积校验')}</div>`}
-      <div class="field-hint" style="padding:4px 4px 0;font-size:.74rem;color:#94a3b8">${tr('riser.note.volSimplified')}</div>
-      <div class="group-title">🔗 ${tr('冒口颈')}</div>
-      ${row(`🔗 ${tr('冒口颈模数 M_neck')}`, r.M_neck.toFixed(2), 'mm', '', `Mc×${r.neck_k}（${tr(md.name)}${tr('系数')}）`)}
-      ${row(`⭕ ${tr('圆形冒口颈 ⌀')}`, '⌀' + r.d_neck, 'mm', '', 'M=d/4')}
-      ${row(`🟦 ${tr('方形冒口颈 a×a')}`, r.d_neck + '×' + r.d_neck, 'mm', '', 'M=a/4')}
-      ${row(`📏 ${tr('颈长建议')}`, Math.round(r.d_neck * 0.5) + '~' + Math.round(r.d_neck * 1.0), 'mm', '', tr('≈0.5~1.0倍颈径'))}
-      <div class="group-title">📖 ${tr('数据来源')}</div>
-      <div class="field-hint p72-cn" style="line-height:1.7">${tr('· 模数公式：')}${tr(sd.formula)}<br>${tr('· 收缩率：')}${tr(md.name)} = ${(md.shrink * 100).toFixed(1)}%${tr('（《铸造手册》体收缩率，非线收缩率）')}<br>${tr('· 补缩效率：《铸造手册》第5卷典型值')}<br>${tr('· 冒口颈系数：')}${tr(md.name)}=${r.neck_k}×Mc${tr('riser.note.neckCoef')}</div>
+      ${r.cw > 0
+        ? row(`📊 ${tr('单件（铸件+冒口）出品率（参考）')}`, r.yieldPct !== null ? fmt(r.yieldPct, 1) : '—', '%', '', tr('设计口径，不是整模实际出品率'))
+        : `<div class="field-hint" style="padding:4px">${tr('未输入铸件重量：不计算单件出品率（参考）')}</div>`}
+      ${renderRiserReferenceCards({ modulus: r.Mr_act, wallThickness: proj.getV('process.wallUsed') })}
+      <div class="field-hint dc-ref-note" data-ref-note>${referenceNote()}</div>
+      <div class="field-hint dc-top-note" data-top-note>${riserTopNote()}</div>
+      <details class="sc-fold">
+        <summary>📖 ${tr('计算依据 / 工程提示（展开）')}</summary>
+        ${md.name === '灰铁(HT)' ? `<div class="field-hint p72-cn" style="line-height:1.7">🧊 <b>${tr('工程提示')}</b>${tr('：灰铸铁具有石墨化膨胀特性，接近共晶成分时净补缩需求通常较低，部分铸件可采用无冒口或小冒口工艺。对于热节明显、壁厚差较大的铸件，仍应结合冷铁及实际补缩条件进行校核。')}</div>` : ''}
+        <div class="field-hint p72-cn" style="line-height:1.7">${tr('riser.note.campbell')}</div>
+        <div class="field-hint p72-cn" style="line-height:1.7">${tr('· 模数公式：')}${tr(sd.formula)}<br>${tr('· 收缩率：')}${tr(md.name)} = ${(md.shrink * 100).toFixed(1)}%${tr('（《铸造手册》体收缩率，非线收缩率）')}<br>${tr('· 补缩效率：《铸造手册》第5卷典型值（当前算法固定，不可编辑）')}</div>
+      </details>
     `;
+    bindRiserReference(el);
   }
 
   function renderJudge(r) {
     const el = container.querySelector('#r_judge');
     if (!r) { el.innerHTML = `<div class="judge bad">⚠️ ${tr('请输入有效的热节模数')}</div>`; return; }
+    if (r.designType === 'insulated' || container.querySelector('#r_shape')?.value === 'insulated') {
+      el.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="chip">${tr('经验估算')}</span>
+        <span class="field-hint">${tr('发热/保温冒口：尺寸按 V1 = 0.4V0 与当前 H/D 反算；普通目标模数判定和补缩效率表不适用于本模式，需结合工艺验证。')}</span></div>`;
+      return;
+    }
     const parts = [];
     parts.push(`<span class="chip ${r.modOk ? 'success' : 'danger'}">${tr('模数')} ${r.modOk ? '✓' : '✗'}</span>`);
-    if (r.cw > 0) parts.push(`<span class="chip ${r.volOk ? 'success' : 'danger'}">${tr('体积')} ${r.volOk ? '✓' : '✗'}</span>`);
-    el.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${parts.join('')}<span class="field-hint">${tr('推荐：')}${tr(r.sd.name)} ${r.sd.label(r.D, r.H)}</span></div>`;
+    // S5-01：旧体积参考不再出现在校核结论中（它不是设计判据，用户已明确要求移除该提示）。
+    // PHASE V2.0-15（126.txt §三 / §五）：**不得仅因 modOk=true 就显示整体通过** ——
+    //   未收敛时先出一个醒目的"未收敛"徽标，且不再称"推荐"。
+    const okConv = riserConverged(r) !== false;
+    if (!okConv) parts.unshift(`<span class="chip danger">⛔ ${tr('未收敛')}</span>`);
+    el.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${parts.join('')}<span class="field-hint">${okConv ? tr('推荐：') : tr('当前计算所得（未收敛，非最终建议）：')}${tr(r.sd.name)} ${r.sd.label(r.D, r.H)}</span></div>`;
   }
 
   // ---- 报告 ----
   function buildReportHtml() {
     if (!lastResult) return '';
     const r = lastResult;
+    const MrT = r.Mr_target != null ? r.Mr_target : r.Mr_need;   // PHASE V2.0-22：新增字段，旧结果回退
     const now = new Date().toLocaleString('zh-CN', { hour12: false });
     const t = (label, val) => `<tr><td style="width:38%">${label}</td><td>${val}</td></tr>`;
-    let volHtml = '';
-    if (r.cw > 0) {
-      volHtml = `<h3>四、体积校验</h3><table>${t('铸件体积（补缩区）', (r.Vc / 1000).toFixed(0) + ' cm³')}${t('收缩率', (r.md.shrink * 100).toFixed(1) + '%')}${t('所需补缩量', (r.needVol / 1000).toFixed(1) + ' cm³')}${t('有效补缩量', (r.effV / 1000).toFixed(1) + ' cm³')}${t('补缩判定', r.volOk ? '✅ 充足' : '❌ 不足')}${t('工艺出品率', r.yieldPct !== null ? r.yieldPct.toFixed(1) + '%' : '—')}</table>`;
+    if (r.designType === 'insulated') {
+      const hdAct = r.D > 0 ? r.H / r.D : null;
+      return `
+        <h2>🏗️ 铸造冒口设计计算记录 · 发热/保温冒口（经验估算）</h2>
+        <p class="meta">生成时间：${now}</p>
+        <h3>一、输入参数</h3>
+        <table>${t('材质', r.md.name)}${t('热节模数 Mc', r.Mc.toFixed(2) + ' mm')}${t('冒口类型', '发热/保温冒口（经验估算）')}${t('沿用 H/D', Number(r.hd).toFixed(2))}${r.cw > 0 ? t('铸件重量（整件净重口径）', r.cw.toFixed(2) + ' Kg') : ''}</table>
+        <h3>二、体积换算与尺寸反算</h3>
+        <table>${t('普通圆柱基准体积 V0', (r.V0 / 1000).toFixed(1) + ' cm³（几何体积，不含补缩效率修正）')}${t('目标体积 V1 = 0.4 × V0', (r.V1 / 1000).toFixed(1) + ' cm³（40% 为本产品经验系数）')}${t('直径 D / 高度 H', `⌀${r.D} × H${r.H} mm（实际 H/D ${hdAct != null ? hdAct.toFixed(2) : '—'}）`)}${t('实际几何体积（按显示尺寸回算）', (r.Vactual / 1000).toFixed(1) + ' cm³' + (r.volumeOk ? ' ✅' : ' ⚠️ 小于目标'))}${t('几何模数（参考）', r.Mr_act.toFixed(2) + ' mm（由新几何计算，不作普通目标模数判定）')}${r.weightKg != null ? t('冒口重量（按几何体积与密度）', r.weightKg.toFixed(3) + ' Kg') : ''}${r.cw > 0 && r.yieldPct != null ? t('单件（铸件+冒口）出品率（参考）', r.yieldPct.toFixed(1) + '%') : ''}</table>
+        <h3>三、经验性质与限制</h3>
+        <div style="font-size:.8rem;color:#4b5563;line-height:1.8">${insulatedFormulaNote()}<br>${insulatedNoEfficiencyNote()}<br>${insulatedLimitNote()}</div>`;
     }
+    /* S5-01：旧体积模型一节已移除。单件出品率是可解释的参考值，保留但明确标为设计口径。 */
+    const volHtml = r.cw > 0
+      ? `<h3>三、单件（铸件+冒口）出品率（参考）</h3><table>${t('单件（铸件+冒口）出品率', r.yieldPct !== null ? r.yieldPct.toFixed(1) + '%' : '—')}</table>`
+        + `<div style="font-size:.76rem;color:#6b7280;line-height:1.8">该值按输入的铸件重量与冒口体积计算，是单件设计口径的参考值，不是整模实际出品率；实际出品率请用本厂实绩回算。</div>`
+      : '';
+    const sourceNo = r.cw > 0 ? '四' : '三';
+    // PHASE V2.0-15（126.txt §三）：独立计算器**自己的导出报告**同样不得遗漏未收敛警告。
+    const warnTxt = fillWarning(riserWarning(r));
     return `
       <h2>🏗️ 铸造冒口设计计算记录</h2>
       <p class="meta">生成时间：${now}</p>
+      ${warnTxt ? `<div class="warn" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c">${warnTxt}</div>` : ''}
       <h3>一、输入参数</h3>
-      <table>${t('材质', r.md.name)}${t('热节模数 Mc', r.Mc.toFixed(2) + ' mm')}${t('冒口形状', r.sd.name)}${t('H/D 比', (r.H / r.D).toFixed(1))}${t('模数放大系数 f', r.final_f.toFixed(2))}${t('补缩效率', (r.eff * 100).toFixed(1) + '%')}${r.cw > 0 ? t('铸件重量（补缩区）', r.cw.toFixed(2) + ' Kg') : ''}</table>
+      <table>${t('材质', r.md.name)}${t('热节模数 Mc', r.Mc.toFixed(2) + ' mm')}${t('冒口形状', r.sd.name)}${r.shapeKey === 'sphere' ? t('H/D 比', '不适用（球形 H ≡ D）') : t('H/D 比', (r.H / r.D).toFixed(1))}${t('目标模数比 Mr/Mc', (r.targetRatio != null ? r.targetRatio : 1.2).toFixed(2))}${t('补缩效率', (r.eff * 100).toFixed(1) + '%')}${r.cw > 0 ? t('铸件重量（整件净重口径）', r.cw.toFixed(2) + ' Kg') : ''}</table>
       <h3>二、冒口推荐尺寸</h3>
-      <table>${t('冒口规格', r.sd.label(r.D, r.H))}${t(r.dimLabel, r.D + ' mm')}${t('高度 H', r.H + ' mm')}${t('所需冒口模数', r.Mr_need.toFixed(2) + ' mm')}${t('实际冒口模数', r.Mr_act.toFixed(2) + ' mm ' + (r.modOk ? '✅' : '❌'))}${t('冒口体积', (r.Vr / 1000).toFixed(1) + ' cm³')}</table>
-      <h3>三、冒口颈</h3>
-      <table>${t('冒口颈模数 M_neck', r.M_neck.toFixed(2) + ' mm（系数' + r.neck_k + '）')}${t('圆形冒口颈 ⌀', '⌀' + r.d_neck + ' mm')}${t('方形冒口颈', r.d_neck + '×' + r.d_neck + ' mm')}${t('颈长建议', Math.round(r.d_neck * 0.5) + '~' + Math.round(r.d_neck * 1.0) + ' mm')}${t('颈径占比', r.D > 0 ? (r.d_neck / r.D * 100).toFixed(0) + '%' : '—')}</table>
+      <table>${t('冒口规格', r.sd.label(r.D, r.H))}${t(r.dimLabel, r.D + ' mm')}${r.shapeKey === 'sphere' ? t('球形几何', '由球径唯一确定（H ≡ D）') : t('高度 H', r.H + ' mm')}${t('目标冒口模数 Mr_target', MrT.toFixed(2) + ' mm')}${t('实际冒口模数 Mr_actual', r.Mr_act.toFixed(2) + ' mm ' + (r.modOk ? '✅' : '❌'))}${t('冒口体积', (r.Vr / 1000).toFixed(1) + ' cm³')}</table>
       ${volHtml}
-      <h3>五、数据来源</h3>
-      <div style="font-size:.76rem;color:#6b7280;line-height:1.8">· 模数公式：${r.sd.formula}<br>· 收缩率：${r.md.name}=${(r.md.shrink * 100).toFixed(1)}%（《铸造手册》体收缩率）<br>· 补缩效率：源自《铸造手册》第5卷典型值<br>· 冒口颈系数：${r.md.name}=${r.neck_k}×Mc（工程参考值）</div>`;
+      <h3>${sourceNo}、数据来源</h3>
+      <div style="font-size:.76rem;color:#6b7280;line-height:1.8">· 模数公式：${r.sd.formula}<br>· 收缩率：${r.md.name}=${(r.md.shrink * 100).toFixed(1)}%（《铸造手册》体收缩率）<br>· 补缩效率：源自《铸造手册》第5卷典型值（当前算法固定，不可编辑）</div>`;
   }
 
   const openReport = () => {
@@ -322,6 +416,7 @@ export function renderRiser(container, calc) {
   setRecompute(update);   // PHASE 72：语言切换 → 重渲染视图后原地重算（数值不变，只换文案）
   prefillMaterial(container, '#r_mat');   // 当前工况材料 → 预选材质
   toggleMc();
+  applyShapeUi();
   update();
   renderNextSteps(container, calc);
 }

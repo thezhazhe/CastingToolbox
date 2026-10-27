@@ -187,8 +187,10 @@ export const tests = [
   {
     name: '71.5-T5 引擎锁定：riser/gating 数值与整合前一致（直接调 runRiser/runGating）',
     fn: () => {
+      // ⚠ PHASE V2.0-22：riser 的 D/H 由目标模数决定（Mc=15 ⇒ Mr=18 ⇒ D=108），
+      //   旧值 113 由体积约束抬升产生，已随 138.txt §3.4 的裁决失效（d_neck 不变：Mc 决定）。
       const r = runRiser({ mat: '球铁', cast_wt: 50, mc_mode: 'direct', mc: 15, shape: 'sphere_head', hd_ratio: 1.0 });
-      assert(r && r.D === 113 && r.H === 113 && r.d_neck === 60, `球铁 Mc15 锁定（D=${r && r.D} d_neck=${r && r.d_neck}）`);
+      assert(r && r.D === 108 && r.H === 108 && r.d_neck === 60, `球铁 Mc15 锁定（D=${r && r.D} d_neck=${r && r.d_neck}）`);
       // 基线 = 整合前既有引擎输出（71.5 快照；引擎零改动，此值由既有公式链确定性产生）
       const g = runGating({ mat: '灰铁(HT)', pw: 100, cav: 1, wall: 12, pos: '中注', Ho: 250, ph: 200, rh: 0, ratioKey: '封闭式 常用型', gc: 2, gt: 15, rc: 2, rt: 25 });
       assert(g && g.D_sp === 35 && Math.abs(g.t - 15.63) < 0.02, `灰铁 100kg 中注锁定（D_sp=${g && g.D_sp} t=${g && g.t}）`);

@@ -23,7 +23,7 @@ It focuses on the **20% of problems that come up 80% of the time** (80/20 princi
 |---|---|
 | **Casting Processability** | Minimum wall, critical wall, fillets, draft angle, minimum castable hole — by material / size / batch |
 | **STL Analysis** | Import an STL and get envelope size, volume, surface area, weight, wall-thickness distribution and hotspot detection, entirely locally |
-| **Riser Design** | Hotspot modulus Mc, riser shape library, feeding efficiency, riser neck, auto-iterated until modulus + volume both pass |
+| **Riser Design** | Hotspot modulus Mc, riser shape library, feeding efficiency, riser neck; the riser size is solved directly from the target modulus Mr = 1.2 × Mc (the whole-casting volume model is kept as a reference diagnostic and no longer drives sizing) |
 | **Gating System Design** | Dietert pouring time, Osann choke area, sprue / runner / ingate sizing, vent area, velocity & venting checks; Campbell quick-calc and vertical molding line (DISA) methods are separate calculators |
 | **Casting Yield** | Estimated yield range by product / process / material, then measured yield → liquid metal weight per part and per mold |
 | **Linear Shrinkage** | Per-direction shrinkage recommendation and pattern allowance |
@@ -54,7 +54,7 @@ STL
 
 * **3D view** — solid / wireframe / transparent, view presets, model auto-centred; hotspots are marked in 3D and linked both ways with the hotspot list.
 * **Every automatic value is traceable** — each parameter carries a source badge (🟢 STL-derived · 🟡 user input/default · 🔵 calculated · 🟠 user override). Overriding an automatic value keeps the original and offers one-click restore (↺).
-* **No STL? No problem** — a manual input mode runs the same calculators without a model.
+* **Every standalone calculator works without an STL** — open any calculator directly; the 3D Design Center is the guided STL workflow.
 * **Nothing is hidden** — when the analysis cannot produce a reliable result the tool says so and blocks the automatic recommendation instead of guessing.
 
 ## Platforms
@@ -85,9 +85,9 @@ Please read this before using the numbers in production:
 
 ## Installation
 
-**Windows (portable)** — download `CastingToolbox-v1.1.0-win64.zip`, unzip anywhere, run `CastingToolbox.exe`. The browser opens automatically. To stop the server, close its console window.
+**Windows (portable)** — download `CastingToolbox-v2.0.0-win64.zip`, unzip anywhere, run `CastingToolbox.exe`. The browser opens automatically. To stop the server, close its console window.
 
-**Android (APK)** — download `CastingToolbox-v1.0.0.apk`, allow installation from unknown sources, install and open. Fully usable offline. Reports you generate are saved to your Downloads folder.
+**Android (APK)** — V2.0.0 is not distributed as an Android APK. The last published APK is v1.0.0 and does not include the V2.0 UI and features; the current web UI can be used in a modern Android browser.
 
 **Source / development** — requires Node.js 18+:
 
@@ -134,7 +134,7 @@ Casting Toolbox 是一个**轻量、实用、开源的铸造工艺工程工具�
 |---|---|
 | **铸件结构工艺性** | 最小壁厚 · 临界壁厚 · 铸造圆角 · 拔模斜度 · 最小铸孔（按材质/尺寸/批量） |
 | **STL 分析** | 导入 STL 本地解析：外形尺寸 · 体积 · 表面积 · 重量 · 壁厚分布 · 热节检测 |
-| **冒口设计** | 热节模数 Mc · 冒口形状库 · 补缩效率 · 冒口颈 · 自动迭代至模数/体积双通过 |
+| **冒口设计** | 热节模数 Mc · 冒口形状库 · 补缩效率 · 冒口颈 · 按目标模数 Mr = 1.2 × Mc 直接反求尺寸（旧体积模型仅作参考诊断，不参与定尺寸） |
 | **浇注系统设计** | Dietert 浇注时间 · 奥赞阻流截面 · 直/横/内浇道 · 排气面积 · 流速与排气校核（Campbell 速算、垂直造型线 DISA 方法为独立计算器） |
 | **出品率** | 按 产品/工艺/材质 给预估区间 → 现场实测出品率 → 单件与一模铁液重量 |
 | **线收缩率** | 按方向推荐收缩率与放尺量 |
@@ -158,14 +158,14 @@ Casting Toolbox 是一个**轻量、实用、开源的铸造工艺工程工具�
 STL
  ↓   几何分析        外形尺寸 · 体积 · 表面积 · 重量 · 壁厚
  ↓   铸件结构工艺性   检测信号 与 工程参考 分开给
- ↓   冒口设计        热节 Mc → 冒口尺寸 → 模数与体积双校核
+ ↓   冒口设计        热节 Mc → 按目标模数 Mr = 1.2 × Mc 反求冒口尺寸（旧体积模型仅作参考诊断）
  ↓   浇注系统设计     浇注时间 · 阻流截面 · 直/横/内浇道 · 排气
  ↓   出品率 / 线收缩率 / 加工余量
 ```
 
 * **3D 视图**：实体/线框/透明，视角预设，模型自动居中；热结在 3D 中标记，与热结列表双向联动。
 * **每一个自动值都可追溯**：参数带来源徽章（🟢 STL 自动 · 🟡 用户输入/默认 · 🔵 自动计算 · 🟠 用户修改）；覆盖自动值时保留原值，可一键恢复（↺）。
-* **没有 STL 也能用**：手动输入模式走同一套计算器。
+* **独立计算器无需 STL**：可直接打开任意计算器；工艺设计中心是导入 STL 的完整工作流。
 * **不猜、不装**：分析给不出可靠结果时如实说明并阻止自动建议，而不是编一个数。
 
 ## 平台
@@ -196,9 +196,9 @@ Casting Toolbox 的定位是**工程辅助工具**，不是专业 CAE 仿真软�
 
 ## 安装
 
-**Windows（便携版）**——下载 `CastingToolbox-v1.1.0-win64.zip`，解压到任意目录，双击 `CastingToolbox.exe`，浏览器会自动打开。关闭它弹出的控制台窗口即停止服务。
+**Windows（便携版）**——下载 `CastingToolbox-v2.0.0-win64.zip`，解压到任意目录，双击 `CastingToolbox.exe`，浏览器会自动打开。关闭它弹出的控制台窗口即停止服务。
 
-**Android（APK）**——下载 `CastingToolbox-v1.0.0.apk`，允许"未知来源安装"，安装后直接打开，完全离线可用。生成的报告会保存到手机的「下载 / Download」目录。
+**Android（APK）**——V2.0.0 本次不发布 Android APK；最后一个 APK 为 v1.0.0，不包含 V2.0 界面与功能。当前网页版可在现代 Android 浏览器中使用。
 
 **源码 / 开发**——需要 Node.js 18+：
 

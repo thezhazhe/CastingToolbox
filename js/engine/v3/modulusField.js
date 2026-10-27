@@ -68,8 +68,20 @@ function fieldPoint(vox, sample, i, k, o, capR, t, M, V, A, R) {
   //   承重墙（放宽任何比例均破坏 NO_HOTSPOT）。d 上限对板/肋状厚结构的 M 压制由
   //   extractRegion 的原始 V/A 区域生长修复（peakRegion.js，区域用未封顶 V/A 提取）——
   //   峰值 M 保持封顶语义（均匀件不变），区域恢复物理结构核心（ALR2510 厚大结构）。
+  // PHASE V2.0-05H（111.txt）：距离无效（null / 0 / 非有限）时**不得保留未封顶 V/A**。
+  //   旧守卫 `d > 0` 使 d === 0 的点整条跳过封顶 → M = 原始 V/A；且 d === 0 时
+  //   sampling.js 令 char = null → 窗口退化为 charFloor = 1.0mm（比 vs 还小），
+  //   该 V/A 无物理意义。实测（05G §5.5）thickEnd refine 场出现 M = 14.375 =
+  //   报告 Mc 的 1.559×，仅被 peakRegion.js:66 的 `ring.length < 3` 偶然挡住
+  //   （该防线依赖 vs > 环带外径 2mm，与几何无关）。
+  //   处理方式：M = 0 —— 这不是新增哨兵，而是本文件**既有**约定的复用：
+  //     · modulusField.js:64  `w.a > 1e-9 ? w.v / w.a : 0`（窗口内无散热面 → 模数无定义 → 0）
+  //     · peakRegion.js:40     `if (m <= 0) continue;`（检测层已把 M ≤ 0 定义为"非候选"）
+  //     · 下方 maxM 统计以 0 起算，`M[t] > maxM` ⇒ 0 不会抬高 maxM
+  //   仅当调用方**提供了 dists** 时生效：不传 dists 的旧调用保持原行为（全部不封顶）。
   const d = sample.dists ? sample.dists[i] : null;
   if (d !== null && d > 0) m = Math.min(m, o.modulusCeilRatio * d);
+  else if (sample.dists) m = 0;
   M[t] = m;
 }
 

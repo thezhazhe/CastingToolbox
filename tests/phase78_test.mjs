@@ -140,15 +140,17 @@ export const tests = [
       // 非法值 → 回退圆柱形（不静默出错）
       proj.set('process.riserShape', 'nope', SRC.USER_INPUT, CONF.USER_CONFIRMED);
       assert(calc('riser')({}).shapeKey === 'cyl', '非法形状回退圆柱形');
-      // 结果页下拉：4 个选项 + 当前选中
+      /* R6-S3（153.txt §六.3/§八）：结果页不再维护第二个形状下拉 —— 唯一编辑入口在
+         参数面板；结果页只读展示当前形状 + 指回参数面板。这里按新契约断言，
+         强度不降：仍要求 4 种形状存在于引擎表（上面已断言）且当前形状/公式/入口真实渲染。 */
       proj.set('process.riserShape', 'sphere', SRC.USER_INPUT, CONF.USER_CONFIRMED);
       const r = calc('riser')({});
       const container = { innerHTML: '', querySelectorAll: () => [], querySelector: () => null };
       renderResultsCenter(container, { riser: r }, { ctx: {}, active: 'riser' });
       const html = container.innerHTML;
-      assert(html.includes('id="dc_riserShape"'), '结果页有形状下拉');
-      assert(['圆柱形', '球顶圆柱', '球形', '正方柱'].every(n => html.includes(n)), '4 种形状都在下拉里');
-      assert(/<option value="sphere" selected/.test(html), '当前形状选中');
+      assert(!html.includes('id="dc_riserShape"'), '结果页不得再有第二个形状下拉');
+      assert(html.includes('data-shape-readonly') && html.includes('data-edit-param="process.riserShape"'), '结果页只读形状 + 去参数面板入口');
+      assert(html.includes('球形') && html.includes('M = D / 6'), '当前形状名称与公式来自引擎表');
     },
   },
   {

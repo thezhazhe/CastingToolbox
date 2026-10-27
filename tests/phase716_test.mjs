@@ -237,11 +237,22 @@ export const tests = [
       const expectVc = net * 1e6 / R.riser.rhoUsed;
       assert(Math.abs(R.riser.Vc - expectVc) < 1, `riser Vc 换算自净重（${R.riser.Vc.toFixed(0)} mm³）`);
       // 与独立计算器契约一致：runRiser 的 cast_wt 就是"要补缩的铸件金属重量"
-      const direct = runRiser({ mat: '灰铁', cast_wt: net, mc_mode: 'direct', mc: R.riser.Mc, shape: 'sphere_head', hd_ratio: 1.0 });
-      assert(direct.D === R.riser.D && direct.volOk === R.riser.volOk, '设计中心与独立计算器同一输入同结果');
+      // PHASE V2.0-22（138.txt §3.5/§四.1）：原前提随"体积约束不再决定尺寸"失效，改为守住新契约 ——
+      //   旧算法下推荐尺寸由整件净重顶大（两种形状都得到 144），故此处硬编码 sphere_head 也能"同结果"；
+      //   新算法尺寸由 Mr_target 反求 ⇒ **形状重新成为一等输入**（同一 Mr_target 下 cyl=180 vs
+      //   sphere_head=181，后者 M(180,180)=29.999999999999996 未达严格判据而升一档）。
+      //   "同一输入"必须包含形状 ⇒ 取设计中心实际使用的形状（process.riserShape，此处 = cyl）。
+      const direct = runRiser({ mat: '灰铁', cast_wt: net, mc_mode: 'direct', mc: R.riser.Mc, shape: R.riser.shapeKey, hd_ratio: 1.0 });
+      assert(direct.D === R.riser.D && direct.volOk === R.riser.volOk,
+        `设计中心与独立计算器同一输入同结果（${R.riser.shapeKey}：${direct.D} vs ${R.riser.D}）`);
       // 反向证据：用毛坯重算体积校核会要求更大冒口（证明两者不可混用）
-      const withBlank = runRiser({ mat: '灰铁', cast_wt: 1.2, mc_mode: 'direct', mc: R.riser.Mc, shape: 'sphere_head', hd_ratio: 1.0 });
+      const withBlank = runRiser({ mat: '灰铁', cast_wt: 1.2, mc_mode: 'direct', mc: R.riser.Mc, shape: R.riser.shapeKey, hd_ratio: 1.0 });
       assert(withBlank.needVol > direct.needVol, '毛坯重口径会高估所需补缩量（语义不可混用）');
+      // PHASE V2.0-22（138.txt §3.4 / §六.B.1-B.2）：旧体积模型仍按**净重**取数，但它已不再决定推荐尺寸 ——
+      //   固定 Mc/形状/高径比，只改铸件重量，D/H 必须逐位不变（旧算法下毛坯重口径会把尺寸顶大）。
+      const heavy = runRiser({ mat: '灰铁', cast_wt: 50, mc_mode: 'direct', mc: R.riser.Mc, shape: R.riser.shapeKey, hd_ratio: 1.0 });
+      assert(heavy.D === R.riser.D && heavy.H === R.riser.H,
+        `推荐尺寸不得随铸件重量改变（净重 ${net}kg → ${R.riser.D}；50kg → ${heavy.D}）`);
     },
   },
   {
@@ -253,9 +264,13 @@ export const tests = [
       const container = { innerHTML: '', querySelectorAll: () => [], querySelector: () => null, _nav: null };
       renderResultsCenter(container, R, { ctx, active: 'riser' });
       const html = container.innerHTML;
-      for (const [label, key] of [['冒口直径', 'D'], ['冒口高度', 'H'], ['实际冒口模数', 'Mr_act'], ['冒口体积', 'Vr'], ['冒口颈', 'd_neck'], ['体积校核', 'volOk'], ['补缩效率', 'eff'], ['所需补缩金属量', 'needVol']]) {
+      // S5-01：旧体积提示已从结果页移除；保留设计依据、尺寸、颈与补缩量等真实结果。
+      for (const [label, key] of [['冒口直径', 'D'], ['冒口高度', 'H'], ['实际冒口模数', 'Mr_act'], ['冒口体积', 'Vr'], ['冒口颈', 'd_neck'], ['补缩效率', 'eff'], ['目标冒口模数 Mr_target', 'Mr_target']]) {
         assert(html.includes(label), `Page2 展示「${label}」`);
       }
+      assert(!html.includes('旧体积模型参考') && !html.includes('旧体积参考不足'),
+        'Page2 不得再显示旧体积验证/参考不足提示');
+      assert(html.includes('实际') && html.includes('H/D（高度 / 直径）'), 'Page2 应显示实际 H/D');
       assert(html.includes(String(R.riser.D)) && html.includes(String(Math.round(R.riser.H))), 'Page2 含实际数值');
       assert(html.includes('冒口结果来自现有冒口计算器'), 'Page2 明确注明结果出处');
       assert(html.includes('来源：') && /壁厚\/结构参考值|STL 热结检测|用户输入/.test(html), 'Page2 标注 Mc 来源');

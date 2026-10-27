@@ -53,6 +53,26 @@ export const matKeyOf = (fam) => ({
   '灰铁': '灰铁(HT)', '球铁': '球铁(QT)', '铸钢': '铸钢(ZG)', '铝合金': '铝合金(Al)', '铜合金': '铜合金(Cu)',
 }[fam] || '灰铁(HT)');
 
+/** PHASE V2.0-08（117.txt §二）：**未确认的自动 Mc** 的统一提示语。
+ *  单热结路径与"勾选热结"路径必须逐字相同 —— 06A1 的教训是
+ *  「一处说'可直接采用'、一处说'未经确认'」本身就是缺陷（calcManifest.js 旧注释已写明）。
+ *  抽成常量后，两处共用一句话，改口径只需改这里。 */
+const AUTO_MC_NOTE = '本次冒口 Mc 采用 STL 自动热结估计值（未经确认）——自动估计值尚未验证适用于所有几何，板状/长条状热节可能偏低；请核对热节壁厚后在「冒口参数」确认 Mc 再复算';
+
+/** PHASE V2.0-11（121.txt §二 R1/R2）：**几何无效**时的阻断原因（原因 + 建议操作 + 重要限制）。
+ *  只在 `geomStatus === 'INVALID'` 且等级被判为 BLOCK 时**前置**到 note —— 原来这种情形下
+ *  卡片要么显示「自动 Mc 未经确认」（属实，但**不是**阻断原因），要么（用户 Mc 时）note 为空、
+ *  一句解释都没有 ⇒ 用户看到 ⛔ 却不知道该怎么办（即 R-1）。
+ *  措辞刻意止于"**可能**不可信"：网格校验收到的 error 级问题（空网格 / 非法顶点）不等于
+ *  "算出来的数一定错"，不得把话说满（121.txt §二 R1 明令）。 */
+const GEOM_INVALID_NOTE = '当前 STL 网格校验无效，几何数据可能不可信，因此已阻断自动推荐。请检查并修复网格，或重新导入有效的 STL 后再计算。当前尺寸仅供排查参考，不应直接用于生产设计。';
+
+/** 把阻断原因**前置**到既有 note：既有说明原样保留在后（不被取代），两段用「；」分隔、内容互不重复。 */
+const withBlockReason = (existing) => (existing ? GEOM_INVALID_NOTE + '；' + existing : GEOM_INVALID_NOTE);
+
+/** 判断 Mc 是否来自用户（复用项目既有 SRC 语义，不新增状态机） */
+const isUserMcSrc = (src) => src === proj.SRC.USER_OVERRIDE || src === proj.SRC.USER_INPUT;
+
 export const CALC_MANIFEST = [
   {
     id: 'shrinkage', name: '线收缩率', icon: '📏',
@@ -211,9 +231,14 @@ export const CALC_MANIFEST = [
         userMc = true; userMcVal = mcHotSrc.v;
       }
       const geomStatus = proj.getV('geometry.geomStatus') || 'VALID';
-      let mc = 0, note = null;
+      // PHASE V2.0-08（117.txt §三）：`mcSrc` = **实际送进 runRiser 的那个 Mc** 的来源，
+      //   在选值处就地标注（复用项目 SRC 语义），供等级判定与来源展示共用同一处事实——
+      //   视图层不再从 process.mcHotspot 反推（多热结路径的 Mc 来自 process.hsPick，
+      //   反推会把用户手工填的值标成「STL 热结检测」，即 D2）。
+      let mc = 0, note = null, mcSrc = null;
       if (userMc) {
         mc = userMcVal;
+        mcSrc = proj.SRC.USER_OVERRIDE;
         if (hsStatus !== 'ok') note = '按用户确认的热节模数 Mc = ' + mc + ' mm 计算（热结分析状态：' + hsStatus + '）';
       } else if (hsStatus === 'INSUFFICIENT_RESOLUTION') {
         return { blocked: true, reason: 'analysis_failed', level: 'BLOCK_AUTO_RECOMMEND', note: `热结分析失败（${hsReason || '无法可靠分析'}）：无法自动给出冒口建议。请人工输入热节模数 Mc，或检查模型尺度/网格质量后重新导入。` };
@@ -221,9 +246,17 @@ export const CALC_MANIFEST = [
         return { blocked: true, reason: 'low_confidence', level: 'BLOCK_AUTO_RECOMMEND', note: `热结候选置信度不足（${hsReason || '候选未达阈值'}）：不自动建议冒口（避免偏小误导）。请人工输入热节模数 Mc 后重新计算。` };
       } else if (hsStatus === 'ok' && hs.length) {
         mc = proj.getV('process.mcHotspot') || 0;
+        mcSrc = proj.SRC.STL_GEOMETRY_ANALYSIS;
+        // PHASE V2.0-06A1（113.txt §四.2）：走这一支 = 用户**没有**改过 Mc 输入框，
+        //   Mc 是 STL 自动估计值。06A 实测该量对板状/长条状热节系统性偏低（板 0.33×解析），
+        //   方向是"冒口偏小"。故如实标注为**未经确认的初步估算**，
+        //   不得让它静默地充当已完成工程确认的最终设计结果。
+        // PHASE V2.0-08：文案抽为 AUTO_MC_NOTE，与"勾选热结"路径共用同一句。
+        note = AUTO_MC_NOTE;
       } else {
         // NO_HOTSPOT（真均匀件，壁厚模数兜底合理）或无 STL（手动模式，用户已填 wallHot）
         mc = proj.getV('process.wallHot') || 0;
+        mcSrc = proj.SRC.DERIVED;
         // PHASE 71.5 诚实口径：NO_HOTSPOT 需区分 uniform（真均匀，估算合理）与 no_candidate
         //   （未达检出阈值——复杂/薄特征可能超采样能力，不能伪装成"均匀件属正常"）
         // PHASE 71.6（76.txt 十二）：明确"未检测到可靠热点 → Mc 采用壁厚/结构参考值初步估算"，
@@ -242,33 +275,73 @@ export const CALC_MANIFEST = [
       // PHASE 78（78.txt 三）：冒口形状由用户在结果页「② 冒口设计」下拉选择（4 种，默认圆柱形）。
       //   形状只改 runRiser 的 shape 入参（几何/模数/补缩效率公式零改动）。
       const riserShape = RISER_SHAPES[proj.getV('process.riserShape')] ? proj.getV('process.riserShape') : 'cyl';
+      /* S5-05（158.txt §二.S5-05）：H/D 开放为设计输入。默认 1.0；旧项目没有该字段或
+         手动写入非法值时回退 1.0，保证既有结果逐位不变。runRiser 的算法/公式一行未改，
+         这里只是把既有入参接到 CastingProject。球形在 runRiser 内仍恒为 H ≡ D。 */
+      const hdNum = Number(proj.getV('process.hdRatio'));
+      const hdRatio = Number.isFinite(hdNum) && hdNum > 0 ? hdNum : 1.0;
       const runOne = (mcVal) => runRiser({
         mat: fam, cast_wt: castWt,
-        mc_mode: 'direct', mc: mcVal, shape: riserShape, hd_ratio: 1.0, eff: undefined, rho,
+        mc_mode: 'direct', mc: mcVal, shape: riserShape, hd_ratio: hdRatio, eff: undefined, rho,
       });
       // 多热结路径（PHASE 71.7）：逐热结计算，主结果 = Mc 最大者（供 gating/yield 与写回冒口高度使用）
       if (pickedHot.length) {
         const items = pickedHot.map(p => {
+          const det = hsById.get(p.id)?.mc ?? null;
           const rr = runOne(p.mc);
-          return rr ? { ...rr, hsId: p.id, hsMc: hsById.get(p.id)?.mc ?? null } : null;
+          // PHASE V2.0-08（117.txt §二/§三）：**勾选热结 ≠ 确认 Mc**。
+          //   勾选只表示"该热结参与冒口设计"；Mc 若仍等于检出值，它就是**未经确认的自动估计值**。
+          //   逐项按"实际送进 runRiser 的 Mc"标注来源（同上文 mcSrc 口径）。
+          const editedItem = det === null || Math.abs(p.mc - det) > 1e-9;
+          return rr ? { ...rr, hsId: p.id, hsMc: det,
+            mcSrc: editedItem ? proj.SRC.USER_OVERRIDE : proj.SRC.STL_GEOMETRY_ANALYSIS } : null;
         }).filter(Boolean);
         if (!items.length) return null;
         const primary = items.reduce((a, b) => (b.Mc > a.Mc ? b : a));
-        const edited = pickedHot.some(p => Math.abs(p.mc - (hsById.get(p.id)?.mc ?? p.mc)) > 1e-9);
-        const multiNote = items.length > 1
-          ? `已按您选择的 ${items.length} 个热结分别计算冒口（H${items.map(i => i.hsId).join(' / H')}）——V1 不做 feed-zone 分区补缩，各冒口独立校核`
-          : (edited ? `按用户确认的热节模数 Mc = ${items[0].Mc} mm 计算（热结 H${items[0].hsId}）` : null);
+        const mcAllUser = items.every(i => isUserMcSrc(i.mcSrc));
+        const parts = [];
+        if (items.length > 1) parts.push(`已按您选择的 ${items.length} 个热结分别计算冒口（H${items.map(i => i.hsId).join(' / H')}）——V1 不做 feed-zone 分区补缩，各冒口独立校核`);
+        else if (mcAllUser) parts.push(`按用户确认的热节模数 Mc = ${items[0].Mc} mm 计算（热结 H${items[0].hsId}）`);
+        // 只要还有冒口的 Mc 是检出值，就补上与单热结路径**逐字相同**的未确认提示。
+        if (!mcAllUser) parts.push(AUTO_MC_NOTE);
+        const multiNote = parts.length ? parts.join('；') : null;
+        // PHASE V2.0-10（120.txt §三）：硬门禁判定（与单热结路径同源同口径）。
+        const blocked = isHardBlocked({ geomStatus, hsStatus, humanInput: mcAllUser });
+        // PHASE V2.0-11（121.txt §二 R3）：几何无效的阻断原因针对**整份几何数据**（网格校验），
+        //   与"某个热结分析失败"无关 —— 因此用同一句、不逐热结改写；同样前置、不取代多热结说明。
+        const noteText = (blocked && geomStatus === 'INVALID') ? withBlockReason(multiNote) : multiNote;
         return {
           ...primary, items, multi: items.length > 1,
-          level: edited ? 'WARNING_REVIEW' : reliabilityLevel({ geomStatus, hsStatus }),
-          ...(multiNote ? { note: multiNote } : {}),
+          // PHASE V2.0-08（117.txt §二）：本路径**恒为 WARNING_REVIEW**，两种情况都不该给"✅ 可直接采用"：
+          //   ① 有任一冒口的 Mc 仍是检出值（未经确认的自动估计值）——旧实现此处走 reliabilityLevel()，
+          //      它只看几何/分析状态、不知道 Mc 是自动值 ⇒ 勾一下复选框就把 🟡 变 ✅、06A1 提示整条消失（D1）；
+          //   ② 全部为人工改值 —— 与 PHASE 28.5 的单热结人工路径同口径（结果来自人工输入，需用户自判）。
+          // PHASE V2.0-10（120.txt §三）：本路径原先**恒 WARNING_REVIEW**、根本不调用 reliabilityLevel，
+          //   于是几何 INVALID 在多热结路径上同样被降级 ⇒ 改用与单热结路径**同源同口径**的硬门禁判定。
+          //   humanInput = 全部冒口的 Mc 都是用户改过的（只要还有一个检出值，就算"未经确认"）。
+          level: blocked ? 'BLOCK_AUTO_RECOMMEND' : 'WARNING_REVIEW',
+          ...(noteText ? { note: noteText } : {}),
         };
       }
       const r = runOne(mc);
       // PHASE 28.5（42.txt 十）：可靠性等级标签（不改变数值，可观察信号）。
       //   userMc（人工放行）→ WARNING_REVIEW（结果来自人工输入，需用户自判——已非 BLOCK，因建议已按人工输入生成）
-      const level = userMc ? 'WARNING_REVIEW' : reliabilityLevel({ geomStatus, hsStatus });
-      return note ? { ...r, note, level } : { ...r, level };
+      // PHASE V2.0-06A1（113.txt §四.2）：未确认的自动 Mc **也不再给 SAFE_TO_RECOMMEND**
+      //   （"✅ 可直接采用"）。它与 note 必须同一口径，否则一处说"可直接采用"、一处说"未经确认"。
+      const level = (userMc || note) ? 'WARNING_REVIEW' : reliabilityLevel({ geomStatus, hsStatus });
+      const out = note ? { ...r, note, level } : { ...r, level };
+      // PHASE V2.0-10（120.txt §三）：**阻断优先级** —— 硬门禁压过上面的"软降级"（修 N-E；规则见 isHardBlocked）。
+      //   只可能把等级【抬升】到 BLOCK，绝不把 BLOCK 降级；数值照常给出（阻断的是"建议"，不是"计算"）。
+      //   放在 out 之后只做一次赋值：既不改上面两行被 06A1-2 锁定的口径，也自动带上 mcSrc 等后续新增字段。
+      if (isHardBlocked({ geomStatus, hsStatus, humanInput: userMc })) {
+        out.level = 'BLOCK_AUTO_RECOMMEND';
+        // PHASE V2.0-11（121.txt §二 R1/R2）：阻断必须**说明原因**，且**不取代**既有的 Mc 说明
+        //   （自动 Mc 的"未经确认"仍然属实、仍然有用，只是它不再是读者看到的第一句）。
+        if (geomStatus === 'INVALID') out.note = withBlockReason(out.note);
+      }
+      // PHASE V2.0-08：Mc 的来源（mcSrc）随结果一起返回 —— 结果页/参数页据此显示来源，
+      //   不再各自从 process.mcHotspot 反推（多热结路径反推会标错，即 D2）。
+      return { ...out, mcSrc };
     },
   },
   {
@@ -291,6 +364,32 @@ export const CALC_MANIFEST = [
       const y = resolveYield(matKeyOf(fam), null, proj.getV('production.line') || null);
       const g = results?.gating;
       const r = results?.riser;
+      /* V2.0-P1-R6-S4（155.txt §2.2）：整模口径**新增字段**，不改旧字段语义。
+         旧字段 `castWt` / `runnerWt` / `riserWt` 一字不动（它们仍被历史测试与外部消费方按
+         “单件 / G−单件（含冒口，未乘型腔） / 单套”读取）；这里只补四个可验证的新字段，
+         供结果页/报告按整模账目消费：
+           · castingMass        = 单件毛坯重 × 型腔数
+           · riserUnit          = 单套冒口重（与旧 riserWt 同值，名字明确口径）
+           · riserWtTotal       = 单套 × 型腔数（假设每腔一套；与既有账目假设一致）
+           · gatingWtResidual   = G − 整模铸件 − 整模冒口（只是反推残差，**不是实测浇道重**）
+           · finalYield         = null（没有独立浇道实重/实测浇注重量，绝不伪造最终实重出品率）
+         型腔数取 gating 的实际采用值；gating 缺失时退回项目参数。 */
+      const cav = Math.max(1, Math.round(
+        (g && Number.isFinite(g.cav) && g.cav > 0) ? g.cav : (proj.getV('production.cavities') || 1)
+      ));
+      const riserUnit = r && !r.blocked && r.Vr > 0
+        ? (r.items && r.items.length
+          ? r.items.reduce((s, it) => s + it.Vr * (it.rhoUsed || it.md?.rho || 0) / 1e6, 0)
+          : r.Vr * (r.rhoUsed || r.md?.rho || 0) / 1e6)
+        : null;
+      /* gating.castingMass 是浇注链实际采用的整模铸件重；缺失时才按单件 × 腔数重算。 */
+      const castingMass = (g && Number.isFinite(g.castingMass) && g.castingMass > 0)
+        ? g.castingMass
+        : wt * cav;
+      const riserWtTotal = riserUnit != null ? riserUnit * cav : null;
+      const gatingWtResidual = (g && Number.isFinite(g.G) && g.G > 0 && riserWtTotal != null)
+        ? g.G - castingMass - riserWtTotal
+        : null;
       return {
         range: y.range, basis: y.basis, level: y.level,
         castWt: wt,
@@ -301,11 +400,15 @@ export const CALC_MANIFEST = [
         // PHASE 71.6 健壮性：riser 被门禁阻止时结果对象无 md/Vr（旧代码直接解引用 → TypeError →
         //   被 runAnalysis 的 try/catch 吞掉 → 出品率模块静默消失）；改用 riser 自报的 rhoUsed + 守卫。
         // PHASE 71.7：多热结（items）时冒口总重 = 各冒口之和
-        riserWt: r && !r.blocked && r.Vr > 0
-          ? (r.items && r.items.length
-            ? r.items.reduce((s, it) => s + it.Vr * (it.rhoUsed || it.md?.rho || 0) / 1e6, 0)
-            : r.Vr * (r.rhoUsed || r.md?.rho || 0) / 1e6)
-          : null,
+        riserWt: riserUnit,
+        /* S4 新增整模口径（旧字段语义不变） */
+        cavityCount: cav,
+        castingMass,
+        riserUnit,
+        riserWtTotal,
+        gatingWtResidual,
+        designYield: g && Number.isFinite(g.yv) ? g.yv : null,
+        finalYield: null,
       };
     },
   },
@@ -347,6 +450,9 @@ export const CALC_MANIFEST = [
       } else {
         mc = proj.getV('process.wallHot') || 0;   // NO_HOTSPOT 均匀件/手动模式
       }
+      // PHASE V2.0-06A1（113.txt §四.3）：走这一支且非用户输入 = T 由**未确认的自动 Mc** 推出。
+      //   数值一律不变（仍 2×Mc），只是如实标注为"初始建议值"，并降级为需人工复核。
+      const autoT = !userT && !userMc;
       const T = proj.getV('process.chillT') || mc * 2;   // 独立 T_hot；默认 2×热节模数（保持原数值行为）
       if (T <= 0) return null;
       // CHILL_COEF 键为 灰铸铁/球墨铸铁…（family 是 灰铁/球铁——确定性键映射，与 shakeout 同模式；PHASE 28.3-A 修复）
@@ -355,8 +461,25 @@ export const CALC_MANIFEST = [
       //   而警告文案里插的是 input.chillMat（undefined）→ 界面出现「没有『undefined』这种搭配」。
       //   这里显式传该材质的推荐冷铁材料（与独立冷铁视图同口径），不再触发 fallback 文案。
       const r = runChill({ mat: matKey, type: '外冷铁·直接', T, chillMat: (CHILL_DEFAULT_MAT[matKey] || Object.keys(CHILL_COEF[matKey] || {})[0]) });
-      const level = (userMc || userT) ? 'WARNING_REVIEW' : reliabilityLevel({ geomStatus, hsStatus });
-      return { ...r, level };
+      // 113.txt §四.3：自动 Mc 推出的 T 是**初始建议值**，不是经过本铸件热节验证的设计值
+      //   ⇒ 不进 SAFE_TO_RECOMMEND；数值与公式一行未改。
+      const chillNote = autoT
+        ? 'T_hot 由 STL 自动热结估计值 ×2 推出 —— 这是未经确认的初始建议值，不是本铸件热节的验证结果；自动估计值尚未验证适用于所有几何，请核对热节壁厚后在「冷铁」处确认 T_hot 再复算'
+        : null;
+      // PHASE V2.0-10（120.txt §三）：**阻断优先级**（与冒口同源，修 N-E 的同一类短路）。
+      //   本分支原先写 `(userMc || userT || autoT) ? 'WARNING_REVIEW' : reliabilityLevel(…)`，
+      //   autoT 为真即短路 ⇒ 几何 INVALID 被降级。humanInput = 用户显式给了 T_hot 或 Mc（即 !autoT）。
+      //   注：本分支只能写成"提前 return"，因为下面那行 return 被 06A1-4 的结构守卫锁定字面；
+      //   若将来要在本返回点加顶层字段，这条早返回必须同步（冒口分支已改用 out 赋值以避免该坑）。
+      if (isHardBlocked({ geomStatus, hsStatus, humanInput: !autoT })) {
+        // PHASE V2.0-11（121.txt §二 R4）：同口径给出阻断原因 —— 复用既有 note 字段，返回结构不变。
+        //   ⚠ 冷铁当前**不在** FIXED_CALC_TASKS 里（设计中心不执行冷铁），故本次改动在产品里
+        //   暂时**无可观测效果**；记录在案，等冷铁接入主流程时自然生效。
+        const bn = geomStatus === 'INVALID' ? withBlockReason(chillNote) : chillNote;
+        return bn ? { ...r, note: bn, level: 'BLOCK_AUTO_RECOMMEND' } : { ...r, level: 'BLOCK_AUTO_RECOMMEND' };
+      }
+      const level = (userMc || userT || autoT) ? 'WARNING_REVIEW' : reliabilityLevel({ geomStatus, hsStatus });
+      return chillNote ? { ...r, note: chillNote, level } : { ...r, level };
     },
   },
   {
@@ -501,6 +624,32 @@ export function reliabilityLevel({ geomStatus = 'VALID', hsStatus = 'none' } = {
   if (geomStatus === 'INVALID' || hsStatus === 'INSUFFICIENT_RESOLUTION' || hsStatus === 'LOW_CONFIDENCE') return 'BLOCK_AUTO_RECOMMEND';
   if (hsStatus === 'ok') return geomStatus === 'WARNING' ? 'WARNING_REVIEW' : 'SAFE_TO_RECOMMEND';
   return 'WARNING_REVIEW';   // NO_HOTSPOT（wallHot 估算）/ none（手动模式）/ 几何 WARNING 无热结
+}
+
+/**
+ * PHASE V2.0-10（120.txt §三）：**可信度等级的阻断优先级** —— 硬门禁是否压过"软降级"（修 N-E）。
+ *
+ *   背景：V2.0-06A1 为"未确认的自动 Mc"引入降级时写成 `(userMc || note) ? 'WARNING_REVIEW' : reliabilityLevel(…)`，
+ *   `note` 为真即短路 ⇒ `reliabilityLevel` 再也轮不到 ⇒ 几何 INVALID（本应 BLOCK）被降成"需人工复核"；
+ *   冷铁分支同病（`autoT`）；多热结路径**根本不调用** reliabilityLevel。三处症状相同。
+ *
+ *   规则（高 → 低）：
+ *     ① **几何 INVALID ⇒ 恒阻断**。网格本身不可信 ⇒ 净重/体积/热结位置**全部**不可信；
+ *        人工输入 Mc / T_hot 只替代了其中一个量，替代不了这些输入 ⇒ **人工放行在此不适用**。
+ *     ② `reliabilityLevel` 判为 BLOCK 的其余阻断（热结分析失败 / 低置信度）⇒ **保留 PHASE 29 的人工放行**：
+ *        用户显式输入了本模块关键量（humanInput）时维持软等级，否则阻断。
+ *     ③ 无阻断 ⇒ 一律维持软等级（V2.0-06A1 / V2.0-08 的既定口径不变）。
+ *
+ *   ⚠ 纯标签判定：不参与任何数值计算，也不改变 `reliabilityLevel()` 自身的规则。
+ *
+ * @param {string} geomStatus 几何状态（'VALID' | 'WARNING' | 'INVALID'）
+ * @param {string} hsStatus   热结分析状态
+ * @param {boolean} humanInput 用户是否**显式输入了本模块的关键量**（冒口=Mc；冷铁=T_hot 或 Mc）
+ * @returns {boolean} true = 硬门禁压过软降级，等级必须是 BLOCK_AUTO_RECOMMEND
+ */
+function isHardBlocked({ geomStatus, hsStatus, humanInput }) {
+  if (geomStatus === 'INVALID') return true;
+  return !humanInput && reliabilityLevel({ geomStatus, hsStatus }) === 'BLOCK_AUTO_RECOMMEND';
 }
 
 /** 参数缺失判定：从 CastingProject 取共享参数值（useMax 取数组最大值；select 取 options 匹配） */

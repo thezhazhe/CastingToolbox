@@ -33,6 +33,13 @@ const CJK = /[一-鿿]/;
 const CJK_ALLOW = ['感谢每一天的生活', 'QQ', '铸造手册', '机械设计手册', 'CASTING', 'Casting Toolbox · 铸造工具箱',
   '界面语言 / UI Language'];   // 语言切换器自身的 title：故意中英并列（两种语言下都看得懂）
 
+/* 源码里的 key 是**转义后的字面量**（例如 `\n\n`），而 EN 对象的 key 是解析后的
+   真实换行。此前直接拿 m[1] 查表，会把带换行的确认文案误报为"缺英文翻译"。
+   这里按 JS 字符串转义还原，再做查表 —— 这是修测试工具，不是放宽判据。 */
+const unescapeJsKey = (s) => s.replace(/\\(u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|.)/g, (all, e) => {
+  if (e[0] === 'u' || e[0] === 'x') return String.fromCharCode(parseInt(e.slice(1), 16));
+  return { n: '\n', r: '\r', t: '\t', b: '\b', f: '\f', v: '\v', '0': '\0', "'": "'", '"': '"', '\\': '\\' }[e] ?? e;
+});
 function scanSourceKeys() {
   const keys = new Map();
   const files = [];
@@ -54,7 +61,10 @@ function scanSourceKeys() {
     if (!alias) continue;
     const re = new RegExp(`(?<![.\\w$])${alias}\\(\\s*'((?:[^'\\\\]|\\\\.)*)'`, 'g');
     let m;
-    while ((m = re.exec(src))) if (!keys.has(m[1])) keys.set(m[1], relative(ROOT, f));
+    while ((m = re.exec(src))) {
+      const key = unescapeJsKey(m[1]);
+      if (!keys.has(key)) keys.set(key, relative(ROOT, f));
+    }
   }
   return keys;
 }

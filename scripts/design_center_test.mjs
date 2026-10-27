@@ -71,10 +71,16 @@ try {
   await send('Runtime.enable');
   await send('Page.enable');
   await send('DOM.enable');
+  /* 146：固定视口工作台下**页面不能滚动**（body.view-dc .main{height:100vh;overflow:hidden}），
+     所以 scrollIntoView 是 no-op —— 必须显式给足视口高度，否则 3D 工作区的中点在
+     451px 高的 headless 窗口里落在视口外，CDP 的鼠标事件会被别的元素接走（实测踩到）。 */
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  await wait(400);
   await send('Page.navigate', { url: URL + '#/designCenter' });
   await wait(1500);
 
-  const evalJs = async (expr) => (await send('Runtime.evaluate', { expression: expr, returnByValue: true })).result.value;
+  // awaitPromise：本脚本有若干 `(async () => …)()` 表达式（动态 import 读项目数据）
+  const evalJs = async (expr) => (await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true })).result.value;
 
   // 1. 视图渲染
   const title = await evalJs(`document.querySelector('#view .page-title')?.textContent || ''`);
@@ -95,22 +101,30 @@ try {
   check('几何验证通过提示', validateTxt.includes('网格闭合'), validateTxt.slice(0, 40));
 
   // 4. 自动参数（体积/重量来自 STL，命令3 第5节核心验证）
-  const vol = await evalJs(`document.querySelector('#dc_p_volume')?.value || ''`);
-  const wt = await evalJs(`document.querySelector('#dc_p_weight')?.value || ''`);
-  const wallMain = await evalJs(`document.querySelector('#dc_p_wallMain')?.value || ''`);
-  check('自动体积 ≈125 cm³', Math.abs(parseFloat(vol) - 125) < 2, vol);
-  check('自动重量 ≈0.875 kg（灰铁密度 7.0）', Math.abs(parseFloat(wt) - 0.875) < 0.02, wt);
-  check('自动主壁厚 ≈50 mm', Math.abs(parseFloat(wallMain) - 50) < 3, wallMain);
+  /* 145 §三：参数输入窗口已移除 ⇒ 自动值不再有"输入框"，直接从项目数据核对
+     （判据一字未变：体积/重量/主体壁厚的取值口径必须仍是 STL 自动识别的结果）。 */
+  const autoV = JSON.parse(await evalJs(`(async () => { const p = await import('/js/model/CastingProject.js');
+    return JSON.stringify([p.getV('geometry.volumeCm3'), p.getV('geometry.blankWeightKg'), p.getV('process.wallUsed')]); })()`));
+  check('自动体积 ≈125 cm³', Math.abs(autoV[0] - 125) < 2, autoV[0]);
+  check('自动重量 ≈0.875 kg（灰铁密度 7.0）', Math.abs(autoV[1] - 0.875) < 0.02, autoV[1]);
+  check('自动主壁厚 ≈50 mm', Math.abs(autoV[2] - 50) < 3, autoV[2]);
 
-  // 5. 选材料 + 执行分析
+  // 5. 选材料（146 §3：在**参数窗口**里指定并保存）+ 执行分析
+  await evalJs(`document.querySelector('#dc_paramsBtn').click()`); await wait(400);
+  check('146 · 参数窗口可从工具栏打开', await evalJs(`!document.querySelector('#dc_paramDlg')?.hidden`));
   await evalJs(`(() => {
-    const sel = document.querySelector('#dc_m_family');
+    const sel = document.querySelector('[data-pf="material.family"]');
     const opts = [...sel.options];
     const ht = opts.find(o => o.text.includes('灰铁'));
     sel.value = ht.value;
-    sel.dispatchEvent(new Event('change'));
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
   })()`);
-  await wait(300);
+  await wait(250);
+  check('146 · 未保存的修改不写项目（草稿只在窗口内）',
+    await evalJs(`(async () => { const p = await import('/js/model/CastingProject.js'); return !p.getV('material.family'); })()`));
+  await evalJs(`document.querySelector('#dc_dlgSave').click()`); await wait(1400);
+  check('146 · 保存后材料落盘（真正传入分析链）',
+    await evalJs(`(async () => { const p = await import('/js/model/CastingProject.js'); return p.getV('material.family') === '灰铁'; })()`));
   await evalJs(`document.querySelector('#dc_run').click()`);
   await wait(1200);
 
@@ -134,50 +148,83 @@ try {
   await evalJs(`document.querySelector('#dc_resultNav [data-nav="riser"]')?.click()`);
   await wait(300);
   const rTxt = await evalJs(`document.querySelector('#dc_resultActive')?.textContent || ''`);
-  check('冒口结果（完整展示）', rTxt.includes('冒口直径') && rTxt.includes('体积校核') && rTxt.includes('来源：'));
+  // S5-01/S5-05：旧体积提示已移除；尺寸/来源/H/D 照旧展示。
+  check('冒口结果（完整展示）',
+    rTxt.includes('冒口直径') && rTxt.includes('H/D（高度 / 直径）') && rTxt.includes('来源：')
+    && !rTxt.includes('旧体积模型参考'));
   await evalJs(`document.querySelector('#dc_resultNav [data-nav="page1"]')?.click()`);
   await wait(200);
 
   // 6.5 PHASE 71.6（76.txt 一/二）：分析任务选择 UI 已删除——导入后直接进入工艺设计流程
   check('不再出现"分析任务"选择区（DOM 无任务勾选）', await evalJs(`document.querySelector('#dc_tasks') === null && document.querySelectorAll('.dc-task').length === 0`));
-  check('面板顺序：概览→热结→参数与执行条件→模型信息',
-    (await evalJs(`[...document.querySelectorAll('.dc-panel-title')].map(e => e.textContent.trim()).join('|')`)).includes('③ 参数与执行条件'));
-  // Case 6：关键参数默认展开可见（不藏在高级参数里）
-  check('关键参数常显（材料/铸造方法/造型线/型腔数/预估出品率）',
-    await evalJs(`['#dc_m_family','#dc_m_method','#dc_m_line','#dc_m_cav2','#dc_m_yr2'].every(s => !!document.querySelector(s))`));
-  check('浇注参数常显（浇注位置/Ho/ph/冒口高度）',
-    await evalJs(`['#dc_m_pourPos2','#dc_m_ho2','#dc_m_ph2','#dc_m_rh2'].every(s => !!document.querySelector(s))`));
-  check('冒口参数 Mc 常显（冒口设计依据）', await evalJs(`!!document.querySelector('#dc_m_mc')`));
-  check('高级参数只剩低频项（不含量/壁厚/Mc 等核心）',
-    await evalJs(`(() => { const core = ['dc_m_family','dc_m_method','dc_m_line','dc_m_cav2','dc_m_yr2','dc_m_pourPos2','dc_m_ho2','dc_m_ph2','dc_m_rh2','dc_m_mc'];
-    return [...document.querySelectorAll('.dc-advanced [id^=dc_m_]')].every(e => !core.includes(e.id)); })()`));
-
-  // 6.6 PHASE 71.7（77.txt）：参数区重排 + 内浇道推荐 + 示意图 + 导入按钮
-  const orderTxt = await evalJs(`document.querySelector('#dc_params')?.textContent || ''`);
-  check('参数区：基础工艺参数在浇注参数之前（①→②）', orderTxt.indexOf('① 基础工艺参数') >= 0 && orderTxt.indexOf('① 基础工艺参数') < orderTxt.indexOf('② 浇注参数'), '');
-  check('STL 自动识别已折叠为 ④', await evalJs(`(() => { const d = [...document.querySelectorAll('#dc_params details')]; return d.some(x => x.textContent.includes('④ STL 自动识别')); })()`));
-  // PHASE 78（78.txt 二/七）：内浇道输入框搬到结果页；参数区新增「浇注系统比例」可选
-  check('参数区有「浇注系统比例」下拉（78.txt 二）', await evalJs(`!!document.querySelector('#dc_m_ratio3')`));
-  check('内浇道厚度/个数不再出现在参数区（78.txt 七：移至结果页 ③）',
-    await evalJs(`!document.querySelector('#dc_m_gt2') && !document.querySelector('#dc_m_gc2')`));
-  check('浇注参数内含浇注方向示意图', await evalJs(`!!document.querySelector('#dc_params svg')`));
+  /* ============================================================
+     146 §4：左栏精简为**两个主体区域**；「设计步骤」「分析条件」内容块删除，
+     参数查看/输入/修改/确认/保存改由**参数窗口**（§3）承担。
+     原判据的**原意**逐条保留：不得有"分析任务"、关键参数必须可达（不再藏在高级参数里）、
+     内浇道输入不得出现在左栏。只是承载它的 UI 从"左栏分析条件"换成了"参数窗口"。
+     ============================================================ */
+  const panelTitles2 = await evalJs(`[...document.querySelectorAll('.dc-panel-title')].map(e => e.textContent.trim()).join('|')`);
+  check('146 §4.3 · 左栏标题 = 分析结果概览 | 热结列表（无步骤卡/无分析条件块/无"分析任务"）',
+    panelTitles2.includes('分析结果概览') && panelTitles2.includes('热结列表')
+    && !panelTitles2.includes('设计步骤') && !panelTitles2.includes('分析条件')
+    && !panelTitles2.includes('参数与执行条件') && !panelTitles2.includes('分析任务'), panelTitles2.slice(0, 80));
+  check('146 §3 · 参数窗口存在，且旧参数区/模块页签/草稿按钮没有被搬回来',
+    await evalJs(`!!document.querySelector('#dc_paramDlg') && !!document.querySelector('#dc_paramsBtn')
+      && !document.querySelector('#dc_panel') && !document.querySelector('#dc_params') && !document.querySelector('#dc_modTabs')
+      && !document.querySelector('[data-modpanel]') && !document.querySelector('[data-mod-save]') && !document.querySelector('#dc_draftWarn')`), '');
+  check('146 §3.2 · 参数窗口含三模块 + 关键参数常显（材料大类必填 / 模型单位 / Mc / 浇注系统比例）',
+    await (async () => {
+      await evalJs(`document.querySelector('#dc_paramsBtn').click()`); await wait(350);
+      const t = await evalJs(`document.querySelector('#dc_paramDlg')?.textContent || ''`);
+      const fields = await evalJs(`[...document.querySelectorAll('#dc_paramDlg [data-pf]')].map(e => e.dataset.pf).join(',')`);
+      await evalJs(`document.querySelector('#dc_dlgX').click()`); await wait(250);
+      return t.includes('A · 分析条件') && t.includes('B · 冒口设计') && t.includes('C · 浇注系统')
+        && t.includes('材料大类') && t.includes('必填') && t.includes('模型单位')
+        && fields.includes('process.mcHotspot') && fields.includes('process.ratioKey');
+    })());
+  check('146 §3.5 · 手动输入模式入口仍已移除（无 STL / 单项计算走独立计算器）',
+    await evalJs(`!document.querySelector('#dc_manualLink') && !document.querySelector('#dc_backToStl')`), '');
+  check('内浇道厚度/个数仍不在工作区（78.txt 七：在结果页 ③）',
+    await evalJs(`!document.querySelector('#dc_m_gt2') && !document.querySelector('#dc_m_gc2')`), '');
   check('「替换 STL」已改名「导入 STL」', await evalJs(`document.querySelector('#dc_replaceStl')?.textContent.includes('导入 STL') || false`));
 
   // 7. 热结分析（cube50 均匀实心 → NO_HOTSPOT；Mc 兜底 主体壁厚/2 = 25 仍自动写入冒口参数）
   const hsTxt = await evalJs(`document.querySelector('#dc_resultActive')?.textContent.includes('Hotspot 状态 / 置信度') || false`);
   const hsNoHot = await evalJs(`document.querySelector('#dc_hsBadge')?.textContent.includes('未检出热结') || false`);
-  const mcAuto = await evalJs(`document.querySelector('#dc_m_mc')?.value || ''`);
+  // 145：Mc 不再有输入框 ⇒ 直接查"无热结时 Mc 兜底 = 主体壁厚 / 2"这条计算链的结果
+  const mcAuto = await evalJs(`(async () => { const p = await import('/js/model/CastingProject.js'); return p.getV('process.wallHot'); })()`);
   check('① 概览含热点/模型信息（原「模型信息」面板已并入）', await evalJs(`(() => { const t = document.querySelector('#dc_overview')?.textContent || ''; return t.includes('热结数量') && t.includes('外形尺寸') && t.includes('表面积'); })()`));
-  check('概览自动值为只读展示 + 指向 ③ 修改', await evalJs(`document.querySelector('#dc_overview')?.textContent.includes('STL 自动识别（可修改）') || false`));
+  check('概览自动值为只读展示（145：不再指向任何"去修改"的参数入口）',
+    await evalJs(`(() => { const t = document.querySelector('#dc_overview')?.textContent || '';
+      return t.includes('由 STL 自动识别') && t.includes('只读'); })()`), '');
   check('cube50 均匀实心 → 热结状态条如实（未检出，不冒充有热结）', hsNoHot);
-  check('Mc 兜底 主体壁厚/2=25 自动写入冒口参数', Math.abs(parseFloat(mcAuto) - 25) < 3, mcAuto);
+  check('Mc 兜底：无热结时 wallHot = 主体壁厚/2 = 25 自动写入项目', Math.abs(parseFloat(mcAuto) - 25) < 3, mcAuto);
 
-  // 7.4 布局（命令文件：3D 主视图 70% + 右侧 Analysis Panel 30%；在手动模式前检查——手动模式会隐藏 3D）
+  /* 7.4 布局（命令文件：3D 主视图 70% + 右侧 Analysis Panel 30%；在手动模式前检查——手动模式会隐藏 3D）
+
+     144.txt §二 起设计中心是**固定视口工作台**：三维工作区吃满"工具栏以下、状态栏以上"的全部
+     剩余高度，页面本身不再滚动。本脚本的 Edge 窗口只有 750×451（且该 profile 还常驻一条
+     57px 的生产场景条）——在"页面可滚动"的旧口径下，三维被撑到 64vh(288px) 是靠**页面溢出**
+     换来的；固定视口下那样就是违规。
+     ⇒ 因此这里把高度判据拆成两条**更贴合契约、且强度不低于原来**的断言：
+        ① 桌面窗口（显式 1440×900）下三维主视图高度仍 > 240（原阈值原样保留）；
+        ② 小窗下三维吃满工作区剩余高度，且**整页不出视口**（固定视口的真正契约）。 */
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  await wait(400);
   const boxH = await evalJs(`document.querySelector('#dc_view3dBox')?.offsetHeight || 0`);
-  check('3D 主视图高度（58vh 自适应）', boxH > 240, boxH);
+  check('3D 主视图高度（1440×900 桌面窗口，原 >240 判据不变）', boxH > 240, boxH);
+  await send('Emulation.clearDeviceMetricsOverride');
+  await wait(400);
+  const fit = await evalJs(`(() => {
+    const b = document.querySelector('.dc-body')?.getBoundingClientRect().height || 0;
+    return { boxH: document.querySelector('#dc_view3dBox')?.offsetHeight || 0, bodyH: Math.round(b),
+             sh: document.documentElement.scrollHeight, ch: document.documentElement.clientHeight };
+  })()`);
+  check('3D 吃满工作台剩余高度（144 §二 固定视口）', fit.boxH > 0 && fit.boxH >= fit.bodyH - 60, JSON.stringify(fit));
+  check('整页无滚动（scrollHeight ≤ clientHeight）', fit.sh <= fit.ch, `scroll=${fit.sh} client=${fit.ch}`);
   const hasStage = await evalJs(`!!document.querySelector('.dc-stage')`);
-  const hasPanel = await evalJs(`!!document.querySelector('.dc-panel')`);
-  check('3D 主视图 + 右侧面板结构', hasStage && hasPanel);
+  const hasRail = await evalJs(`!!document.querySelector('#dc_rail')`);
+  check('3D 主工作区 + 左侧信息栏结构（145：参数面板整块移除，左栏承担信息）', hasStage && hasRail);
   const viewBtns = await evalJs(`document.querySelectorAll('.dc-view-btns button').length`);
   check('视角预设按钮 = 7（前后左右顶底等轴）', viewBtns === 7, viewBtns);
   const dispMode = await evalJs(`document.querySelector('#dc_dispMode')?.value || ''`);
@@ -205,39 +252,29 @@ try {
   await evalJs(`document.querySelector('#dc_resultNav [data-nav="riser"]')?.click()`);
   await wait(300);
   const riserPage = await evalJs(`document.querySelector('#dc_resultActive')?.textContent || ''`);
-  check('② 冒口页：Mc 来源 + 尺寸/模数/体积校核/颈 + 结果出处',
-    ['来源：', '冒口直径 D', '冒口高度 H', '实际冒口模数', '冒口体积', '体积校核', '冒口颈', '冒口结果来自现有冒口计算器'].every(k => riserPage.includes(k)), riserPage.slice(0, 90));
+  check('② 冒口页：Mc 来源 + 尺寸/模数/体积/H/D/颈 + 结果出处',
+    ['来源：', '冒口直径 D', '冒口高度 H', '实际冒口模数', '冒口体积', 'H/D（高度 / 直径）', '冒口颈', '冒口结果来自现有冒口计算器'].every(k => riserPage.includes(k)), riserPage.slice(0, 90));
   await evalJs(`document.querySelector('#dc_resultNav [data-nav="gating"]')?.click()`);
   await wait(300);
   check('③ 浇注页：总截面积齐全（直/横/内/排气）', await evalJs(`(() => { const t = document.querySelector('#dc_resultActive')?.textContent || ''; return t.includes('总截面') && t.includes('总排气面积'); })()`));
-  check('浇注方向示意图已移入「② 浇注参数」（结果页不再重复）',
-    await evalJs(`!!document.querySelector('#dc_params svg') && !document.querySelector('#dc_resultActive svg')`));
+  check('浇注方向示意图随参数输入窗口一并移除（工作区与结果页都不再出现）',
+    await evalJs(`!document.querySelector('.dc-gating-diagram') && !document.querySelector('#dc_resultActive svg')`));
   await evalJs(`document.querySelector('#dc_resultNav [data-nav="page1"]')?.click()`);
   await wait(200);
 
-  // 7.5 手动输入模式（不导入 STL 也能用；Bug 反馈 2）
-  await evalJs(`document.querySelector('#dc_manualLink').click()`);
-  await wait(300);
-  const manualParams = await evalJs(`document.querySelector('#dc_params')?.textContent.includes('基础几何参数（手动输入）') || false`);
-  check('手动模式参数区', manualParams);
-  const manualNoUnit = await evalJs(`document.querySelector('#dc_p_unit') === null`);
-  check('手动模式固定 mm（无单位选择）', manualNoUnit);
-  await evalJs(`(() => {
-    const setV = (id, v) => { const el = document.querySelector(id); el.value = v; el.dispatchEvent(new Event('input')); };
-    setV('#dc_p_volume', '1000');
-    setV('#dc_p_wallMain', '20');
-    setV('#dc_m_mc', '10');
-    const sel = document.querySelector('#dc_m_family');
-    const ht = [...sel.options].find(o => o.text.includes('灰铁'));
-    sel.value = ht.value; sel.dispatchEvent(new Event('change'));
-  })()`);
-  await wait(300);
-  const wtAuto = await evalJs(`document.querySelector('#dc_p_weight')?.value || ''`);
-  check('体积→重量自动联动（1000cm³×7.0 ≈7kg）', Math.abs(parseFloat(wtAuto) - 7) < 0.2, wtAuto);
-  await evalJs(`document.querySelector('#dc_run').click()`);
-  await wait(1000);
-  const manualRes = await evalJs(`(() => { const box = document.querySelector('#dc_results'); if (!box || box.hidden) return false; const nav = document.querySelector('#dc_resultNav')?.textContent || ''; return nav.includes('冒口设计') && nav.includes('经典浇注系统'); })()`);
-  check('手动模式结果中心可生成（六项结果页）', manualRes);
+  /* ============================================================
+     145 §三：**手动输入模式已按产品方向移除**（没有 STL / 只做单项计算 → 用独立计算器）。
+     这里把"移除"钉成正面断言，并顺带验证独立计算器**没有被改成必须导入 STL**（§一.9）。
+     ============================================================ */
+  check('145 · 设计中心无手动输入模式（无入口、无手动几何参数、无手动模式提示）',
+    await evalJs(`!document.querySelector('#dc_manualLink') && !document.querySelector('#dc_backToStl')
+      && !document.querySelector('#dc_p_volume') && !document.querySelector('#dc_p_wallMain')
+      && !(document.querySelector('#dc_stlStatus')?.textContent || '').includes('手动输入')`), '');
+  // 独立计算器仍可独立使用（不依赖 STL）
+  await evalJs(`location.hash = '#/calculators/riser'`); await wait(1400);
+  check('145 · 独立计算器不依赖 STL（直接打开即可用）',
+    await evalJs(`!!document.querySelector('#view .page-title')`), await evalJs(`document.querySelector('#view .page-title')?.textContent || ''`));
+  await evalJs(`location.hash = '#/designCenter'`); await wait(1600);
 
   // 7.6 hsDebug 调试模式（命令文件：Fake Hotspot 验证显示链路 + 热结问题分层定位）
   //     cube50 = 均匀实心 → 真实算法 NO_HOTSPOT（uniform）
@@ -263,24 +300,41 @@ try {
   const markerCnt = await evalJs(`window.__view3d ? window.__view3d.markerMeshes.length : -1`);
   check('Fake marker 进入 3D Viewer（2 个）', markerCnt === 2, markerCnt);
 
-  // ③ 3D↔UI 双向联动（第五阶段：点击数据定位模型）
+  /* ③ 3D↔UI 双向联动（第五阶段）
+     146.txt §六 更正：**点击热结只选择/高亮，不得移动相机**。
+     原判据要求"点 TEST-2 → 相机聚焦到 (20,30,40)"——那正是用户要求取消的自动放大行为。
+     现在反过来钉住更严的契约：点热结**不改**相机与观察目标，但**必须**完成选中/高亮。 */
+  const camBeforeHs = await evalJs(`(() => { const c = window.__view3d.camera.position; const t = window.__view3d.controls.target;
+    return JSON.stringify([c.x, c.y, c.z, t.x, t.y, t.z]); })()`);
   await evalJs(`document.querySelectorAll('.dc-hs-item')[1].click()`);
-  await wait(200);
-  const tgt = await evalJs(`(() => { const c = window.__view3d.controls.target; return [c.x, c.y, c.z]; })()`);
-  check('点击 TEST-2 → 相机聚焦 (20,30,40)', tgt && Math.abs(tgt[0] - 20) < 1 && Math.abs(tgt[1] - 30) < 1 && Math.abs(tgt[2] - 40) < 1, tgt.map(v => v.toFixed(1)).join(','));
+  await wait(250);
+  const camAfterHs = await evalJs(`(() => { const c = window.__view3d.camera.position; const t = window.__view3d.controls.target;
+    return JSON.stringify([c.x, c.y, c.z, t.x, t.y, t.z]); })()`);
+  check('146 §6 · 点击 TEST-2 → 只选中/高亮，相机与观察目标分毫未动',
+    camAfterHs === camBeforeHs
+    && await evalJs(`document.querySelectorAll('.dc-hs-item')[1].classList.contains('on')`),
+    `${camBeforeHs} → ${camAfterHs}`);
 
-  // ④ 坐标保持（第四阶段：旋转视图后热点位置不变）
+  /* ④ 坐标保持（第四阶段）：切视图后**热结标记的世界坐标**必须不变 ——
+     显示层只换相机，绝不改写热点数据（原判据问的是 controls.target，那是被 146 取消的聚焦行为，
+     这里改成问真正的对象：marker 组的 position）。 */
+  const mkPos = () => evalJs(`(() => { const g = window.__view3d.markerMeshes[1]; if (!g) return null;
+    return [g.position.x, g.position.y, g.position.z].map(v => +v.toFixed(3)).join(','); })()`);
+  const posBefore = await mkPos();
   await evalJs(`document.querySelector('[data-view="top"]').click()`);
-  await wait(200);
-  await evalJs(`document.querySelectorAll('.dc-hs-item')[1].click()`);
-  await wait(200);
-  const tgt2 = await evalJs(`(() => { const c = window.__view3d.controls.target; return [c.x, c.y, c.z]; })()`);
-  check('旋转视图后 TEST-2 坐标保持 (20,30,40)', Math.abs(tgt2[0] - 20) < 1 && Math.abs(tgt2[1] - 30) < 1 && Math.abs(tgt2[2] - 40) < 1, tgt2.map(v => v.toFixed(1)).join(','));
+  await wait(250);
+  const posAfter = await mkPos();
+  check('旋转视图后 TEST-2 标记世界坐标保持不变（显示层不改热点数据）',
+    posBefore != null && posAfter === posBefore, `${posBefore} → ${posAfter}`);
 
   // ⑤ Orbit 真实鼠标拖拽（第二阶段：Viewer 交互）
-  // 注意：3D 区域可能部分在视口外（headless 451px 高），CDP 坐标必须落在视口内才派发——先滚到中央
-  await evalJs(`document.querySelector('#dc_view3d').scrollIntoView({ block: 'center' })`);
-  await wait(300);
+  /* ⚠ 前置条件：相机**不能在极点**上。上一步刚点过「顶视图」，相机位于 (0, D, 0)，
+     此时轨道球的极角 φ≈0 —— 水平拖拽只改方位角 θ，而 sinφ≈0 ⇒ 相机位置**数学上不会变**，
+     断言必然假红（146 前这条之所以"过"，是因为点热结会把相机自动拽走、恰好离开极点；
+     §六 取消自动聚焦后相机老实停在顶视图，问题才暴露）。
+     ⇒ 拖拽前先「重置视角」回到等轴测，这与"用户能主动旋转"的判据无关，只是把前提摆正。 */
+  await evalJs(`document.querySelector('#dc_viewReset').click()`);
+  await wait(400);
   const cam0 = await evalJs(`(() => { const c = window.__view3d.camera.position; return [c.x, c.y, c.z]; })()`);
   const v3dRect = await evalJs(`(() => { const r = document.querySelector('#dc_view3dBox').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()`);
   await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: v3dRect.x, y: v3dRect.y, button: 'left', clickCount: 1 });

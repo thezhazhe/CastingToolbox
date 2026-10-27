@@ -15,6 +15,7 @@ import { checkNum, firstErr } from './numcheck.js';
 import { installExampleTags } from './exampleTag.js';
 // PHASE 72（80.txt §八）：核心计算器 UI 中英双语（公式/变量/单位/报告正文不动）
 import { t as tr } from '../i18n/index.js';
+import { RUNNER_SECTIONS, defaultTrapezoidKind, applyRunnerSection, runnerSectionNote } from './gatingReference.js';
 import { setRecompute } from '../i18n/viewState.js';
 
 /* PHASE 72：属性值转义（title 等；i18n 文案可能含引号） */
@@ -25,7 +26,10 @@ const FAMILY_OF_MAT = { '灰铁(HT)': '灰铁', '球铁(QT)': '球铁', '铸钢(
 
 // P51 收尾（53.txt §五）：预设一句话适用范围——依据 recommendGatingRatio 现有自动选择条件整理（不新造阈值）；
 //   200kg 分界为代码既有条件（partWt>200 升档），note 取 RATIO_PRESETS 自带注释
-const RATIO_APPLIC = {
+/* ⚠ 149 §二.2：**导出**给设计中心的参数窗口复用（原为模块私有）。
+   设计中心只读这张表与 `ENG_NOTES` 来显示帮助内容，**不复制一份**——
+   两处各写一份正是"同一事实两处口径"的老病（147 §7 已列）。本文件本身零行为改动。 */
+export const RATIO_APPLIC = {
   '封闭式 保守型(灰铁)': '灰铁保守备选（系统默认兜底方案）',
   '封闭式 常用型': '灰铁常规铸件（≤200kg）系统默认推荐',
   '封闭式 大件型': '灰铁大件（>200kg）系统自动升档',
@@ -38,8 +42,23 @@ const RATIO_APPLIC = {
 const ratioFmt = (k) => (RATIO_PRESETS[k] ? RATIO_PRESETS[k].r.join(':') : '');
 const fmtRatio3 = (a, b, c) => `${+a.toFixed(2)}:${+b.toFixed(2)}:${+c.toFixed(2)}`;
 
+/* 149 §二.2：「浇注比例怎么选？」帮助内容的**单一来源**。
+   独立计算器的 ⓘ 弹窗与设计中心参数窗口都读这里 —— 两处各写一份正文正是
+   "同一事实两个口径"的老病（147 §7）。本文件对外的行为一字未改。 */
+export const RATIO_HELP_INTRO = '浇注比例 S直:S横:S内 表示直浇道、横浇道和内浇口的<b>截面积关系</b>，会影响阻流位置、流速和充型平稳性。';
+export const RATIO_HELP_AUTO = '<b>系统会自动推荐</b>：根据材质、铸件重量等已有条件自动选择合适的浇注比例预设；仍可手动选择其他预设。';
+export const RATIO_HELP_TIP = '不知道怎么选时，直接采用系统自动推荐的预设即可；有特殊工艺要求时，再手动调整。';
+/** 比例预设一览（名称 / 实际比例 / 适用范围 / 自带注释），供帮助面板逐条渲染 */
+export function ratioHelpRows() {
+  return Object.keys(RATIO_PRESETS).map((k) => {
+    const [s, rr, gg] = RATIO_PRESETS[k].r;
+    return { key: k, ratio: fmtRatio3(s, rr, gg), applic: RATIO_APPLIC[k] || '—', note: RATIO_PRESETS[k].note || '' };
+  });
+}
+
 // 59.txt：Campbell 工程补充信息——纯提示层，参与任何计算/判定
-const ENG_NOTES = {
+// 149 §二.2：导出给设计中心参数窗口复用（同一批工程原则不在两处各写一份）
+export const ENG_NOTES = {
   sprue: '工程原则：直浇道宜采用连续、平滑的锥度，以减少充型过程中卷气和吸气风险，并避免突然变截面。',
   runner: '工程原则：横浇道截面宜平稳过渡，避免突然扩张或剧烈改变流向，以降低紊流和卷气风险。',
   turn: '工程提示：浇道转弯宜尽量平缓，避免尖锐转角和突然改变流向，有利于保持流动稳定。',
@@ -94,7 +113,7 @@ export function renderGating(container, calc) {
           <div class="field"><label class="field-label">📏 Ho${tr('（内浇道至上箱面）')}</label><div class="f-row"><input class="field-input" type="number" id="g_Ho" value="${DEFAULTS.Ho}" step="1" min="0"><span class="f-unit">mm</span></div><div class="field-hint" style="margin-top:4px">${tr('内浇道基准至上箱面的垂直距离（见图）')}</div></div>
           <div class="field"><label class="field-label">📏 ${tr('产品高度（浇注向）')}</label><div class="f-row"><input class="field-input" type="number" id="g_ph" value="${DEFAULTS.ph}" step="1" min="0"><span class="f-unit">mm</span></div><div class="field-hint" style="margin-top:4px">${tr('浇注方向下铸件有效高度（铸件底→铸件顶）')}</div></div>
         </div>
-        <div class="field"><label class="field-label">📏 ${tr('冒口高于铸件顶面的距离')}</label><div class="f-row"><input class="field-input" type="number" id="g_rh" value="${DEFAULTS.rh}" step="0.5" min="0"><span class="f-unit">mm</span></div><div class="field-hint" style="margin-top:4px">${tr('无冒口时填 0')}</div></div>
+        <div class="field"><label class="field-label">📏 ${tr('RH（冒口顶面高出铸件顶面）')}</label><div class="f-row"><input class="field-input" type="number" id="g_rh" value="${DEFAULTS.rh}" step="0.5" min="0"><span class="f-unit">mm</span></div><div class="field-hint" style="margin-top:4px">${tr('无冒口时填 0；不是冒口总高 H')}</div></div>
         <div id="g_diagram" style="margin:12px 0"></div>
         <div class="divider"></div>
         <div class="field">
@@ -150,37 +169,52 @@ export function renderGating(container, calc) {
           <div class="f-row"><select class="field-select" id="g_gateShape">${['方形', '圆形'].map(k => `<option value="${k}">${tr(k)}</option>`).join('')}</select><span class="f-unit" style="width:auto" id="g_gateShapeHint"></span></div>
         </div>
         <div class="field-grid2">
-          <div class="field"><label class="field-label">🔢 ${tr('个数')}</label><div class="f-row"><input class="field-input" type="number" id="g_gc" value="${DEFAULTS.gc}" step="1" min="1"><span class="f-unit">${tr('个')}</span></div></div>
+          <div class="field"><label class="field-label">🔢 ${tr('内浇口总数（整模，全部铸件合计）')}</label><div class="f-row"><input class="field-input" type="number" id="g_gc" value="${DEFAULTS.gc}" step="1" min="1"><span class="f-unit">${tr('个')}</span></div></div>
           <div class="field" id="g_gtField"><label class="field-label">📐 ${tr('厚度')}</label><div class="f-row"><input class="field-input" type="number" id="g_gt" value="${DEFAULTS.gt}" step="0.5" min="0"><span class="f-unit">mm</span></div></div>
         </div>
+        <div class="field-hint" style="margin-top:4px">${tr('内浇口总数为整套浇注系统中所有铸件的内浇口数量合计。')}</div>
         <div class="results gcards" style="margin-top:8px">
           <div class="rrow" id="g_ig_len"><span class="rl">📏 ${tr('推荐长度')}</span><span class="rv">—</span></div>
           <div class="rrow" id="g_ig_dia" style="display:none"><span class="rl">⭕ ${tr('推荐直径')}</span><span class="rv">—</span></div>
           <div class="rrow" id="g_ig_tube" style="display:none"><span class="rl">🧱 ${tr('瓷管建议')}</span><span class="rv">—</span></div>
           <div class="rrow" id="g_ig_area"><span class="rl">📐 ${tr('实际总面积')}</span><span class="rv">—</span></div>
         </div>
-        <!-- 60.txt：浇口速度工程参考（组元尺寸区直接可见，原在详细信息折叠内） -->
-        <div class="eng-note">${tr(ENG_NOTES.gateVel)}</div>
+        <!-- 155 §3.2：工程原则属于 P2，默认折叠；不再占据输入区主体。 -->
+        <details class="sc-fold"><summary>ⓘ ${tr('工程原则 · 内浇口速度')}</summary><div class="field-hint">${tr(ENG_NOTES.gateVel)}</div></details>
         <div class="divider"></div>
-        <div class="group-title">🟧 ${tr('横浇道（长方形）')}</div>
+        <div class="group-title">🟧 ${tr('横浇道')} <span id="g_runnerAutoHint" class="f-unit" style="width:auto"></span></div>
         <div class="field-grid2">
-          <div class="field"><label class="field-label">🔢 ${tr('条数')}</label><div class="f-row"><input class="field-input" type="number" id="g_rc" value="${DEFAULTS.rc}" step="1" min="1"><span class="f-unit">${tr('条')}</span></div></div>
-          <div class="field"><label class="field-label">📐 ${tr('厚度')}</label><div class="f-row"><input class="field-input" type="number" id="g_rt" value="${DEFAULTS.rt}" step="0.5" min="0"><span class="f-unit">mm</span></div></div>
+          <div class="field"><label class="field-label">🔷 ${tr('截面形式')}</label><div class="f-row">
+            <select class="field-select" id="g_runnerSection">
+              ${Object.values(RUNNER_SECTIONS).map(s => `<option value="${s.key}">${tr(s.label)}</option>`).join('')}
+            </select>
+            <button type="button" class="btn btn-ghost" id="g_runnerAuto" style="padding:4px 8px" title="${esc(tr('按系统类型恢复自动匹配'))}">↺</button>
+          </div></div>
+          <div class="field" id="g_rectField"><label class="field-label">📐 ${tr('厚度')}</label><div class="f-row"><input class="field-input" type="number" id="g_rt" value="${DEFAULTS.rt}" step="0.5" min="0"><span class="f-unit">mm</span></div></div>
+          <div class="field" id="g_rcField"><label class="field-label">🔢 ${tr('矩形条数')}</label><div class="f-row"><input class="field-input" type="number" id="g_rc" value="${DEFAULTS.rc}" step="1" min="1"><span class="f-unit">${tr('条')}</span></div></div>
+          <div class="field" id="g_trapNField"><label class="field-label">🔢 ${tr('梯形数量')}</label><div class="f-row"><input class="field-input" type="number" id="g_trapN" value="1" step="1" min="1"><span class="f-unit">${tr('条')}</span></div></div>
         </div>
-        <div class="results gcards" style="margin-top:8px">
+        <div class="results gcards" style="margin-top:8px" id="g_runnerRectResults">
           <div class="rrow" id="g_rr_len"><span class="rl">📏 ${tr('推荐长度')}</span><span class="rv">—</span></div>
           <div class="rrow" id="g_rr_area"><span class="rl">📐 ${tr('实际总面积')}</span><span class="rv">—</span></div>
         </div>
-        <!-- 60.txt：横浇道过渡+转弯工程原则（组元尺寸区直接可见） -->
-        <div class="eng-note">${tr(ENG_NOTES.runner)}<br>${tr(ENG_NOTES.turn)}</div>
+        <div class="results gcards" style="margin-top:8px" id="g_runnerTrapResults" hidden>
+          <div class="rrow" id="g_tr_top"><span class="rl">📐 ${tr('上底 a')}</span><span class="rv">—</span></div>
+          <div class="rrow" id="g_tr_bottom"><span class="rl">📐 ${tr('下底 2a')}</span><span class="rv">—</span></div>
+          <div class="rrow" id="g_tr_h"><span class="rl">📏 ${tr('高 h')}</span><span class="rv">—</span></div>
+          <div class="rrow" id="g_tr_each"><span class="rl">📐 ${tr('单条实际 / 目标')}</span><span class="rv">—</span></div>
+          <div class="rrow" id="g_tr_total"><span class="rl">📐 ${tr('总实际 / 目标')}</span><span class="rv">—</span></div>
+          <div class="rrow" id="g_tr_check"><span class="rl">✅ ${tr('面积回算校核')}</span><span class="rv">—</span></div>
+        </div>
+        <div class="field-hint" id="g_runnerTrapNote" hidden>${runnerSectionNote()}</div>
+        <details class="sc-fold"><summary>ⓘ ${tr('工程原则 · 横浇道与转弯')}</summary><div class="field-hint">${tr(ENG_NOTES.runner)}<br>${tr(ENG_NOTES.turn)}</div></details>
         <div class="divider"></div>
         <div class="group-title">⬇️ ${tr('直浇道（自动）')}</div>
         <div class="results gcards" style="margin-top:8px">
           <div class="rrow" id="g_sp_dia"><span class="rl">⭕ ${tr('推荐直径（1根圆形）')}</span><span class="rv">—</span></div>
           <div class="rrow" id="g_sp_area"><span class="rl">📐 ${tr('实际截面积')}</span><span class="rv">—</span></div>
         </div>
-        <!-- 60.txt：直浇道锥度工程原则（组元尺寸区直接可见） -->
-        <div class="eng-note">${tr(ENG_NOTES.sprue)}</div>
+        <details class="sc-fold"><summary>ⓘ ${tr('工程原则 · 直浇道')}</summary><div class="field-hint">${tr(ENG_NOTES.sprue)}</div></details>
         <div class="divider"></div>
         <div class="group-title">💭 ${tr('排气（自动生成，无需填写）')}</div>
         <div class="field" style="margin-bottom:8px">
@@ -268,6 +302,28 @@ export function renderGating(container, calc) {
 
   let lastResult = null;
   let optMode = false;   // P50（51.txt）：默认基础设计；用户点击"按目标速度优化"后置 true（仅影响内浇口几何）
+  /* 164 §5.4：截面默认由真实浇注系统类型自动匹配；用户手动选择后保持，不随每次结果重建被覆盖。
+     「↺」恢复自动匹配（sectionTouched=false）。 */
+  let sectionTouched = false;
+  const runnerSectionValue = () => q('#g_runnerSection')?.value || 'rect';
+  const runnerCountValue = () => {
+    const section = runnerSectionValue();
+    return section === 'rect'
+      ? (parseInt(q('#g_rc')?.value) || 0)
+      : (parseInt(q('#g_trapN')?.value) || 0);
+  };
+  const syncRunnerSectionUi = () => {
+    const section = runnerSectionValue();
+    const isRect = section === 'rect';
+    q('#g_rectField') && (q('#g_rectField').hidden = !isRect);
+    q('#g_rcField') && (q('#g_rcField').hidden = !isRect);
+    q('#g_trapNField') && (q('#g_trapNField').hidden = isRect);
+    q('#g_runnerRectResults') && (q('#g_runnerRectResults').hidden = !isRect);
+    q('#g_runnerTrapResults') && (q('#g_runnerTrapResults').hidden = isRect);
+    q('#g_runnerTrapNote') && (q('#g_runnerTrapNote').hidden = isRect);
+    const hint = q('#g_runnerAutoHint');
+    if (hint) hint.textContent = sectionTouched ? tr('手动选择') : tr('自动匹配');
+  };
   // 出品率联动（PHASE 45-B）：用户手改过出品率后，切换材质不再覆盖
   let yrTouched = false;
   const read = () => {
@@ -335,7 +391,7 @@ export function renderGating(container, calc) {
           <span class="rv">允许过流量 ${it.capacity} kg ｜ 本次需求 ${fmt(r.demand, 1)} kg ｜ 余量 ${fmt(it.capacity - r.demand, 1)} kg</span></div>`).join('')}
       ${r.list.length > 3 ? `<div class="field-hint" style="padding:4px 4px 0">另有 ${r.list.length - 3} 个规格可选（未全部列出）</div>` : ''}
       <div class="field-hint" style="padding:6px 4px 0">来源：企业「过滤网标准」（C 级经验数据）；推荐仅作建议，不改变浇注系统</div>
-      <div class="eng-note" style="margin-top:8px">${ENG_NOTES.filter}</div>`;
+      <details class="sc-fold" style="margin-top:8px"><summary>ⓘ ${tr('工程原则 · 过滤网')}</summary><div class="field-hint">${ENG_NOTES.filter}</div></details>`;
   };
   /** 图放大 overlay（简单实现，无复杂弹窗系统） */
   const setupDiagramZoom = () => {
@@ -368,12 +424,15 @@ export function renderGating(container, calc) {
       checkNum(q('#g_yr').value, { label: '预估出品率', gt: 0, max: 100, required: true }),
       checkNum(q('#g_Ho').value, { label: 'Ho（内浇道至上箱面）', gt: 0, required: true }),
       checkNum(q('#g_ph').value, { label: '产品高度（浇注向）', gt: 0, required: true }),
-      checkNum(q('#g_rh').value, { label: '冒口高于铸件顶面的距离', min: 0 }),      // 无冒口填 0 合法
-      checkNum(q('#g_gc').value, { label: '内浇道个数', min: 0, int: true }),
+      checkNum(q('#g_rh').value, { label: 'RH（冒口顶面高出铸件顶面）', min: 0 }),      // 无冒口填 0 合法
+      checkNum(q('#g_gc').value, { label: '内浇口总数（整模，全部铸件合计）', min: 0, int: true }),
       checkNum(q('#g_gt').value, { label: '内浇道厚度', min: 0 }),
-      checkNum(q('#g_rc').value, { label: '横浇道条数', min: 0, int: true }),
-      checkNum(q('#g_rt').value, { label: '横浇道厚度', min: 0 }),
+      checkNum(q('#g_rc').value, { label: '矩形横浇道条数', min: 0, int: true }),
+      checkNum(q('#g_rt').value, { label: '矩形横浇道厚度', min: 0 }),
     ];
+    if (runnerSectionValue() !== 'rect') {
+      errs.push(checkNum(q('#g_trapN').value, { label: '梯形横浇道数量', gt: 0, int: true, required: true }));
+    }
     if (q('#g_ratio').value === '__custom') {
       errs.push(
         checkNum(q('#g_cs').value, { label: '自定义比例 S直', gt: 0, required: true }),
@@ -392,13 +451,25 @@ export function renderGating(container, calc) {
       const el = q(id);
       if (el) { el.className = 'rrow'; el.innerHTML = `<span class="rl">${el.querySelector('.rl') ? el.querySelector('.rl').textContent : ''}</span><span class="rv">—</span>`; }
     };
-    for (const id of ['#g_ig_len', '#g_ig_dia', '#g_ig_tube', '#g_ig_area', '#g_rr_len', '#g_rr_area', '#g_sp_dia', '#g_sp_area', '#g_ventSug', '#g_vent_ratio']) blank(id);
+    for (const id of ['#g_ig_len', '#g_ig_dia', '#g_ig_tube', '#g_ig_area', '#g_rr_len', '#g_rr_area',
+      '#g_tr_top', '#g_tr_bottom', '#g_tr_h', '#g_tr_each', '#g_tr_total', '#g_tr_check',
+      '#g_sp_dia', '#g_sp_area', '#g_ventSug', '#g_vent_ratio']) blank(id);
   };
   const update = () => {
     syncHints();
+    syncRunnerSectionUi();
     const err = validateInputs();
     if (err) { lastResult = null; renderInvalid(err); return; }   // P0-1：非法输入不执行正式计算
-    lastResult = runGating({ ...read(), optimize: optMode });   // P50：optimize 仅当用户主动点击后为 true
+    const core = runGating({ ...read(), optimize: optMode });    // P50：optimize 仅当用户主动点击后为 true
+    if (!sectionTouched) {
+      const auto = defaultTrapezoidKind(core.rd?.type);
+      if (q('#g_runnerSection').value !== auto) q('#g_runnerSection').value = auto;
+      syncRunnerSectionUi();
+    }
+    lastResult = applyRunnerSection(core, {
+      section: runnerSectionValue(),
+      count: runnerCountValue(),
+    });
     renderDiagram();
     renderSummary(lastResult);
     renderResults(lastResult);
@@ -422,6 +493,8 @@ export function renderGating(container, calc) {
   ratioSel.addEventListener('change', () => { ratioTouched = true; toggleCustom(); debounced(); });
   q('#g_yr').addEventListener('input', () => { yrTouched = true; debounced(); });
   q('#g_gateShape').addEventListener('change', () => { toggleGateShape(); debounced(); });
+  q('#g_runnerSection').addEventListener('change', () => { sectionTouched = true; syncRunnerSectionUi(); debounced(); });
+  q('#g_runnerAuto').addEventListener('click', () => { sectionTouched = false; debounced(); });
   container.querySelectorAll('input[name="g_ventType"]').forEach(el => el.addEventListener('change', () => { toggleVentType(); debounced(); }));
   container.querySelectorAll('.section-card input, .section-card select').forEach(el => el.addEventListener('input', debounced));
   // 过滤网"使用/不使用"单选（PHASE 45-A：唯一用户选择，型号由软件自动推荐）
@@ -447,7 +520,8 @@ export function renderGating(container, calc) {
   const runOptimizeFlow = () => {
     // P51 门禁（防御）：内浇口阻流 / 临界状态 → 不提供优化（按钮本就不显示）
     if (!lastResult || !lastResult.vTarget || lastResult.ingateChoke || lastResult.boundaryChoke) return;
-    const opt = runGating({ ...read(), optimize: true });
+    const optCore = runGating({ ...read(), optimize: true });
+    const opt = applyRunnerSection(optCore, { section: runnerSectionValue(), count: runnerCountValue() });
     // P51 收尾（53.txt §一）：优化提交通用防御——优化前后 chokePosition 任一变化 → 拒绝提交、保留原几何
     //   （未来防御机制：不为制造迁移而修改优化算法）
     const chokeChanged = opt.chokePosition !== lastResult.chokePosition;
@@ -476,19 +550,18 @@ export function renderGating(container, calc) {
   });
   // P51 收尾（53.txt §六）：浇注比例 ⓘ —— 精简版：简介 + 自动推荐说明 + 预设清单（名称/比例/适用）+ 收尾一句
   q('#g_ratioInfo')?.addEventListener('click', () => {
-    const presetRows = Object.keys(RATIO_PRESETS).map((k) => {
-      const [s, rr, gg] = RATIO_PRESETS[k].r;
-      return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0">
-        <div style="font-size:13px;font-weight:700;color:#0f172a">${k} · S直:S横:S内 = ${fmtRatio3(s, rr, gg)}</div>
-        <div style="font-size:12px;color:#64748b;margin-top:3px">适用：${RATIO_APPLIC[k] || '—'}${RATIO_PRESETS[k].note ? `（${RATIO_PRESETS[k].note}）` : ''}</div>
-      </div>`;
-    }).join('');
+    // 149 §二.2：正文与预设清单改读上面那份**单一来源**（本弹窗的显示结果一字未变）
+    const presetRows = ratioHelpRows().map((r) =>
+      `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0">
+        <div style="font-size:13px;font-weight:700;color:#0f172a">${r.key} · S直:S横:S内 = ${r.ratio}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:3px">适用：${r.applic}${r.note ? `（${r.note}）` : ''}</div>
+      </div>`).join('');
     optModal(`<h3 style="margin:0 0 10px">ⓘ 浇注比例怎么选？</h3>
-      <div style="font-size:13px;color:#334155;line-height:1.8">浇注比例 S直:S横:S内 表示直浇道、横浇道和内浇口的<b>截面积关系</b>，会影响阻流位置、流速和充型平稳性。</div>
-      <div style="font-size:13px;color:#334155;line-height:1.8;margin-top:8px"><b>系统会自动推荐</b>：根据材质、铸件重量等已有条件自动选择合适的浇注比例预设；仍可手动选择其他预设。</div>
+      <div style="font-size:13px;color:#334155;line-height:1.8">${RATIO_HELP_INTRO}</div>
+      <div style="font-size:13px;color:#334155;line-height:1.8;margin-top:8px">${RATIO_HELP_AUTO}</div>
       <div style="font-size:12px;font-weight:700;color:#64748b;margin:10px 0 4px">预设一览</div>
       ${presetRows}
-      <div style="font-size:13px;color:#334155;line-height:1.8;background:#fffbeb;border-radius:8px;padding:8px 12px;margin-top:8px">不知道怎么选时，直接采用系统自动推荐的预设即可；有特殊工艺要求时，再手动调整。</div>
+      <div style="font-size:13px;color:#334155;line-height:1.8;background:#fffbeb;border-radius:8px;padding:8px 12px;margin-top:8px">${RATIO_HELP_TIP}</div>
       <div style="margin-top:14px;text-align:right"><button type="button" data-close style="background:#e2e8f0;border:none;border-radius:6px;padding:6px 14px;cursor:pointer">知道了</button></div>`);
     bindOptModal();
   });
@@ -599,6 +672,8 @@ export function renderGating(container, calc) {
     // 企业查表对照（PHASE 28.3-E：并列参照，不参与 T 计算链）
     const refWith = pourTimeReference(r.G, true);
     const refNo = pourTimeReference(r.G, false);
+    /* S4：g.ya 未舍入，g.yv 是取整回显；同一份结果里统一用实际反算值，避免 69% 与 68.5%。 */
+    const dy = (r.ya != null ? r.ya : r.yv);
     // 浇注温度建议（PHASE 28.3-F：企业壁厚表，一行文本；推荐范围非绝对值）
     const pourT = recommendPourTemp({ family: FAMILY_OF_MAT[r.mat] || '灰铁', wall: r.wall });
     q('#g_results').innerHTML = `
@@ -608,7 +683,7 @@ export function renderGating(container, calc) {
       ${row(`⚖️ ${tr('密度 ρ')}`, r.rho, 'kg/dm³', '', tr('查材料表'))}
       ${row(`🔢 ${tr('材质系数 f')}`, r.fc, '', '', tr('查材料表'))}
       ${row(`⚖️ ${tr('铸件质量 W_c')}`, fmt(r.castingMass, 2), 'Kg', '', `= ${r.pw}×${r.cav} ${tr('件（P47 浇注时间公式的 W，不出品率，PHASE 49）')}`)}
-      ${row(`🫗 ${tr('浇注重量 G')}`, fmt(r.G, 2), 'Kg', '', `G = W_c ÷ ${r.yv}%${tr('（浇注重量：奥赞阻流/流量 Q 用，与企业 Excel 浇注重量同义）')}`)}
+      ${row(`🫗 ${tr('浇注重量 G')}`, fmt(r.G, 2), 'Kg', '', `G = W_c ÷ ${fmt(dy, 1)}%${tr('（浇注重量：奥赞阻流/流量 Q 用，与企业 Excel 浇注重量同义）')}`)}
       ${r.boundaryNote ? row(`⚠️ ${tr('公式分界点')}`, tr('需工程复核'), '', 'warn', r.boundaryNote) : ''}
       ${row(`📏 ${tr('C = 件高+冒口高')}`, fmt(r.Cmm, 2), 'mm', '', `${r.ph} + ${r.rh}`)}
       ${row(`🏗️ ${tr('Hb 水口盆高度')}`, r.Hb, 'mm', '', 'G<10→150,<50→200,<200→250,<1000→300,<3000→500,<8000→750,≥8000→1100')}
@@ -624,14 +699,18 @@ export function renderGating(container, calc) {
       ${row(`📍 ${tr('瓶颈位置')}`, tr(r.cp), '', '', `${tr('比例')} 1:${r.r_r.toFixed(2)}:${r.g_r.toFixed(2)} ${tr('最小比值处')}`)}
       ${row(`🔽 ${tr('内浇道参考面积')}`, fmt(r.A_gt, 0), 'mm²', '', `A×(S内/min)，${tr('奥赞参考')}`)}
       ${r.vTarget ? row(`🧮 ${tr('推荐内浇口总面积')}`, fmt(r.A_rec, 0), 'mm²', r.A_rec > r.A_gt ? 'warn' : '', `=max(A_gt ${fmt(r.A_gt,0)}, A_target=Q/v_target=${fmt(r.A_target,0)})${r.A_rec > r.A_gt ? `：${tr('超目标，已放大')} ×${fmt(r.A_rec / Math.max(1, r.A_gt), 2)} ${tr('并应用于实际尺寸')}` : `：${tr('未超参考，不缩小（48-B）')}`}`) : ''}
-      ${row(`➡️ ${tr('横浇道参考面积')}`, fmt(r.A_run, 0), 'mm²', '', 'A×(S横/min)')}
+      ${row(`➡️ ${tr('横浇道参考面积')}`, fmt(r.A_run, 0), 'mm²', '', tr('A×(S横/min)，全部横浇道目标总面积'))}
+      ${r.runnerSection ? row(`🟧 ${tr('横浇道截面')}`, r.runnerSection.isTrapezoid
+        ? `${tr(r.runnerSection.label)}：${r.runnerSection.count} ${tr('条')} × ${tr('上底')} ${fmt(r.runnerSection.top, 2)} × ${tr('下底')} ${fmt(r.runnerSection.bottom, 2)} × ${tr('高')} ${fmt(r.runnerSection.height, 2)} mm → ${fmt(r.runnerSection.actualTotal, 0)} mm²`
+        : `${tr('矩形')}：${r.rc} ${tr('条')} × ${tr('厚')} ${r.rt} mm × ${tr('长')} ${fmt(r.L_r, 0)} mm → ${fmt(r.Fr_act, 0)} mm²`, '', '', r.runnerSection.isTrapezoid ? tr('按最终显示尺寸回算') : '') : ''}
       ${row(`⬇️ ${tr('直浇道参考面积')}`, fmt(r.A_sp, 0), 'mm²', '', 'A×(S直/min)')}
       <div class="group-title">${tr('校核')}</div>
       ${row(`💨 ${tr('内浇口平均流速')}`, `${fmt(r.vFinal, 3)} ${velBadge(r)}`, 'm/s', r.vState === 'rec' ? 'ok' : r.vState === 'high' ? 'warn' : r.vState === 'low' ? 'warn' : r.r7Exceed ? 'warn' : '', velNote(r))}
       ${row(`💨 ${tr('液面上升速度 vL')}`, fmt(r.vL, 2), 'mm/s', '', tr('=铸件高度/浇注时间（参考，下限标准待核对）'))}
       ${row(`💭 ${tr('排气面积比')}`, fmt(r.vr, 2), tr('倍'), r.vr_ok ? 'ok' : 'bad', tr('S出/S直，标准≥1.5'))}
-      ${row(`📊 ${tr('实际出品率')}`, fmt(r.ya, 1), '%', '', 'pw×cav/G×100%')}
+      ${row(`📊 ${tr('设计出品率（按输入预估反推）')}`, fmt(r.ya, 1), '%', '', 'pw×cav/G×100%，恒等于输入的预估出品率；不是实重统计')}
       ${row(`🔗 ${tr('实际比例 S直:S横:S内')}`, r.Fr_act > 0 ? `1:${fmt(r.rrv, 2)}:${fmt(r.rgv, 2)}` : tr('横浇道未设'), '', '', `${tr('目标')} 1:${r.r_r.toFixed(2)}:${r.g_r.toFixed(2)}`)}
+      ${r.runnerSection?.isTrapezoid ? `<div class="field-hint">${runnerSectionNote()}</div>` : ''}
     `;
   }
 
@@ -658,10 +737,30 @@ export function renderGating(container, calc) {
     const igOk = r.Fg >= r.A_rec * 0.7 && r.Fg <= Math.max(r.A_rec, r.A_gt) * 1.3;
     set('#g_ig_area', `${fmt(r.Fg, 0)} mm²`, igOk ? 'ok' : 'warn');   // P51：参考值移 title
     q('#g_ig_area').querySelector('.rv').title = `${tr('奥赞参考')} ${fmt(r.A_gt, 0)}${r.A_rec > r.A_gt ? ` → ${tr('推荐')} ${fmt(r.A_rec, 0)}` : ''} mm²`;
-    set('#g_rr_len', r.rc > 0 && r.rt > 0 ? `${r.L_r} mm（${tr('厚')}${r.rt}×${tr('长')}${r.L_r}×${r.rc}${tr('条')}）` : tr('条数/厚度=0'));
-    const frOk = r.Fr_act >= r.A_run * 0.8 && r.Fr_act <= r.A_run * 1.2;
-    set('#g_rr_area', `${fmt(r.Fr_act, 0)} mm²`, frOk ? 'ok' : 'warn');
-    q('#g_rr_area').querySelector('.rv').title = `${tr('参考')} ${fmt(r.A_run, 0)} mm²`;
+    const rs = r.runnerSection;
+    if (rs?.isTrapezoid) {
+      if (rs.ok === false) {
+        set('#g_tr_top', '—');
+        set('#g_tr_bottom', '—');
+        set('#g_tr_h', '—');
+        set('#g_tr_each', '—');
+        set('#g_tr_total', '—', 'bad');
+        set('#g_tr_check', tr('无法计算：缺少有效的横浇道目标面积'), 'bad');
+      } else {
+        set('#g_tr_top', `${fmt(rs.top, 2)} mm`);
+        set('#g_tr_bottom', `${fmt(rs.bottom, 2)} mm`);
+        set('#g_tr_h', `${fmt(rs.height, 2)} mm`);
+        set('#g_tr_each', `${fmt(rs.actualEach, 2)} / ${fmt(rs.targetEach, 2)} mm²`);
+        set('#g_tr_total', `${fmt(rs.actualTotal, 0)} / ${fmt(rs.targetTotal, 0)} mm²`, r.Fr_act >= r.A_run ? 'ok' : 'warn');
+        set('#g_tr_check', `(${tr('上底')} + ${tr('下底')}) × ${tr('高')} ÷ 2 = ${fmt(rs.actualEach, 2)} mm² × ${rs.count} = ${fmt(rs.actualTotal, 2)} mm²`, 'ok');
+        q('#g_tr_total')?.querySelector('.rv') && (q('#g_tr_total').querySelector('.rv').title = `${tr('目标总面积 A_run')} ${fmt(r.A_run, 0)} mm²`);
+      }
+    } else {
+      set('#g_rr_len', r.rc > 0 && r.rt > 0 ? `${r.L_r} mm（${tr('厚')}${r.rt}×${tr('长')}${r.L_r}×${r.rc}${tr('条')}）` : tr('条数/厚度=0'));
+      const frOk = r.Fr_act >= r.A_run * 0.8 && r.Fr_act <= r.A_run * 1.2;
+      set('#g_rr_area', `${fmt(r.Fr_act, 0)} mm²`, frOk ? 'ok' : 'warn');
+      q('#g_rr_area').querySelector('.rv').title = `${tr('参考')} ${fmt(r.A_run, 0)} mm²`;
+    }
     const fsOk = r.Fs_act >= r.A_sp * 0.9 && r.Fs_act <= r.A_sp * 1.1;
     set('#g_sp_dia', `⌀${r.D_sp} mm（${tr('1根圆形')}）`);
     set('#g_sp_area', `${fmt(r.Fs_act, 0)} mm²`, fsOk ? 'ok' : 'warn');
@@ -704,17 +803,23 @@ export function renderGating(container, calc) {
   function buildReportHtml() {
     if (!lastResult) return '';
     const r = lastResult;
+    const dy = (r.ya != null ? r.ya : r.yv);
     const now = new Date().toLocaleString('zh-CN', { hour12: false });
     const t = (label, val) => `<tr><td style="width:38%">${label}</td><td>${val}</td></tr>`;
+    const rs = r.runnerSection;
+    const runnerTxt = rs?.isTrapezoid
+      ? `${rs.count}条×上底${fmt(rs.top, 2)}×下底${fmt(rs.bottom, 2)}×高${fmt(rs.height, 2)}mm = ${fmt(rs.actualTotal, 0)}mm²（目标${fmt(rs.targetTotal, 0)}）`
+      : `${r.rc}条×厚${r.rt}mm×长${r.L_r}mm = ${fmt(r.Fr_act, 0)}mm²（参考${fmt(r.A_run, 0)}）`;
     return `
       <h2>🏗️ 铸造浇注系统设计计算记录</h2>
       <p class="meta">生成时间：${now} · 材质 ${r.mat}</p>
       <h3>一、基本参数（输入）</h3>
-      <table>${t('单件毛重', `${r.pw} Kg`)}${t('一模件数', `${r.cav} 件`)}${t('产品壁厚', `${r.wall} mm`)}${t('预估出品率', `${r.yv}%`)}${t('浇注方向', r.pos)}${t('Ho', `${r.Ho} mm`)}${t('产品高度', `${r.ph} mm`)}${t('冒口高度', `${r.rh} mm`)}${t('比例预设', `${r.ratioKey || '自定义'} · S直:S横:S内 = ${fmt(r.s_r, 2)}:${fmt(r.r_r, 2)}:${fmt(r.g_r, 2)}`)}</table>
+      <table>${t('单件毛重', `${r.pw} Kg`)}${t('一模件数', `${r.cav} 件`)}${t('产品壁厚', `${r.wall} mm`)}${t('预估出品率', `${fmt(dy, 1)}%`)}${t('浇注方向', r.pos)}${t('Ho', `${r.Ho} mm`)}${t('产品高度', `${r.ph} mm`)}${t('RH（冒口顶面高出铸件顶面）', `${r.rh} mm`)}${t('比例预设', `${r.ratioKey || '自定义'} · S直:S横:S内 = ${fmt(r.s_r, 2)}:${fmt(r.r_r, 2)}:${fmt(r.g_r, 2)}`)}</table>
       <h3>二、自动计算结果</h3>
-      <table>${t('密度 ρ', `${r.rho} kg/dm³`)}${t('材质系数 f', r.fc)}${t('铸件质量 W_c（P47 公式 W）', `${fmt(r.castingMass, 2)} Kg`)}${t('浇注重量 G（奥赞/流量）', `${fmt(r.G, 2)} Kg`)}${t('C=件高+冒口高', `${fmt(r.Cmm, 2)} mm`)}${t('Hb 水口盆高度', `${r.Hb} mm`)}${t('Hp 平均静压头', `${fmt(r.Hp, 4)} mm`)}${t('fv 流速系数', r.fv)}${t('浇注时间 t', `${fmt(r.t, 4)} s`)}${t('阻流截面 A_choke', `${fmt(r.A, 2)} mm²`)}</table>
+      <table>${t('密度 ρ', `${r.rho} kg/dm³`)}${t('材质系数 f', r.fc)}${t('铸件质量 W_c（P47 公式 W）', `${fmt(r.castingMass, 2)} Kg`)}${t('浇注重量 G（奥赞/流量）', `${fmt(r.G, 2)} Kg`)}${t('C = ph + RH', `${fmt(r.Cmm, 2)} mm`)}${t('Hb 水口盆高度', `${r.Hb} mm`)}${t('Hp 平均静压头', `${fmt(r.Hp, 4)} mm`)}${t('fv 流速系数', r.fv)}${t('浇注时间 t', `${fmt(r.t, 4)} s`)}${t('阻流截面 A_choke', `${fmt(r.A, 2)} mm²`)}</table>
       <h3>三、浇注系统尺寸</h3>
-      <table>${t('瓶颈位置', r.cp)}${t('内浇道', `${r.gc}个×厚${r.gt}mm×长${r.L_g}mm = ${fmt(r.Fg, 0)}mm²（奥赞参考${fmt(r.A_gt, 0)}${r.A_rec > r.A_gt ? `→推荐${fmt(r.A_rec, 0)}` : ''}）`)}${t('横浇道', `${r.rc}条×厚${r.rt}mm×长${r.L_r}mm = ${fmt(r.Fr_act, 0)}mm²（参考${fmt(r.A_run, 0)}）`)}${t('直浇道', `⌀${r.D_sp}mm = ${fmt(r.Fs_act, 0)}mm²（参考${fmt(r.A_sp, 0)}）`)}${t('内浇口平均流速', `${fmt(r.vFinal, 3)} m/s ${r.vState === 'rec' ? '✅推荐' : r.vState === 'high' ? '⚠️偏高' : r.vState === 'low' ? 'ℹ️偏低' : '—'}`)}${t('目标流速', r.vTarget ? `${r.vTarget} m/s${r.vTargetLo ? `（${r.vTargetLo}~${r.vTargetHi}）` : `（≤${r.vTargetHi}）`}` : '无（铸钢/铜）')}${t('推荐内浇口总面积', `${fmt(r.A_rec, 0)} mm²${r.A_rec > r.A_gt ? `（放大×${fmt(r.A_rec / Math.max(1, r.A_gt), 2)}）` : '=参考'}`)}${t('排气面积比', `${fmt(r.vr, 2)} 倍 ${r.vr_ok ? '✓' : '✗'}`)}${t('实际出品率', `${fmt(r.ya, 1)}%`)}</table>
+      <table>${t('瓶颈位置', r.cp)}${t('内浇道', `${r.gc}个×厚${r.gt}mm×长${r.L_g}mm = ${fmt(r.Fg, 0)}mm²（奥赞参考${fmt(r.A_gt, 0)}${r.A_rec > r.A_gt ? `→推荐${fmt(r.A_rec, 0)}` : ''}）`)}${t('横浇道', runnerTxt)}${t('直浇道', `⌀${r.D_sp}mm = ${fmt(r.Fs_act, 0)}mm²（参考${fmt(r.A_sp, 0)}）`)}${t('内浇口平均流速', `${fmt(r.vFinal, 3)} m/s ${r.vState === 'rec' ? '✅推荐' : r.vState === 'high' ? '⚠️偏高' : r.vState === 'low' ? 'ℹ️偏低' : '—'}`)}${t('目标流速', r.vTarget ? `${r.vTarget} m/s${r.vTargetLo ? `（${r.vTargetLo}~${r.vTargetHi}）` : `（≤${r.vTargetHi}）`}` : '无（铸钢/铜）')}${t('推荐内浇口总面积', `${fmt(r.A_rec, 0)} mm²${r.A_rec > r.A_gt ? `（放大×${fmt(r.A_rec / Math.max(1, r.A_gt), 2)}）` : '=参考'}`)}${t('排气面积比', `${fmt(r.vr, 2)} 倍 ${r.vr_ok ? '✓' : '✗'}`)}${t('设计出品率（按输入预估反推）', `${fmt(r.ya, 1)}%`)}</table>
+      ${rs?.isTrapezoid ? `<div style="font-size:.78rem;color:#6b7280;line-height:1.8;margin:6px 0">梯形横浇道：A_run 为全部横浇道目标总面积，按条数均分后反算单条尺寸；实际总截面由最终显示尺寸回算。阻流位置/面积比按实际总截面积重算（P51 面积判定同规则）；未进行梯形流动仿真。</div>` : ''}
       <h3>四、综合判定</h3>
       <p style="font-weight:700;color:${r.allOk ? '#059669' : '#DC2626'}">${r.allOk ? '✅ 设计合理 · 参数合格' : '⚠️ 需优化 · 建议调整参数'}</p>
       ${r.sugs.filter(s => !s.startsWith('✅')).map(s => `<div style="padding:6px 12px;margin:5px 0;background:#FFFBEB;color:#D97706;border-radius:6px;font-size:.82rem;border-left:3px solid #D97706">${s}</div>`).join('')}
@@ -750,6 +855,7 @@ export function renderGating(container, calc) {
   }
   toggleCustom();
   toggleGateShape();
+  syncRunnerSectionUi();
   toggleVentType();
   update();
   renderNextSteps(container, calc);

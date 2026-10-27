@@ -149,14 +149,22 @@ export const RISER_REASON = {
  * 距离口径与 88 口径**完全一致**（两处必须是同一个定义，否则同一份数据会出现两个数）：
  *   热点位置 = 引擎 V3 的代表点；冒口位置 = 冒口包围盒中心；距离 = 两点直线距离。
  *
+ * PHASE V2.0-06A1（113.txt §四.4）：**热点模数是否经过用户确认**必须与"比值算出来是多少"分开。
+ *   `hotspots[].mc` 在本页来自引擎 V3 自动输出（`peakModulus`），用户无法在本页修改。
+ *   实测（06A）该量对板状/长条状热节系统性偏低 ⇒ 比值虚高 ⇒ 假 PASS。
+ *   故本函数只**如实计算**比值与计数（数值口径一行未改），把"结论能不能定"交给
+ *   `opts.mcConfirmed` 决定，由视图层显示——判定阈值 1.2 本身不动。
+ *
  * @param {Array<{id,x,y,z,mc,regionVolumeCm3,confidence}>} hotspots
  * @param {Array<{id,name,metrics:{modulusMm,volumeMm3,areaMm2,center},volumeReliable?}>} risers
- * @returns {{rows:Array, counts:object, distances:number[]}}
+ * @param {{mcConfirmed?:boolean}} [opts] mcConfirmed = 用户已确认热点模数可作工程输入
+ * @returns {{rows:Array, counts:object, distances:number[], mcConfirmed:boolean}}
  *   rows[i] = { riserId, riserModulus, modulusUsable, reason, nearest, all, ok }
  *   counts  = { riserTotal, hotspotTotal, withHotspot, modulusOk, modulusLow,
  *               modulusUnknown, modulusUnreliable, noHotspot }
  */
-export function buildRiserRows(hotspots = [], risers = []) {
+export function buildRiserRows(hotspots = [], risers = [], opts = {}) {
+  const mcConfirmed = opts.mcConfirmed === true;      // 安全默认：未显式确认即视为未确认
   const hsList = (hotspots || []).filter(h => h && Number.isFinite(h.x) && Number.isFinite(h.mc));
   const rList = (risers || []).filter(r => r?.metrics);
 
@@ -212,7 +220,7 @@ export function buildRiserRows(hotspots = [], risers = []) {
   counts.noHotspot = rows.filter(r => !r.nearest).length;
 
   const distances = rows.map(r => r.nearest?.distance).filter(Number.isFinite);
-  return { rows, counts, distances };
+  return { rows, counts, distances, mcConfirmed };
 }
 
 /** 冒口检测的汇总语义码（与 SUMMARY_CODE 同样：只给 code，文案由视图查 i18n） */
@@ -221,6 +229,9 @@ export const RISER_CODE = {
   NO_RISER: 'no_riser',
   NO_HOTSPOT: 'riser_no_hotspot',
   MODULUS_OK: 'riser_modulus_ok',
+  // PHASE V2.0-06A1（113.txt §四.4）：比值算出来是"够"，但热点模数尚未经用户确认。
+  //   与 MODULUS_OK 分开成独立 code —— 值相同、**结论的确定性不同**，不得合并显示。
+  MODULUS_OK_UNCONFIRMED: 'riser_modulus_ok_unconfirmed',
   MODULUS_LOW: 'riser_modulus_low',
   MODULUS_UNKNOWN: 'riser_modulus_unknown',
   MODULUS_UNRELIABLE: 'riser_modulus_unreliable',
@@ -234,10 +245,12 @@ export const RISER_CODE = {
  *   不得表述为"一定不会缩孔 / 一定能补缩 / 工艺一定正确"。
  * 阈值只有一个：MODULUS_RATIO_MIN（1.2），**不引入** 1.3 / 1.5 / 安全系数 / 材料修正。
  */
-export function summarizeRisers({ product, hotspots = [], risers = [], rows } = {}) {
+export function summarizeRisers({ product, hotspots = [], risers = [], rows, mcConfirmed = false } = {}) {
   const items = [];
-  const r = rows || buildRiserRows(hotspots, risers);
+  const r = rows || buildRiserRows(hotspots, risers, { mcConfirmed });
   const c = r.counts;
+  // 显式传入优先；未传则沿用 rows 自带的口径（rows 由本模块产出，两者同源）
+  const confirmed = r.mcConfirmed === true || mcConfirmed === true;
 
   if (!product) {
     items.push({ level: LEVEL.INFO, code: RISER_CODE.NO_PRODUCT, params: [] });
@@ -247,7 +260,11 @@ export function summarizeRisers({ product, hotspots = [], risers = [], rows } = 
     // 没有热点 → 没有可比的热点模数。不是缺陷（均匀件本来就没有热结），如实说明。
     items.push({ level: LEVEL.INFO, code: RISER_CODE.NO_HOTSPOT, params: [] });
   } else {
-    items.push({ level: LEVEL.PASS, code: RISER_CODE.MODULUS_OK, params: [c.modulusOk, MODULUS_RATIO_MIN] });
+    // 113.txt §四.4：未经确认的自动 Mc 不得给出**无条件的确定 PASS**。
+    //   数值（c.modulusOk / 1.2）一字不改，只是把"结论的确定性"如实降级为 INFO（待确认）。
+    items.push(confirmed
+      ? { level: LEVEL.PASS, code: RISER_CODE.MODULUS_OK, params: [c.modulusOk, MODULUS_RATIO_MIN] }
+      : { level: LEVEL.INFO, code: RISER_CODE.MODULUS_OK_UNCONFIRMED, params: [c.modulusOk, MODULUS_RATIO_MIN] });
     if (c.modulusLow > 0) {
       items.push({ level: LEVEL.WARNING, code: RISER_CODE.MODULUS_LOW, params: [c.modulusLow, MODULUS_RATIO_MIN] });
     }
@@ -268,7 +285,9 @@ export function summarizeRisers({ product, hotspots = [], risers = [], rows } = 
   }
 
   const warns = items.filter(i => i.level === LEVEL.WARNING).length;
-  return { level: warns ? LEVEL.WARNING : LEVEL.PASS, warns, items, counts: c };
+  // mcUnconfirmed：有"算出来够、但输入未确认"的条目 → 视图层首行不得显示"未发现明显问题"
+  const mcUnconfirmed = items.some(i => i.code === RISER_CODE.MODULUS_OK_UNCONFIRMED);
+  return { level: warns ? LEVEL.WARNING : LEVEL.PASS, warns, mcUnconfirmed, items, counts: c };
 }
 
 /* ---------- 浇注系统（88.txt §十五~§二十二） ---------- */

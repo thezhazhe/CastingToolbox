@@ -23,6 +23,7 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { rmSync } from 'node:fs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
@@ -54,6 +55,10 @@ try { const r = await fetch(URL); if (!r.ok) throw new Error('not 200'); }
 catch (e) { server = spawn(process.execPath, ['serve.js'], { cwd: ROOT, stdio: 'ignore' }); }
 
 const PROFILE = path.join(process.cwd(), '_edge_p93inspect');
+/* ★ 每次从**干净 profile** 开始：该脚本不清理 profile 时，上一次运行留下的
+   localStorage（生产场景）会让「默认材质/出品率」类断言随历史运行而红/绿不定。
+   与其它浏览器脚本的既有做法一致（S2.2 实测：干净 profile 下只剩 2 条历史基线失败）。 */
+try { rmSync(PROFILE, { recursive: true, force: true }); } catch (e) {}
 const edge = spawn(EDGE, ['--headless=new', `--remote-debugging-port=${CDP_PORT}`, '--disable-gpu', '--no-first-run',
   '--disable-extensions', `--user-data-dir=${PROFILE}`, 'about:blank'], { stdio: 'ignore' });
 
@@ -227,7 +232,15 @@ try {
     cards.map(c => c.kv.map(k => k[1]).join('/')).join('  |  '));
   check('★ 存在「模数比不足」的 WARNING（判据在真实数据上生效，§十）',
     cards.some(c => c.vcls.includes('pi-warning')), cards.map(c => c.vcls + ':' + c.verdict).join(' | '));
-  check('★ 存在「模数比满足」的 PASS', cards.some(c => c.vcls.includes('pi-pass')));
+  // ⚠ PHASE V2.0-06A1-R1（115.txt §四.D）：06A1 起，**热点 Mc 未经确认时不给最终 PASS**。
+  //   本用例的 R1 比值 ≈1.4 满足 1.2，但此刻 mcConfirmed=false ⇒ 应停在 INFO「待确认」。
+  //   原断言（存在 PASS）是 06A1 **之前**的行为，已按新契约改写 —— 这不是放宽，
+  //   而是把"必须有 PASS"挪到了下面场景 A：勾选确认后 PASS 必须真的出现。
+  check('★ 未确认时**不存在**最终 PASS（06A1 新契约；确认后见场景 A）',
+    cards.every(c => !c.vcls.includes('pi-pass')), cards.map(c => c.vcls + ':' + c.verdict).join(' | '));
+  check('★ 满足 1.2 的那张卡显示「计算通过 / 本结论待确认」（INFO）',
+    cards.some(c => c.vcls.includes('pi-info') && c.verdict.includes('本结论待确认')),
+    cards.map(c => c.vcls + ':' + c.verdict).join(' | '));
   check('用「最近热点」措辞，且明确标注只是几何关系（§十一）',
     cards.every(c => c.txt.includes('几何关系')) && !cards.some(c => c.txt.includes('负责')),
     cards[0].txt.slice(0, 80));
@@ -235,7 +248,9 @@ try {
     cards.every(c => c.hasMore === (hsN > 1)) && cards.every(c => c.allHidden === true),
     `每卡按钮 ${cards.map(c => c.hasMore).join(',')}`);
   const sumTxt = await evalJs(`document.querySelector('#pi_result .pi-reslist')?.textContent || ''`);
-  check('总览给出 满足 / 不足 的计数', sumTxt.includes('模数比满足') && sumTxt.includes('模数比不足'),
+  // 未确认时"够"的那一侧措辞是「模数比计算通过…本结论待确认」；
+  // "不足"那一侧**不受确认位影响**（§四.D：输入不确定不得把"不足"美化成"待确认"）。
+  check('总览给出 计算通过 / 不足 的计数', sumTxt.includes('模数比计算通过') && sumTxt.includes('模数比不足'),
     sumTxt.replace(/\s+/g, ' ').slice(0, 90));
   // §十末段：不得把几何模数检查说成结论。**按句判**，因为免责声明必须能写
   // "…也不代表『一定不会缩孔』" —— 那句话本身就是在辟谣，不该被自己的规则误伤。
@@ -244,6 +259,153 @@ try {
     return txt.split(/[。；]/).filter(s => /一定不会缩孔|一定能补缩|工艺一定正确/.test(s) && !/不代表|不等同|不做/.test(s)).join(' / ');
   })()`);
   check('总览区不出现"一定不会缩孔"这类过度承诺（§十末段）', promise === '', promise);
+
+  /* ---------- ③-quinquies PHASE V2.0-06A1-R1：热点模数确认位（115.txt §四） ----------
+     114.txt 只读验收实测到的 P0：确认框能勾，但判定纹丝不动 —— 监听器直接绑在元素上，
+     而复选框要等 paint() → renderDetail() 才创建，绑定那一刻元素还不存在。
+     这里用**真实点击 + 真实重绘**验证修复；断言的是界面行为，不是源码字符串。 */
+  console.log('\n[③-bis PHASE V2.0-06A1-R1 热点模数确认位]');
+
+  const mcState = async () => JSON.parse(await evalJs(`JSON.stringify({
+    box: !!document.querySelector('#pi_mc_confirm'),
+    visible: (() => { const c = document.querySelector('#pi_mc_confirm'); if (!c) return false;
+      const r = c.getBoundingClientRect(); return r.width > 0 && r.height > 0; })(),
+    checked: document.querySelector('#pi_mc_confirm') ? document.querySelector('#pi_mc_confirm').checked : null,
+    card: (document.querySelector('.pi-rcverdict') ? document.querySelector('.pi-rcverdict').textContent : '').trim(),
+    cardCls: document.querySelector('.pi-rcverdict') ? document.querySelector('.pi-rcverdict').className : '',
+    head: (document.querySelector('.pi-reshead') ? document.querySelector('.pi-reshead').textContent : '').trim(),
+    headCls: document.querySelector('.pi-reshead') ? document.querySelector('.pi-reshead').className : '',
+    sum: [...document.querySelectorAll('#pi_result .pi-reslist .pi-resrow')].map(r => r.textContent.trim()).join(' || '),
+    cardsPass: [...document.querySelectorAll('.pi-rcverdict')].filter(v => v.className.includes('pi-pass')).length,
+  })`));
+  // 真点（.click() 会切换 checked 并派发 change），然后等 paint() 重画完
+  const clickConfirm = async () => { await evalJs(`document.querySelector('#pi_mc_confirm').click()`); await wait(700); };
+  const headSummary = (cls, n) => `${cls} / pass卡 ${n}`;
+
+  // 前置：结果已生成 / 有热点 / 比值满足 1.2 / 当前未确认
+  await evalJs(`document.querySelector('#pi_detailSec').open = true`); await wait(400);
+  const s0 = await mcState();
+  check('R1 前置：确认框存在且可见（不是 0×0 / display:none）', s0.box && s0.visible,
+    JSON.stringify({ box: s0.box, visible: s0.visible }));
+  check('R1 前置：初始为未确认（checked = false）', s0.checked === false, String(s0.checked));
+  check('R1 前置：未确认时不存在 PASS 卡片（安全侧）', s0.cardsPass === 0 && !s0.cardCls.includes('pi-pass'), s0.card);
+  // ⚠ 本场景是 R1(满足) + R2(不足) 两张卡。首行三分支的优先级是 warns > mcUnconfirmed > ok，
+  //   只要还有"不足"项就必须优先报"需要关注"，**不该**被"待确认"盖过去。
+  //   "结论待确认 ↔ 未发现明显问题"那一支只在**全部满足**时才可见 —— 单独放在场景 E 验。
+  check('R1 前置：有不足项时首行优先报「需要关注」（不被"待确认"掩盖）',
+    s0.headCls.includes('warn') && s0.head.includes('需要关注'), `${s0.headCls} / ${s0.head}`);
+
+  /* ---- 场景 A：勾选确认 ---- */
+  await clickConfirm();
+  const sA = await mcState();
+  check('A1 勾选后复选框仍在且 checked=true（说明确实经历了一次重绘）',
+    sA.box && sA.checked === true, JSON.stringify({ box: sA.box, checked: sA.checked }));
+  check('A2 ★ 勾选后判定卡片给出最终 PASS 文案', sA.card.includes('模数比满足要求'), sA.card);
+  check('A3 勾选后卡片配色为 pi-pass', sA.cardCls.includes('pi-pass'), sA.cardCls);
+  check('A4 卡片与总览一致：1 张 PASS 卡 + 首行仍如实报出 1 项"不足"（R2 那张）',
+    sA.cardsPass === 1 && sA.headCls.includes('warn') && sA.head.includes('需要关注'),
+    headSummary(sA.headCls, sA.cardsPass));
+  check('A5 ★ 勾选后"够"的那一侧整条翻面（卡片 PASS + 总览条目 PASS）',
+    sA.cardCls.includes('pi-pass')
+    && (await evalJs(`[...document.querySelectorAll('#pi_result .pi-resrow')].some(r => r.className.includes('pi-pass') && r.textContent.includes('模数比满足'))`)) === true,
+    sA.card);
+  check('A6 总览条目改为「模数比满足」', sA.sum.includes('模数比满足'), sA.sum.slice(0, 90));
+
+  /* ---- 场景 B：取消确认 ---- */
+  await clickConfirm();
+  const sB = await mcState();
+  check('B1 取消后复选框仍在且 checked=false', sB.box && sB.checked === false, String(sB.checked));
+  check('B2 取消后判定卡片恢复 INFO / 待确认', sB.card.includes('本结论待确认'), sB.card);
+  check('B3 ★ 取消后不残留任何 PASS（卡片 + 总览首行）',
+    sB.cardsPass === 0 && !sB.head.includes('未发现明显问题'), headSummary(sB.headCls, sB.cardsPass));
+  check('B4 取消后总览条目回到「计算通过 / 本结论待确认」（INFO）',
+    sB.sum.includes('本结论待确认') && sB.sum.includes('模数比计算通过'), sB.sum.slice(0, 90));
+
+  /* ---- 场景 C：反复重绘（确认 → 取消 → 再次确认） ---- */
+  await clickConfirm(); await clickConfirm(); await clickConfirm();
+  const sC = await mcState();
+  check('C1 ★ 三次来回后仍生效（监听器经多次 paint() 重建依然有效）',
+    sC.checked === true && sC.card.includes('模数比满足要求'), `${sC.checked} / ${sC.card}`);
+  check('C2 复选框只有一个（不重复注册 / 不重复渲染）',
+    (await evalJs(`document.querySelectorAll('#pi_mc_confirm').length`)) === 1);
+  check('C3 一次操作只处理一次（最终状态与勾选一致，无状态错乱）',
+    sC.checked === true && sC.cardsPass === 1, `pass卡 ${sC.cardsPass}`);
+  await clickConfirm();     // 收尾：回到未确认，避免影响后续用例
+  const sC2 = await mcState();
+  check('C4 收尾回未确认后同样干净（无残留 PASS）', sC2.checked === false && sC2.cardsPass === 0,
+    headSummary(sC2.headCls, sC2.cardsPass));
+
+  /* ---- 场景 D：安全边界（既有行为不得改变） ---- */
+  check('D1 未确认 + 比值≥1.2 → 不显示最终 PASS（= 前置 s0；首行另有不足项时优先报"需要关注"）',
+    s0.cardsPass === 0 && s0.sum.includes('本结论待确认'), `pass卡 ${s0.cardsPass}`);
+  const lowCls = await evalJs(`(() => {
+    const c = [...document.querySelectorAll('#pi_result .pi-rcard')].find(x =>
+      (x.querySelector('.pi-rcverdict') ? x.querySelector('.pi-rcverdict').textContent : '').includes('模数比不足'));
+    return c ? c.querySelector('.pi-rcverdict').className : 'NOT_FOUND';
+  })()`);
+  check('D2 ★ 未确认 + 比值不足 → 仍报 WARNING（不因未确认就美化成"待确认"）',
+    lowCls.includes('pi-warning'), lowCls);
+
+  /* ---- 场景 E：单冒口全满足时的首行三分支（warns > mcUnconfirmed > ok） ----
+     A/B 用的是 R1(满足)+R2(不足) 两张卡，首行恒为"需要关注"，把"待确认 ↔ 未发现明显问题"
+     这一支盖住了。这里用**现有 UI**（明细表里的 × 删除）摘掉 R2，把那一支单独验出来。 */
+  await evalJs(`document.querySelector('#pi_detail [data-pi-remove="R2"]').click()`); await wait(700);
+  check('E1 摘掉 R2 后结论立即作废（少了一个冒口 → 必须重新点开始检测）',
+    (await evalJs(`document.querySelector('#pi_result').textContent`)).includes('开始检测'));
+  await evalJs(`document.querySelector('#pi_run').click()`); await wait(1200);
+  check('E2 只剩 R1（冒口计数 = 1）', (await evalJs(`document.querySelector('#pi_n_riser').textContent`)) === '1');
+  const e0 = await mcState();
+  check('E3 ★ 未确认 + 全部满足 → 首行走「结论待确认」分支，且不是 ok/未发现明显问题',
+    e0.headCls.includes('warn') && e0.head.includes('结论待确认') && !e0.head.includes('未发现明显问题'),
+    `${e0.headCls} / ${e0.head}`);
+  check('E4 未确认 + 全部满足 → 仍无 PASS 卡片', e0.cardsPass === 0, String(e0.cardsPass));
+  await clickConfirm();
+  const e1 = await mcState();
+  check('E5 ★ 确认后首行变为「未发现明显问题」（ok 分支）',
+    e1.headCls.includes('ok') && e1.head.includes('未发现明显问题'), `${e1.headCls} / ${e1.head}`);
+  check('E6 确认后卡片给出最终 PASS', e1.cardCls.includes('pi-pass') && e1.card.includes('模数比满足要求'), e1.card);
+  await clickConfirm();
+  const e2 = await mcState();
+  check('E7 ★ 再次取消 → 首行回到「结论待确认」，不残留任何 PASS',
+    e2.head.includes('结论待确认') && !e2.headCls.includes('ok') && e2.cardsPass === 0,
+    `${e2.headCls} / ${e2.head} / pass卡 ${e2.cardsPass}`);
+  // 复原 R2（后面 ④ 3D 用例要求 R1 + R2 都在）
+  await dropFile('riser', 'R2', 'R2.stl');
+  await waitFor(`document.querySelector('#pi_n_riser') && document.querySelector('#pi_n_riser').textContent === '2'`, 90000);
+  await evalJs(`document.querySelector('#pi_run').click()`); await wait(1200);
+  check('E8 复原：R2 已导回，两张卡都在',
+    (await evalJs(`document.querySelectorAll('#pi_result .pi-rcard').length`)) === 2);
+
+  // D3 换产品 → 确认状态失效（115.txt §四.D / 114.txt 第 5 项）
+  await clickConfirm();
+  check('D3 前置：已确认（PASS 已出现）', (await mcState()).cardsPass >= 1);
+  await evalJs(`(async () => {
+    const g = await import('/tests/helpers/stlGen.js');
+    const gen = (sdf, ext, res) => { const half = ext * 1.1 + 4.7, d = 0.3179;
+      return g.genSTL(sdf, [[-half+d,-half+d,-half+d],[half+d,half+d,half+d]], res); };
+    window.__m.product2 = gen(g.union(g.BOX([-50,-40,-30],[50,0,30]),
+      ...[[-20,-10],[20,10]].map(([x,z]) => g.BOX([x-15,0,z-15],[x+15,25,z+15]))), 80, 72);
+    return true;
+  })()`, true);
+  await dropFile('product', 'product2', 'product2.stl');
+  await waitFor(`/product2\\.stl/.test(document.querySelector('#pi_plan') ? document.querySelector('#pi_plan').textContent : '')`, 180000);
+  await wait(1200);
+  const sD = JSON.parse(await evalJs(`JSON.stringify({
+    checked: document.querySelector('#pi_mc_confirm') ? document.querySelector('#pi_mc_confirm').checked : 'no-box',
+    result: (document.querySelector('#pi_result') ? document.querySelector('#pi_result').textContent : '').trim().slice(0, 60),
+    passAnywhere: document.querySelectorAll('.pi-rcverdict.pi-pass').length,
+  })`));
+  check('D4 ★ 换产品后确认状态失效（复选框回到未勾选）', sD.checked === false, String(sD.checked));
+  check('D5 ★ 换产品后旧结论一并作废（要求重新点「开始检测」，且无 PASS 残留）',
+    sD.result.includes('开始检测') && sD.passAnywhere === 0, sD.result);
+
+  // 复原：把原始产品导回来并重跑检测，后面的 ④ 3D 用例依赖它
+  await dropFile('product', 'product', 'boss.stl');
+  await waitFor(`/boss\\.stl/.test(document.querySelector('#pi_plan') ? document.querySelector('#pi_plan').textContent : '')`, 180000);
+  await evalJs(`document.querySelector('#pi_run').click()`); await wait(1200);
+  await evalJs(`document.querySelector('#pi_detailSec').open = false`); await wait(200);
+  check('R1 收尾：状态已复原（产品 boss.stl + 检测结果已重出）',
+    (await evalJs(`document.querySelectorAll('#pi_result .pi-rcard').length`)) === 2);
 
   /* ---------- ④ 3D：同场景 + 点选高亮（§十二） ---------- */
   console.log('\n[④ 3D 场景与点选]');
@@ -804,6 +966,172 @@ try {
     p97b.total && p97b.total !== '—' && /主轴/.test(p97b.src), JSON.stringify(p97b));
 
   check('无未捕获异常（PHASE 97 段）', exceptions.length === 0, exceptions.slice(0, 2).join(' | '));
+
+  /* ============================================================
+     ⑩ PHASE V2.0-08（117.txt §五）· 设计中心「② 冒口设计」结果卡可信度
+        场景：① 自动 Mc 不勾选 ② 自动 Mc 仅勾选 ③ 用户输入 Mc 的来源
+              ④ 尺寸不变时的归因说明 ⑤ 取消勾选 / 更换产品 ⑥ 工程数值未变
+        受控场景用项目模块播撒（cube50 本身无热结）：重件 77.56 kg + 2 个热结，
+        播撒手法与 scripts/browser_p78_test.mjs 相同。
+     ============================================================ */
+  console.log('\n[⑩ V2.0-08 设计中心冒口结果卡]');
+  await goto('#/designCenter');
+  await wait(1200);
+
+  const dcDoc = await send('DOM.getDocument', { depth: 1 });
+  const dcFile = await send('DOM.querySelector', { nodeId: dcDoc.root.nodeId, selector: '#dc_file' });
+  await send('DOM.setFileInputFiles', { nodeId: dcFile.nodeId, files: [path.join(ROOT, 'tests', 'golden', 'cube50.stl').replace(/\\/g, '/')] });
+  // ⚠ 必须等热结状态条**出文字**（分析写完 hotspots 才算完），否则播撒会被引擎回写覆盖
+  check('⑩ 导入 cube50（真实 STL 路径）',
+    await waitFor(`(document.querySelector('#dc_hsBadge')?.textContent || '').length > 4`, 60000, 800), '');
+  await wait(1200);
+  await evalJs(`(async () => {
+    const p = await import('/js/model/CastingProject.js');
+    p.set('hotspots.status', 'ok', p.SRC.STL_GEOMETRY_ANALYSIS, p.CONF.HIGH);
+    p.set('hotspots.items', [{ id: 1, mc: 14, regionVolumeCm3: 60 }, { id: 2, mc: 12, regionVolumeCm3: 25 }], p.SRC.STL_GEOMETRY_ANALYSIS, p.CONF.MEDIUM);
+    p.set('process.mcHotspot', 14, p.SRC.STL_GEOMETRY_ANALYSIS, p.CONF.HIGH);
+    p.set('material.family', '球铁', p.SRC.USER_INPUT, p.CONF.USER_CONFIRMED);
+    p.set('material.solidDensity', 7.1, p.SRC.SCENARIO, p.CONF.MEDIUM);
+    p.set('geometry.geomStatus', 'VALID', p.SRC.STL_GEOMETRY_ANALYSIS, p.CONF.HIGH);
+    p.set('geometry.blankWeightKg', 77.56, p.SRC.USER_OVERRIDE, p.CONF.USER_CONFIRMED);
+    p.set('geometry.netWeightKg', 77.56, p.SRC.USER_OVERRIDE, p.CONF.USER_CONFIRMED);
+    p.set('process.wallHot', 8, p.SRC.STL_GEOMETRY_ANALYSIS, p.CONF.HIGH);
+    p.set('process.riserShape', 'cyl', p.SRC.DEFAULT, p.CONF.LOW);
+    return true;
+  })()`, true);
+  /* 触发一次真实重渲染 → 热结勾选列表按播撒后的项目状态重建。
+     146 §3：材料改在**参数窗口**里选、保存后才落盘（saveParamDlg 里 family 分支会调
+     renderHotspotList）⇒ 走这条真实路径，不再直接改已删除的 #dc_m_family。 */
+  /* ⚠ R6-S2：参数编辑载体由浮层 `#dc_paramDlg` 换成右侧任务面板 ② 步骤；
+     保存入口 = 页脚 `#dc_pfSave`。选择材料的动作与落盘语义完全不变。 */
+  await evalJs(`document.querySelector('#dc_paramsBtn')?.click()`); await wait(500);
+  await evalJs(`(() => { const el = document.querySelector('[data-pf="material.family"]');
+    if (!el) return false;
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(el, '球铁');
+    el.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`);
+  await wait(300);
+  await evalJs(`document.querySelector('#dc_pfSave')?.click()`); await wait(220);
+  await evalJs(`[...document.querySelectorAll('#dc_flowbar [data-flow-step]')].find(b => b.dataset.flowStep === 'run')?.click()`);
+  await wait(1800);
+  const seeded = await evalJs(`(async () => { const p = await import('/js/model/CastingProject.js');
+    return JSON.stringify({ n: (p.getV('hotspots.items') || []).length, st: p.getV('hotspots.status'),
+      net: p.getV('geometry.netWeightKg'), states: document.querySelectorAll('[data-hs-pick-state]').length }); })()`, true);
+  check('⑩ 受控场景就绪（2 个热结 + 净重 77.56 + 热结状态 2 行）',
+    JSON.parse(seeded).n === 2 && JSON.parse(seeded).states === 2 && JSON.parse(seeded).net === 77.56, seeded);
+  /* R6-S2.2-B：设计勾选统一在 ③ B（草稿，保存并分析后生效）。测试也走真实路径。 */
+  const setHsPick = async (id, on) => {
+    await evalJs(`document.querySelector('#dc_paramsBtn')?.click()`); await wait(450);
+    await evalJs(`[...document.querySelectorAll('#dc_flowbar [data-flow-step]')].find(b => b.dataset.flowStep === 'param')?.click()`); await wait(450);
+    await evalJs(`document.querySelector('[data-ptab="riser"]')?.click()`); await wait(300);
+    const ok = await evalJs(`(() => { const cb = document.querySelector('[data-dlg-hs="${id}"]');
+      if (!cb) return false; if (cb.checked !== ${on}) cb.click(); return true; })()`);
+    if (!ok) throw new Error('③ B 里找不到热结勾选 id=' + id);
+    await wait(250);
+    await evalJs(`document.querySelector('#dc_pfSave')?.click()`); await wait(220);
+    await evalJs(`[...document.querySelectorAll('#dc_flowbar [data-flow-step]')].find(b => b.dataset.flowStep === 'run')?.click()`);
+    await wait(2000);
+  };
+
+  const gotoRiserPage = () => evalJs(`(() => {
+    const b = [...document.querySelectorAll('#dc_resultNav [data-nav]')].find(x => (x.textContent || '').includes('冒口设计'));
+    if (b) { b.click(); return true; } return false; })()`);
+  const READ_CARD = `(() => {
+    const sec = [...document.querySelectorAll('#dc_resultActive .dc-result-sec')]
+      .find(s => (s.querySelector('.dc-sec-title')?.textContent || '').includes('冒口设计'));
+    if (!sec) return JSON.stringify({ found: false });
+    return JSON.stringify({
+      found: true,
+      chip: (sec.querySelector('.dc-sec-title .chip')?.textContent || '').trim(),
+      srcLine: (sec.querySelector('.dc-hint-line')?.textContent || '').trim(),
+      txt: (sec.innerText || '').replace(/\\s+/g, ' '),
+    }); })()`;
+  const readCalc = () => evalJs(`(async () => {
+    const m = await import('/calcs/calcManifest.js');
+    const r = m.getCalcManifest('riser').calculate();
+    return JSON.stringify(r ? { D: r.D, H: r.H, f: +r.final_f.toFixed(4), Mr: r.Mr_act, neck: r.d_neck,
+      level: r.level, bind: r.bind, dMod: r.dModOnly, mcSrc: r.mcSrc } : null); })()`, true);
+  const runDc = async () => {
+    await evalJs(`document.querySelector('#dc_run')?.click()`);
+    await waitFor(`!!(document.querySelector('#dc_resultActive')?.textContent || '')`, 30000, 500);
+    await wait(700); await gotoRiserPage(); await wait(800);
+    return JSON.parse(await evalJs(READ_CARD));
+  };
+
+  /* ---- 场景 ① 自动 Mc、不勾选 ---- */
+  const c1 = await runDc();
+  const n1 = JSON.parse(await readCalc());
+  check('⑩① 结果卡可读（切到「② 冒口设计」页）', c1.found, JSON.stringify(c1).slice(0, 90));
+  check('⑩① 等级 = 🟡 需人工复核（不得"可直接采用"）', /需人工复核/.test(c1.chip) && !/可直接采用/.test(c1.chip), c1.chip);
+  check('⑩① 卡片带 Mc 估计值说明（冒口结果底部普通文字）',
+    /Mc 为基于 STL 几何计算的估计值/.test(c1.txt), '');
+  check('⑩① 来源行写"STL 热结检测"，估计值说明在结果底部',
+    /STL 热结检测/.test(c1.srcLine) && !/自动估计值/.test(c1.srcLine)
+    && /Mc 为基于 STL 几何计算的估计值/.test(c1.txt), c1.srcLine.slice(0, 70));
+  check('⑩④ 旧体积归因已移除，结果卡保留目标模数与设计依据',
+    !/补缩体积校核/.test(c1.txt) && !/旧体积/.test(c1.txt)
+    && /目标模数/.test(c1.txt), c1.txt.slice(0, 100));
+  check('⑩⑥ 工程数值 = 修复前基线（D/H = 147/147、f = 1.75）',
+    n1.D === 147 && n1.H === 147 && n1.f === 1.75, JSON.stringify(n1));
+
+  /* ---- 场景 ② 自动 Mc、仅勾选 H1（不改任何数字）---- */
+  const h1id = await evalJs(`(async () => { const p = await import('/js/model/CastingProject.js');
+    return (p.getV('hotspots.items') || [])[0]?.id; })()`, true);
+  await setHsPick(h1id, true);
+  await gotoRiserPage(); await wait(800);
+  const c2 = JSON.parse(await evalJs(READ_CARD));
+  const n2 = JSON.parse(await readCalc());
+  check('⑩② 勾选后**不得**出现"✅ 可直接采用"', !/可直接采用/.test(c2.chip), c2.chip);
+  check('⑩② 仍为 🟡 需人工复核', /需人工复核/.test(c2.chip), c2.chip);
+  check('⑩② 勾选**不得**吞掉 Mc 估计值说明（D1 修复点）',
+    /Mc 为基于 STL 几何计算的估计值/.test(c2.txt), '');
+  check('⑩② 尺寸与场景①逐位相同（勾选不改变工程数值）',
+    n2.D === n1.D && n2.H === n1.H && n2.f === n1.f && n2.neck === n1.neck, `${JSON.stringify(n1)} → ${JSON.stringify(n2)}`);
+
+  /* ---- 场景 ③ 把 H1 的冒口设计 Mc 改成 20 ----
+     ★ 载体已两次易主，这里用**当前真实 UI**：
+       146 删掉 v1.1.0 的 `[data-hs-edit]` + `#dc_hsModal`（本段因此自 146 起就抛异常、
+       后面的断言全部没跑过）；149 §四 把逐热结编辑恢复到参数界面 B 模块的行内输入框；
+       R6-S2 起那个输入框在右侧任务面板 ③ → B 冒口设计里。
+     语义一字未变：改的是**热结 H1 自己的** Mc，保存后才进项目并参与计算。 */
+  await evalJs(`document.querySelector('#dc_paramsBtn')?.click()`); await wait(450);
+  await evalJs(`[...document.querySelectorAll('#dc_flowbar [data-flow-step]')].find(b => b.dataset.flowStep === 'param')?.click()`); await wait(450);
+  const mcIn = await evalJs(`(async () => { const p = await import('/js/model/CastingProject.js');
+    const h1 = (p.getV('hotspots.items') || [])[0]; const el = document.querySelector('[data-dlg-hs-mc="' + h1.id + '"]');
+    if (!el) return false;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, '20');
+    el.dispatchEvent(new Event('input', { bubbles: true })); return true; })()`, true);
+  if (!mcIn) throw new Error('参数界面 B 模块里找不到热结 H1 的「冒口设计 Mc」输入框');
+  await wait(250);
+  await evalJs(`document.querySelector('#dc_pfSave')?.click()`); await wait(220);
+  await evalJs(`[...document.querySelectorAll('#dc_flowbar [data-flow-step]')].find(b => b.dataset.flowStep === 'run')?.click()`);
+  await wait(2000); await gotoRiserPage(); await wait(800);
+  const c3 = JSON.parse(await evalJs(READ_CARD));
+  const n3 = JSON.parse(await readCalc());
+  check('⑩③ 来源行必须写"用户输入"（D2 修复点）', /用户输入/.test(c3.srcLine), c3.srcLine.slice(0, 70));
+  check('⑩③ 来源行**不得**再写"STL 热结检测"', !/STL 热结检测/.test(c3.srcLine), c3.srcLine.slice(0, 70));
+  check('⑩③ 改值后走"用户输入"分支（不再显示 STL 估计值说明）',
+    /用户输入/.test(c3.srcLine) && !/Mc 为基于 STL 几何计算的估计值/.test(c3.txt), '');
+  check('⑩③ 尺寸随 Mc 更新（144/144、f = 1.20）', n3.D === 144 && n3.H === 144 && n3.f === 1.2, JSON.stringify(n3));
+
+  /* ---- 场景 ⑤ 取消勾选 → 回到场景①状态 ---- */
+  await setHsPick(h1id, false);
+  await gotoRiserPage(); await wait(800);
+  const c5 = JSON.parse(await evalJs(READ_CARD));
+  const n5 = JSON.parse(await readCalc());
+  check('⑩⑤ 取消勾选 → 等级回到 🟡 + Mc 估计值说明恢复',
+    /需人工复核/.test(c5.chip) && /Mc 为基于 STL 几何计算的估计值/.test(c5.txt) && !/可直接采用/.test(c5.chip), c5.chip);
+  check('⑩⑤ 取消勾选 → 尺寸回到场景①基线',
+    n5.D === n1.D && n5.H === n1.H && n5.f === n1.f, JSON.stringify(n5));
+
+  /* ---- 场景 ⑤b 更换产品 → 勾选状态必须失效 ---- */
+  const dcDoc2 = await send('DOM.getDocument', { depth: 1 });
+  const dcFile2 = await send('DOM.querySelector', { nodeId: dcDoc2.root.nodeId, selector: '#dc_file' });
+  await send('DOM.setFileInputFiles', { nodeId: dcFile2.nodeId, files: [path.join(ROOT, 'tests', 'golden', 'cube50.stl').replace(/\\/g, '/')] });
+  await wait(3000);
+  const pickAfter = await evalJs(`(async () => { const p = await import('/js/model/CastingProject.js'); return JSON.stringify(p.getV('process.hsPick')); })()`, true);
+  check('⑩⑤b 更换产品后勾选状态被清空（不会带旧热结 id 进新件）', pickAfter === '[]' || pickAfter === 'undefined', pickAfter);
+
+  check('无未捕获异常（V2.0-08 段）', exceptions.length === 0, exceptions.slice(0, 2).join(' | '));
 
   /* ---------- ⑨ 控制台 ---------- */
   console.log('\n[⑨ 控制台]');

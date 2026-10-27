@@ -47,3 +47,6 @@ tests/real-stl/*.stl
 # 测试夹具：工程级生成模型（858MB，可再生：node tests/engineering-generated/gen_engineering.mjs）
 tests/engineering-generated/models/
 tests/engineering-generated/phase15/data/
+# 研究实验输出 / 生成基线（保留在工作区，不随发布源码提交）
+tests/experiments/out/
+tests/engineering-generated/*_sweep.csv

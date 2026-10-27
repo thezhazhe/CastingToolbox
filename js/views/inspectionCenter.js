@@ -160,6 +160,10 @@ let state = {
   sel: null,
   _focusSel: false,   // 这一次重画要不要动相机（只有用户主动点卡片时为真）
   _hsPickAt: 0,       // 最近一次点到热点 marker 的时刻（用来让热点在同一次点击里优先于冒口）
+  // PHASE V2.0-06A1（113.txt §四.4）：热点模数 mc 在本页来自引擎 V3 自动输出，用户原本
+  //   无法修改也无法确认 —— "算出来够"会被直接读成"最终合格"。这里只加**一个布尔确认位**：
+  //   未确认 ⇒ 模数比判定降级为"待确认"（INFO），不产生最终 PASS。换产品即复位。
+  mcConfirmed: false,
 
   /* ---- PHASE 94 §二/§三：浇注系统检测（三个语义类别，每类 1 个 STL） ----
      units —— 三类各自的**独立单元**列表。数量按连通分量数，不按文件数（§二）。
@@ -209,7 +213,8 @@ function showToast(msg) {
  */
 function derive() {
   const hotspots = state.product?.hotspotsStatus === 'ok' ? (state.product.hotspots || []) : [];
-  const relation = buildRiserRows(hotspots, state.risers);           // {rows, counts, distances}
+  // {rows, counts, distances, mcConfirmed}
+  const relation = buildRiserRows(hotspots, state.risers, { mcConfirmed: state.mcConfirmed });
   const summary = summarizeRisers({ product: state.product, hotspots, risers: state.risers, rows: relation });
   return { hotspots, relation, summary };
 }
@@ -284,7 +289,7 @@ export function render(container) {
             <i class="pi-condsrc" id="pi_gyieldSrc" hidden></i>
           </label>
         </div>
-        <div class="field-hint pi-condhint">${tr('浇注系统类型决定要不要拿「企业 R7 参考」比一下平均内浇口速度：开放式 ≤ 1.0 m/s、封闭式 ≤ 1.5 m/s（企业经验审核值，不是行业标准）。选「自动」= 不做这个比较，只给几何与流量估算。')}</div>
+        <details class="sc-fold"><summary>ⓘ ${tr('浇注系统类型与 R7 参考')}</summary><div class="field-hint pi-condhint">${tr('浇注系统类型决定要不要拿「企业 R7 参考」比一下平均内浇口速度：开放式 ≤ 1.0 m/s、封闭式 ≤ 1.5 m/s（企业经验审核值，不是行业标准）。选「自动」= 不做这个比较，只给几何与流量估算。')}</div></details>
         <div class="pi-runbar">
           <button class="btn btn-primary" id="pi_grun" type="button" disabled>${tr('开始检测')}</button>
           <span class="pi-runhint" id="pi_grunHint"></span>
@@ -368,6 +373,20 @@ export function render(container) {
     const rm = e.target.closest('[data-pi-remove]');
     if (!rm) return;
     removeRiser(container, rm.dataset.piRemove);
+  });
+  // 113.txt §四.4：热点模数确认开关。只是把"结论的确定性"记下来，**不改任何数值**；
+  //   重画即让冒口卡片与总览按新状态重新判定。（不改 state.detected：结果本身没变）
+  // ⚠ V2.0-06A1-R1（115.txt）：**必须委托在 #pi_detail 上，不得直接绑元素**。
+  //   复选框是 renderDetail() 在 paint() 里现画的，而 render() 里执行到这一行时
+  //   #pi_detail 还是空的 —— 直接绑元素会静默落到 null（`?.`），监听器永远挂不上；
+  //   而 paint() 不重跑绑定，所以事后也补不回来 ⇒ 勾选后界面纹丝不动
+  //   （114.txt 只读验收实测到的 P0）。
+  //   委托挂在 #pi_detail 这个**长期存在**的容器上：paint() 只替换它的 innerHTML，
+  //   容器本身不销毁 ⇒ 每次重画后新生成的复选框天然具备事件能力，且只注册一次、不会重复。
+  container.querySelector('#pi_detail')?.addEventListener('change', (e) => {
+    if (e.target?.id !== 'pi_mc_confirm') return;
+    state.mcConfirmed = e.target.checked === true;
+    paint(container);
   });
   // §十二：点卡片 = 选中（3D 高亮 + 相机聚焦）。
   // data-pi-sel = 选中的**类别**（riser / hotspot），data-pi-id = 具体 ID —— 两者都要，别只传一个。
@@ -729,6 +748,8 @@ async function loadProduct(container, file) {
     const parts = objectsFromComponents(mesh, KIND.PRODUCT, file.name, cc.components, (m) => objectMetrics(m), cc.weld);
     const totalVol = parts.objects.reduce((s, o) => s + (o.metrics?.volumeMm3 || 0), 0);
     const totalArea = parts.objects.reduce((s, o) => s + (o.metrics?.areaMm2 || 0), 0);
+    // 换产品 = 换了一套热点模数 → 上一份的确认作废（113.txt §四.4）
+    state.mcConfirmed = false;
     state.product = {
       name: file.name, mesh, validation, geometry, analysis,
       hotspots: hotspots.hotspots || [],
@@ -1166,7 +1187,7 @@ function pourBlock(d) {
     </div>
     <div class="pi-pour-src">${src}${p.volumeCm3 != null ? ` · ${tr('产品体积')} ${fmt(p.volumeCm3, 1)} cm³` : ''}</div>
     ${p.missing.length ? `<div class="pi-pour-miss">⚠ ${tr('缺少')}：${p.missing.map(m => tr(POUR_REASON_TEXT[m] || m)).join('、')}</div>` : ''}
-    <div class="field-hint">${tr('浇注时间 = 经典浇注系统计算器（浇注系统设计工具）按「材质 + 产品重量 + 主体壁厚」算得，与设计中心同一个公式；总流量 = 浇注金属液体积 ÷ 浇注时间；平均内浇口速度 = 总流量 ÷ 内浇口总面积。浇注金属液体积 = 产品重量 ÷ 出品率 ÷ 密度（与经典计算器同口径，含冒口与浇道本身的金属）。')}</div>
+    <details class="sc-fold"><summary>ⓘ ${tr('浇注时间 / 流量口径')}</summary><div class="field-hint">${tr('浇注时间 = 经典浇注系统计算器（浇注系统设计工具）按「材质 + 产品重量 + 主体壁厚」算得，与设计中心同一个公式；总流量 = 浇注金属液体积 ÷ 浇注时间；平均内浇口速度 = 总流量 ÷ 内浇口总面积。浇注金属液体积 = 产品重量 ÷ 出品率 ÷ 密度（与经典计算器同口径，含冒口与浇道本身的金属）。')}</div></details>
   </div>`;
 }
 
@@ -1212,7 +1233,7 @@ function renderGatingDetail(container, d) {
     ? `${groups}
       <div class="field-hint">${tr('“截面积”是按单元自身主轴方向切片量的；“长度”是沿这条主轴的轴向长度。圆形给的是等效直径 D = 2√(A/π)。切不出唯一闭合截面的单元一律标 ⚠ 并留空，不给估计值。')}</div>
       <div class="field-hint">${tr('总截面积 = 该类每个单元的有效截面积逐个相加（不是平均面积 × 数量）。有效截面积取单元中段截面的中位值；圆形按 πD²/4、矩形按 W×H、梯形按 (a+b)h/2、不规则按实测截面几何面积。')}</div>
-      <div class="field-hint">${tr('切面方向：内浇口优先按**与产品（或横浇道）的实际连接面**定；产品与上游都没导入、或连接判不出来时，退回"垂直于最长主轴"这个约定，并在上表标出「方向未确认」。')}</div>`
+      <div class="field-hint">${tr('切面方向：内浇口优先按<b>与产品（或横浇道）的实际连接面</b>定；产品与上游都没导入、或连接判不出来时，退回"垂直于最长主轴"这个约定，并在上表标出「方向未确认」。')}</div>`
     : `<div class="pi-empty">${tr('暂无可展开的单元。')}</div>`;
 }
 
@@ -1506,6 +1527,7 @@ const RISER_TEXT = {
   [RISER_CODE.NO_RISER]: '暂未导入冒口',
   [RISER_CODE.NO_HOTSPOT]: '未检出热点（模型壁厚均匀或热点低于置信度门槛），没有可比的热点模数',
   [RISER_CODE.MODULUS_OK]: '{n} 个冒口的模数比满足（M冒口 / M热点 ≥ {r}）',
+  [RISER_CODE.MODULUS_OK_UNCONFIRMED]: '{n} 个冒口的模数比计算通过（M冒口 / M热点 ≥ {r}）；但热点模数 Mc 是未经确认的自动估计值，本结论待确认',
   [RISER_CODE.MODULUS_LOW]: '{n} 个冒口的模数比不足（M冒口 / M热点 < {r}）',
   [RISER_CODE.MODULUS_UNKNOWN]: '{n} 个冒口没有可比的热点模数，未参与判定',
   [RISER_CODE.MODULUS_UNRELIABLE]: '{n} 个冒口的模数无法可靠计算（几何不是有效封闭实体），未参与判定',
@@ -1522,21 +1544,27 @@ const RISER_REASON_TEXT = {
  * 单个冒口的判定（§十）。**只有模数比是判据**，且只分 PASS / WARNING / INFO 三级。
  * 算不出来的一律 INFO + 说明原因，绝不当成"不足"（不制造恐慌），也绝不当成"满足"。
  */
-function riserVerdict(row) {
+function riserVerdict(row, mcConfirmed) {
   if (!row.modulusUsable) {
     return { level: LEVEL.INFO, text: tr(RISER_REASON_TEXT[row.reason] || '无法可靠计算冒口模数') };
   }
   const n = row.nearest;
   if (!n) return { level: LEVEL.INFO, text: tr('未检出热点，没有可比的热点模数') };
   if (n.ratio == null) return { level: LEVEL.INFO, text: tr('热点模数不可得，未参与模数比判定') };
-  if (n.ok) return { level: LEVEL.PASS, text: tr('模数比满足要求（≥ {r}）', [MODULUS_RATIO_MIN]) };
+  // 113.txt §四.4：比值算出来够 ≠ 结论可以定。热点模数未确认时不得显示无条件的确定 PASS。
+  //   （"不够"仍是 WARNING —— 输入不确定不会把"不足"变成"合格"，方向是安全的，如实报。）
+  if (n.ok) {
+    return mcConfirmed
+      ? { level: LEVEL.PASS, text: tr('模数比满足要求（≥ {r}）', [MODULUS_RATIO_MIN]) }
+      : { level: LEVEL.INFO, text: tr('模数比计算通过（≥ {r}）；热点模数 Mc 尚未确认，本结论待确认', [MODULUS_RATIO_MIN]) };
+  }
   return { level: LEVEL.WARNING, text: tr('模数比不足（< {r}），建议加大冒口或调整位置后复核', [MODULUS_RATIO_MIN]) };
 }
 
 /** §十三：一张卡只讲一个冒口 —— 冒口模数 / 最近热点 / 热点模数 / 模数比 / 结论 */
-function riserCard(row) {
+function riserCard(row, mcConfirmed) {
   const n = row.nearest;
-  const v = riserVerdict(row);
+  const v = riserVerdict(row, mcConfirmed);
   const sel = state.sel?.kind === 'riser' && state.sel.id === row.riserId;
   const hsSel = n && state.sel?.kind === 'hotspot' && state.sel.id === ('H' + n.hsId);
   const kv = (k, val, cls = '') => `<div class="pi-rk ${cls}"><span>${k}</span><b>${val}</b></div>`;
@@ -1582,9 +1610,13 @@ function renderResult(container, d) {
 
   const { summary } = d;
   const rows = d.relation.rows;
+  const mcConfirmed = d.relation.mcConfirmed === true;
+  // 113.txt §四.1：同一条结论在多个位置必须同一口径 —— 首行不得在"结论待确认"时显示"未发现明显问题"
   const head = summary.warns
     ? `<div class="pi-reshead warn">⚠ ${tr('发现 {n} 项需要关注', [summary.warns])}</div>`
-    : `<div class="pi-reshead ok">✓ ${tr('未发现明显问题')}</div>`;
+    : summary.mcUnconfirmed
+      ? `<div class="pi-reshead warn">ℹ ${tr('计算已完成，但热点模数为自动估计值 —— 结论待确认')}</div>`
+      : `<div class="pi-reshead ok">✓ ${tr('未发现明显问题')}</div>`;
 
   const summaryRows = summary.items.map(i =>
     `<div class="pi-resrow pi-${i.level}">
@@ -1593,11 +1625,11 @@ function renderResult(container, d) {
     </div>`).join('');
 
   const cards = rows.length
-    ? `<div class="pi-rlist">${rows.map(riserCard).join('')}</div>`
+    ? `<div class="pi-rlist">${rows.map(r => riserCard(r, mcConfirmed)).join('')}</div>`
     : `<div class="pi-empty">${tr('暂未导入冒口。')}</div>`;
 
   el.innerHTML = `${head}<div class="pi-reslist">${summaryRows}</div>${cards}
-    <div class="field-hint" style="margin-top:8px">${tr('模数比 M冒口 / M热点 是几何模数检查，阈值 {r} 为经验设计参数，不等同于凝固模拟结论，也不代表“一定不会缩孔”。最近热点按几何距离自动关联，本版不做“哪个冒口负责哪个热点”的判定；距离仅作参考，未设通过/不通过阈值。', [MODULUS_RATIO_MIN])}</div>`;
+    <details class="sc-fold" style="margin-top:8px"><summary>ⓘ ${tr('模数比结论的适用边界')}</summary><div class="field-hint">${tr('模数比 M冒口 / M热点 是几何模数检查，阈值 {r} 为经验设计参数，不等同于凝固模拟结论，也不代表“一定不会缩孔”。最近热点按几何距离自动关联，本版不做“哪个冒口负责哪个热点”的判定；距离仅作参考，未设通过/不通过阈值。', [MODULUS_RATIO_MIN])}</div></details>`;
 
   el.querySelectorAll('[data-pi-all]').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -1881,7 +1913,7 @@ function renderGating(container, d) {
   }
 
   html += `<div class="field-hint" style="margin-top:8px">
-    ${tr('浇注系统按**几何网络**追踪：从每个产品连接口向外走，遇到交汇就停下、记成节点，再往每个分支方向各起一条新的流道段（段与段之间共享节点）。截面积按“沿当前流向垂直切一刀”实测，不是用固定 X/Y/Z 平面切。')}
+    ${tr('浇注系统按<b>几何网络</b>追踪：从每个产品连接口向外走，遇到交汇就停下、记成节点，再往每个分支方向各起一条新的流道段（段与段之间共享节点）。截面积按“沿当前流向垂直切一刀”实测，不是用固定 X/Y/Z 平面切。')}
   </div>`;
 
   // §十七：诊断数据（默认折叠，?flowDebug=1 展开）
@@ -2097,6 +2129,11 @@ function renderDetail(container, d) {
             <th>${tr('置信度')}</th><th>${tr('坐标')} mm</th></tr></thead>
           <tbody>${hsRows}</tbody>
         </table></div>
+        <label class="pi-mcconf" style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;cursor:pointer">
+          <input type="checkbox" id="pi_mc_confirm" ${state.mcConfirmed ? 'checked' : ''} style="margin-top:3px">
+          <span>${tr('我已核对以上热点模数，可作为本次模数比判定的工程输入')}</span>
+        </label>
+        <div class="field-hint" style="margin-top:4px">${tr('以上热点模数为 STL 自动估计值，尚未验证适用于所有几何（板状/长条状热节可能偏低）。未勾选时，模数比判定只显示"计算通过"，不给出最终合格结论。')}</div>
       </div>` : ''}
     <div class="field-hint">${tr('模数 M = 体积 ÷ 表面积（该对象自身的 V/A）。热点位置与模数取自热点分析引擎的输出，本页不做任何重算。')}</div>`;
 }

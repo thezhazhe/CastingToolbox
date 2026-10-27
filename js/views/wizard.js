@@ -8,7 +8,11 @@ import * as context from '../context.js';
 import { prefillDocId } from '../scenario.js';
 import { runGating, MATERIALS, RATIO_PRESETS, recommendGatingRatio } from '../../calcs/gating.js';
 import { runRiser, RISER_SHAPES } from '../../calcs/riser.js';
+import { riserWarning, riserConverged, fillWarning } from './riserStatus.js';
 import { saveFile } from '../download.js';
+// PHASE V2.0-18（129.txt §六）：**复用**既有输入校验，不另立一套规则。
+//   `numcheck.js` 的既有原则：空/≤边界/NaN/±Infinity/非数字 → 明确短提示（不静默换算）。
+import { checkNum, firstErr } from './numcheck.js';
 
 const STEPS = [
   { key: 'material', name: '选择材料', icon: '🔩' },
@@ -129,6 +133,13 @@ function stepFrame(container, idx, contentHtml, opts = {}) {
   container.querySelectorAll('#wzBody select').forEach(el =>
     el.addEventListener('change', scheduleRevalidate));
   revalidate();
+  // PHASE V2.0-18（129.txt §六）：**把 revalidate 交出去**。
+  //   原因：上面那次 `querySelectorAll` 只覆盖**此刻已在 DOM 里**的输入框；
+  //   而第 3 步的 `#wz_mc` / `#wz_hot` 是 `stepFrame` 返回**之后**才由 `syncMcField()`
+  //   动态插进 `#wz_mc_field` 的 ⇒ 它们拿不到 input 监听 ⇒ 改了它们**不会重新校验**。
+  //   （实测：切到"直接输入 Mc"后填 -5，"下一步"仍可点。）
+  //   现把 `revalidate` 返回给调用方，由动态插入方自己接上。
+  return { revalidate, scheduleRevalidate };
 }
 
 /* ---- 已选参数摘要条（恒占位，避免布局跳动） ---- */
@@ -237,7 +248,14 @@ function renderStepWeight(container, idx) {
     </div>
     <div class="field" style="margin-top:12px"><label class="field-label">📊 预估出品率（材料推荐 ${md.y_min}~${md.y_max}%）</label><div class="f-row"><input class="field-input" type="number" id="wz_yield" value="${state.yield}" step="1" min="10" max="100"><span class="f-unit">%</span></div></div>
   `, {
-    validate: () => state.partWt > 0 ? { ok: true } : { ok: false, msg: '👆 请输入铸件毛重（Kg）' },
+    // PHASE V2.0-18（129.txt §五/§六）：改用 `checkNum`，**读 DOM 原值**而非 `state.partWt`。
+    //   原式 `state.partWt > 0` 漏掉 `Infinity`（`Infinity > 0` 为真 ⇒ 能带着 ∞ 重量进入计算），
+    //   且报错只有一句笼统提示。`checkNum` 会分别给出"不能为空"/"需为有效数字"/"需大于 0"。
+    //   ⚠ 合法输入（正有限数）行为不变；`#wz_pw` 的值同时是 `runRiser` 的 `cast_wt`。
+    validate: () => {
+      const err = checkNum(container.querySelector('#wz_pw').value, { label: '铸件毛重', gt: 0, required: true });
+      return err ? { ok: false, msg: '👆 ' + err } : { ok: true };
+    },
   });
   container.querySelectorAll('#wzBody input').forEach(el => el.addEventListener('input', () => {
     state.partWt = parseFloat(container.querySelector('#wz_pw').value) || 0;
@@ -251,7 +269,7 @@ function renderStepWall(container, idx) {
   state.wall = state.wall ?? 20;
   state.mcMode = state.mcMode ?? 'wall';
   state.mc = state.mc ?? 10;
-  stepFrame(container, idx, `
+  const _frame = stepFrame(container, idx, `
     <div class="field-grid2">
       <div class="field"><label class="field-label">📐 产品主壁厚 w（浇注时间用）</label><div class="f-row"><input class="field-input" type="number" id="wz_wall" value="${state.wall}" step="0.5" min="0"><span class="f-unit">mm</span></div></div>
       <div class="field"><label class="field-label">🧲 热节模数 Mc 输入方式</label><div class="f-row"><select class="field-select" id="wz_mcMode">
@@ -263,7 +281,24 @@ function renderStepWall(container, idx) {
     <div class="field" id="wz_mc_field" style="margin-top:12px"></div>
     <div class="field-hint" style="margin-top:8px">热节模数用于冒口设计。若不知热节，用壁厚估算即可（板状热节 Mc≈壁厚/2）。</div>
   `, {
-    validate: () => state.wall > 0 ? { ok: true } : { ok: false, msg: '👆 请输入产品主壁厚' },
+    // PHASE V2.0-18（129.txt §五/§六）：**本步此前只校验壁厚，热节模数输入框完全没有校验** ——
+    //   用户在"直接输入 Mc"/"热节圆直径 d"模式下填 0 或负数，仍能点"下一步"，
+    //   直到结果页才因为 `runRiser` 返回 null 而显示"— 未计算"，中间没有任何提示。
+    //   现按模式补校验，并**复用 `numcheck.js`**（与 riserView 同一套规则与文案口径）。
+    //   ⚠ 默认模式 `wall`（Mc = 壁厚 ÷ 2）**不做额外校验** ⇒ 默认流程行为完全不变；
+    //     `#wz_mc` / `#wz_hot` 只在对应模式下才存在于 DOM，取不到就跳过（不误报）。
+    validate: () => {
+      const err = firstErr([
+        checkNum(container.querySelector('#wz_wall').value, { label: '产品主壁厚', gt: 0, required: true }),
+        state.mcMode === 'direct'
+          ? checkNum(container.querySelector('#wz_mc')?.value, { label: '热节模数 Mc', gt: 0, required: true })
+          : null,
+        state.mcMode === 'hot_spot'
+          ? checkNum(container.querySelector('#wz_hot')?.value, { label: '热节圆直径 d', gt: 0, required: true })
+          : null,
+      ]);
+      return err ? { ok: false, msg: '👆 ' + err } : { ok: true };
+    },
   });
   const mcField = container.querySelector('#wz_mc_field');
   const syncMcField = () => {
@@ -285,6 +320,9 @@ function renderStepWall(container, idx) {
   container.querySelector('#wz_mc_field').addEventListener('input', (e) => {
     if (e.target.id === 'wz_mc') state.mc = parseFloat(e.target.value) || 0;
     if (e.target.id === 'wz_hot') state.mc = (parseFloat(e.target.value) || 0) / 2;
+    // ★ 动态插入的输入框不会自动重新校验（见 stepFrame 末尾注释）—— 这里补上，
+    //   否则"填了非法 Mc 但按钮仍可点"，本阶段的校验等于没生效。
+    _frame.scheduleRevalidate();
   });
 }
 
@@ -425,7 +463,10 @@ function renderStepReport(container, idx) {
 }
 
 /* 下载版：完整独立 HTML（自带样式，无 CSS 变量依赖） */
-function fullReportHtml(doc, md, g, r, mc) {
+// PHASE V2.0-15（126.txt §四.4）：导出纯渲染函数以便**真实渲染级**测试 ——
+//   与 processPage1.page1Html / resultsCenter.renderResultsCenter / gatingDiagram.gatingDiagramSvg
+//   同一惯例（纯函数、无副作用、不进主流程）。
+export function fullReportHtml(doc, md, g, r, mc) {
   return `<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><title>工艺建议报告</title>
 <style>body{font-family:system-ui,'Microsoft YaHei',sans-serif;color:#1f2937;font-size:13px;padding:24px;max-width:780px;margin:auto}
 table{border-collapse:collapse;width:100%;margin:8px 0}th,td{border:1px solid #d1d5db;padding:5px 9px;text-align:left}
@@ -440,13 +481,23 @@ const fmt = (v, d) => (typeof v === 'number' && !isNaN(v) ? parseFloat(v.toFixed
 const t = (label, val) => `<tr><td>${label}</td><td>${val}</td></tr>`;
 const stat = (k, v) => `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center"><div style="font-size:.7rem;color:#64748b">${k}</div><div style="font-size:.95rem;font-weight:700;color:#1e293b;margin-top:2px">${v}</div></div>`;
 
-function reportHtml(doc, md, g, r, mc) {
+export function reportHtml(doc, md, g, r, mc) {
   const c = doc.content;
-  const allOk = g.v_ok && g.vr_ok && (!r || r.volOk);
+  // PHASE V2.0-15（126.txt §三 / §四.6）：**未收敛 / 无冒口结果不得显示成"参数合理"**。
+  //   原式 `(!r || r.volOk)` 有两个漏洞：① `r` 为空时 `!r` 为真 ⇒ 冒口一栏是"—"却亮绿灯；
+  //   ② 只看 `volOk` ⇒ 未收敛但体积恰好充足时会当成正常结果。
+  const conv = riserConverged(r);
+  // PHASE V2.0-22（138.txt §3.5）：**旧体积模型不再是判据** —— 它按整件净重折算补缩需求，
+  //   等于假设整个铸件的收缩量由这一个冒口单独承担，该假设尚无工程依据。
+  //   ⇒ "参数合理"的冒口条件改为**目标模数规则是否达成**（`modOk`），体积模型降级为参考值。
+  const riserOk = !!r && conv === true && r.modOk === true;
+  const warnTxt = fillWarning(riserWarning(r));
+  const allOk = g.v_ok && g.vr_ok && riserOk;
   return `
     <div style="background:${allOk ? 'linear-gradient(135deg,rgba(14,159,110,.16),rgba(14,159,110,.05))' : 'linear-gradient(135deg,rgba(217,119,6,.16),rgba(217,119,6,.05))'};border:1px solid ${allOk ? 'rgba(14,159,110,.45)' : 'rgba(217,119,6,.45)'};border-radius:12px;padding:16px;margin-bottom:16px;text-align:center">
       <div style="font-size:1.1rem;font-weight:800;color:${allOk ? '#0E9F6E' : '#D97706'}">${allOk ? '✅ 工艺方案已生成 · 参数合理' : '⚠️ 工艺方案已生成 · 需关注优化项'}</div>
-      <div style="font-size:.76rem;color:#6b7280;margin-top:5px">流速 ${g.v_ok ? '✓ 合格' : '✗ 超限'} · 排气 ${g.vr_ok ? '✓ 合格' : '✗ 不足'} · 冒口补缩 ${r && r.volOk ? '✓ 合格' : '⚠️ 需加大/加冷铁'}</div>
+      <div style="font-size:.76rem;color:#6b7280;margin-top:5px">流速 ${g.v_ok ? '✓ 合格' : '✗ 超限'} · 排气 ${g.vr_ok ? '✓ 合格' : '✗ 不足'} · 冒口模数 ${!r ? '— 未计算' : conv === false ? '⛔ 未收敛' : r.modOk ? '✓ 达目标' : '⚠️ 未达目标'}</div>
+      ${warnTxt ? `<div style="font-size:.76rem;color:#b91c1c;margin-top:8px;text-align:left;line-height:1.7">${warnTxt}</div>` : ''}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px">
       ${stat('材料', doc.id)}
@@ -460,9 +511,11 @@ function reportHtml(doc, md, g, r, mc) {
     <h3>🌊 浇注系统建议</h3>
     <table>${t('浇注重量 G', fmt(g.G, 2) + ' Kg')}${t('浇注时间 t', fmt(g.t, 2) + ' s')}${t('阻流截面 A_choke', fmt(g.A, 1) + ' mm²')}${t('内浇道', g.gc + '个 × ' + g.gt + 'mm厚 × ' + g.L_g + 'mm长')}${t('横浇道', g.rc + '条 × ' + g.rt + 'mm厚 × ' + g.L_r + 'mm长')}${t('直浇道', '⌀' + g.D_sp + ' mm')}${t('流速校核', fmt(g.v, 2) + ' m/s ' + (g.v_ok ? '✅' : '⚠️ 超' + g.vLimit))}${t('排气面积比', fmt(g.vr, 2) + ' 倍 ' + (g.vr_ok ? '✅' : '⚠️ 需≥1.5'))}</table>
     <h3>🏗️ 冒口建议</h3>
-    <table>${t('冒口形状', r ? r.sd.name : '—')}${t('冒口尺寸', r ? r.sd.label(r.D, r.H) : '—')}${t('所需模数 Mr_需', r ? r.Mr_need.toFixed(2) + ' mm' : '—')}${t('实际模数 Mr_实', r ? r.Mr_act.toFixed(2) + ' mm' : '—')}${t('冒口体积', r ? (r.Vr / 1000).toFixed(1) + ' cm³' : '—')}${t('圆形冒口颈', r ? '⌀' + r.d_neck + ' mm' : '—')}${t('补缩判定', r && r.volOk ? '✅ 体积补缩充足' : r ? '⚠️ 体积不足，需加大冒口' : '—')}</table>
+    <table>${t('冒口形状', r ? r.sd.name : '—')}${t('冒口尺寸', r ? r.sd.label(r.D, r.H) : '—')}${t('目标冒口模数 Mr_target', r ? (r.Mr_target != null ? r.Mr_target : r.Mr_need).toFixed(2) + ' mm' : '—')}${t('实际模数 Mr_actual', r ? r.Mr_act.toFixed(2) + ' mm' + (r.modOk ? ' ✅' : ' ⚠️') : '—')}${t('冒口体积', r ? (r.Vr / 1000).toFixed(1) + ' cm³' : '—')}${t('收敛状态', !r ? '— 未计算' : conv === false ? '⛔ 未收敛（迭代达上限）' : '✓ 已收敛')}</table>
+    ${warnTxt ? `<div style="font-size:.76rem;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 10px;line-height:1.7;margin:6px 0">${warnTxt}</div>` : ''}
     <h3>✅ 综合判定</h3>
-    <table>${t('流速', g.v_ok ? '合格' : '需增大内浇道')}${t('排气', g.vr_ok ? '合格' : '需增加排气面积')}${t('补缩', r && r.volOk ? '合格' : '需加大冒口/加冷铁')}${t('材料提醒', (c.recommendations || []).slice(0, 2).join('；') || '—')}</table>
+    <table>${t('流速', g.v_ok ? '合格' : '需增大内浇道')}${t('排气', g.vr_ok ? '合格' : '需增加排气面积')}${t('冒口模数', !r ? '— 未计算' : conv === false ? '⛔ 未收敛，不可作为最终建议' : r.modOk ? '达目标模数（1.2 × Mc）' : '未达目标模数')}${t('材料提醒', (c.recommendations || []).slice(0, 2).join('；') || '—')}</table>
+    <p style="font-size:.74rem;color:#6b7280;line-height:1.7;margin:6px 0 0">推荐尺寸依据目标模数规则（Mr_target = 1.2 × Mc）计算；<b>实际补缩能力尚需结合具体工艺和生产结果验证</b>。</p>
     <p style="text-align:center;font-size:.7rem;color:#94a3b8;margin-top:16px">—— 由 Casting Toolbox 离线生成 · 数据源自《铸造手册》/GB 标准 · 页码待核对 ——</p>`;
 }
 

@@ -53,7 +53,10 @@ function shell(container, calc, formHtml, sourceHtml) {
         <div class="card section-card">
           <div class="section-card-title"><span class="step-badge">3</span>📖 ${t('说明与依据')}</div>
           ${zhNote ? `<div class="field-hint" style="margin-bottom:6px;color:var(--warning,#B45309)">🌐 ${zhNote}</div>` : ''}
-          <div class="field-hint p72-cn" style="line-height:1.8">${sourceHtml}</div>
+          <details class="sc-fold">
+            <summary>${t('展开查看完整说明（公式 / 适用条件 / 参考来源）')}</summary>
+            <div class="field-hint p72-cn" style="line-height:1.8">${sourceHtml}</div>
+          </details>
         </div>
       </div>
     </div>
@@ -211,7 +214,7 @@ export function renderMachining(container, calc) {
     if (!rec) {
       q('#sc_results').innerHTML = `
         <div class="empty" style="padding:20px">
-          <span class="empty-sub">${t('「{a}」+「{b}」无标准 RMA 等级（GB/T 6414 未给出）。', [t(method), t(q('#m_mat').value)])}</span>
+          <span class="empty-sub">${t('「{a}」+「{b}」无标准 RMA 等级（GB/T 42124.3-2025 未给出）。', [t(method), t(q('#m_mat').value)])}</span>
         </div>
         <div class="field-hint" style="padding:8px 4px 0">${t('该组合余量请按本厂工艺/图纸直接定（如压铸余量极小、多为不加工或精加工），<b>宁缺毋滥</b>。')}</div>`;
       return;
@@ -267,14 +270,14 @@ export function renderYield(container, calc) {
       </select></div>
     </div>
     <div class="divider" style="margin:14px 0"></div>
-    <div class="section-card-title" style="margin-bottom:10px"><span class="step-badge">B</span>⚖️ ${t('② 现场实测 → 铁液重量')}</div>
+    <div class="section-card-title" style="margin-bottom:10px"><span class="step-badge">B</span>⚖️ ${t('② 本厂实绩 / 预计 → 铁液重量')}</div>
     <div class="field-grid3">
       <div class="field"><label class="field-label">⚖️ ${t('单件铸件重量')}</label><div class="f-row"><input class="field-input" type="number" id="y_part" value="50" step="0.1" min="0"><span class="f-unit">Kg</span></div></div>
       <div class="field"><label class="field-label">🔢 ${t('一模件数')}</label><div class="f-row"><input class="field-input" type="number" id="y_cav" value="2" step="1" min="1"><span class="f-unit">${t('件')}</span></div></div>
-      <div class="field"><label class="field-label">📊 ${t('现场实测出品率')} <span class="field-hint" style="display:inline">${t('（默认=预估中值，请改为本厂实绩）')}</span></label><div class="f-row"><input class="field-input" type="number" id="y_yield" step="0.5" min="1" max="100" placeholder="${esc(t('自动填预估中值'))}"><span class="f-unit">%</span></div></div>
+      <div class="field"><label class="field-label">📊 ${t('出品率（本厂实绩 / 预计）')} <span class="field-hint" style="display:inline">${t('（默认=预估中值，请改为本厂实绩）')}</span></label><div class="f-row"><input class="field-input" type="number" id="y_yield" step="0.5" min="1" max="100" placeholder="${esc(t('自动填预估中值'))}"><span class="f-unit">%</span></div></div>
     </div>
   `, `
-    · <b>两步走</b>：第 ① 步输入 产品/工艺/材质 → 得<b>预估出品率区间</b>（行业经验参考）；第 ② 步<b>现场实测出品率默认自动预填预估中值</b>，<b>请改成贵厂本批实绩</b>（改一次即记住，不再被覆盖）→ 铁液/浇冒口重量按它计算。<br>
+    · <b>两步走</b>：第 ① 步输入 产品/工艺/材质 → 得<b>预估出品率区间</b>（行业经验参考）；第 ② 步<b>出品率默认自动预填预估中值</b>，<b>请改成贵厂本批实绩</b>（改一次即记住，不再被覆盖）→ 铁液/浇冒口重量按它计算。<br>
     · <b>为什么分两步</b>：出品率受浇冒口设计、工艺水平、设备影响，<b>各厂各件差异很大</b>——预估是"参考值"，算铁液、配炉料必须用本厂实测值。<br>
     · <b>回退规则</b>：优先「产品×工艺」→「材质×工艺」→「工艺」→「材质」→ 通用，只显示一个最准结果。产品少见可以不选，用材质+工艺参考。<br>
     · 垂直线（DISA）一般出品率<b>偏低</b>（约 45~65%），水平线/金属型通常更高。<br>
@@ -306,10 +309,10 @@ export function renderYield(container, calc) {
     let err = firstErr([
       checkNum(q('#y_part').value, { label: t('单件铸件重量'), gt: 0, required: true }),
       checkNum(q('#y_cav').value, { label: t('一模件数'), gt: 0, int: true, required: true }),
-      checkNum(yieldRaw, { label: t('现场实测出品率'), gt: 0, max: 100, required: true }),
+      checkNum(yieldRaw, { label: t('出品率（本厂实绩 / 预计）'), gt: 0, max: 100, required: true }),
     ]);
     if (!err && String(yieldRaw).trim() === '' && !res.range) {
-      err = t('现场实测出品率未自动预填：请先选择 ① 的产品 / 工艺 / 材质（自动回填预估中值），或直接手填本厂实绩');
+      err = t('出品率未自动预填：请先选择 ① 的产品 / 工艺 / 材质（自动回填预估中值），或直接手填本厂实绩');
     }
     const G = partWt / (yieldPct / 100);   // 单件铁液（err 门禁后保证 >0）
     const md = MATERIALS[mat] || null;
@@ -318,7 +321,7 @@ export function renderYield(container, calc) {
     const calHtml = err ? `
       <div class="empty" style="padding:14px"><span class="empty-sub">⚠️ ${err}</span></div>`
       : `
-      <div class="group-title">${t('铁液重量（按现场实测 {p}%）', [fmt(yieldPct, 1)])}</div>
+      <div class="group-title">${t('铁液重量（按出品率 {p}%）', [fmt(yieldPct, 1)])}</div>
       ${row(`⚖️ ${t('单件铁液重量')}`, fmt(G, 2), 'Kg', 'ok', `${fmt(partWt, 2)} ÷ ${fmt(yieldPct, 1)}%`)}
       ${row(`🔢 ${t('一模铁液总重')}`, fmt(G * cav, 2), 'Kg', '', t('单件铁液 × {n} 件', [cav]))}
       ${row(`🫗 ${t('浇注系统及冒口等非铸件金属重量')}`, fmt(G * cav - partWt * cav, 2), 'Kg', '', t('一模铁液 − 一模铸件重量'))}
@@ -327,6 +330,7 @@ export function renderYield(container, calc) {
     q('#sc_results').innerHTML = `
       ${ex.exampleNote()}
       ${estHtml}
+      <div class="field-hint">${t('当前为工艺预估值。获得实际出品率后，可手动输入并回算相关参数。')}</div>
       ${calHtml}`;
   };
   setRecompute(update);   // PHASE 72：语言切换后原地重算（数值不变）

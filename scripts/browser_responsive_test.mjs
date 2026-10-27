@@ -37,7 +37,7 @@ ws.onmessage = (ev) => {
   if (m.method === 'Runtime.exceptionThrown') exceptions.push(m.params.exceptionDetails.exception?.description?.split(/\r?\n/)[0] || m.params.exceptionDetails.text);
 };
 await new Promise(r => (ws.onopen = r));
-await send('Runtime.enable'); await send('Page.enable');
+await send('Runtime.enable'); await send('Page.enable'); await send('DOM.enable');
 const evalJs = async (e) => (await send('Runtime.evaluate', { expression: e, returnByValue: true, awaitPromise: true })).result.value;
 const viewport = async (w, h, mobile) => {
   await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: !!mobile });
@@ -46,6 +46,19 @@ const viewport = async (w, h, mobile) => {
   await wait(450);
 };
 const goto = async (hash) => { await evalJs(`location.hash = '${hash}'`); await wait(1000); };
+/* 146 §三：结果页 / 参数窗口都要基于**真实导入的 STL**（手动模式已删除），故补两个辅助函数 */
+const poll = async (e, timeoutMs = 60000, step = 500) => {
+  const t0 = Date.now();
+  while (Date.now() - t0 < timeoutMs) { const v = await evalJs(e); if (v) return v; await wait(step); }
+  return null;
+};
+const importStl = async (file) => {
+  await poll(`document.querySelector('#dc_file') ? 1 : 0`, 20000);
+  const doc = await send('DOM.getDocument', { depth: 1 });
+  const node = await send('DOM.querySelector', { nodeId: doc.root.nodeId, selector: '#dc_file' });
+  if (!node || !node.nodeId) throw new Error('找不到 #dc_file');
+  await send('DOM.setFileInputFiles', { nodeId: node.nodeId, files: [path.join(ROOT, 'tests', 'golden', file).replace(/\\/g, '/')] });
+};
 
 /* 溢出探针：返回超出视口右边界的可见元素（最多 6 个） */
 const OVERFLOW_FN = `(() => {
@@ -89,26 +102,39 @@ try {
       const ok = r.count === 0 && r.docScroll <= r.vw + 1;
       check(`${page} 无横向溢出`, ok, ok ? '' : `溢出 ${r.count} 处（docScroll ${r.docScroll} > vw ${r.vw}）: ` + r.bad.map(b => `${b.t}[right=${b.right}]"${b.txt}"`).join(' / '));
     }
-    /* 设计中心**结果页**（表格最多、最容易撑破）——手动模式跑一遍全链再量 */
+    /* 设计中心结果页（表格最多、最容易撑破）+ **参数窗口**（§九 明确点名要查的版面）。
+       146 §3.5：无 STL 的手动模式已删除 ⇒ 结果页要跑全链必须**导入一个 STL**，不能再靠手填进入。 */
     await goto('#/designCenter');
-    await evalJs(`document.querySelector('#dc_manualLink')?.click()`); await wait(600);
-    const ready = await evalJs(`!!document.querySelector('#dc_m_family')`);
-    if (ready) {
-      const setV = (sel, val) => evalJs(`(() => {
-        const el = document.querySelector('${sel}'); if (!el) return false;
-        const proto = el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
-        Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, '${val}');
-        el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? 'change' : 'input', { bubbles: true })); return true;
-      })()`);
-      await setV('#dc_m_family', '灰铁'); await wait(500);
-      await setV('#dc_p_volume', '900'); await setV('#dc_p_wallMain', '22'); await setV('#dc_m_mc', '13'); await wait(600);
-      await evalJs(`document.querySelector('#dc_run')?.click()`); await wait(2600);
+    const setV = (sel, val) => evalJs(`(() => {
+      const el = document.querySelector('${sel}'); if (!el) return false;
+      const proto = el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+      Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, '${val}');
+      el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? 'change' : 'input', { bubbles: true })); return true;
+    })()`);
+    await importStl('cube50.stl');
+    await poll(`document.querySelector('#dc_hsBadge') && !document.querySelector('#dc_hsBadge').hidden`, 90000, 600);
+    /* 参数窗口（146 §三）本身也是"字段 + 单位 + 说明"密集版面，必须一并量 */
+    /* R6-S2：参数界面 = 右侧面板的 ② 步骤（`#dc_paramsBtn` 会停在缺项那一步）。 */
+    await evalJs(`document.querySelector('#dc_paramsBtn')?.click()`); await wait(600);
+    await setV('[data-pf="material.family"]', '灰铁'); await wait(300);
+    {
+      const r = await evalJs(OVERFLOW_FN);
+      const ok = r.count === 0 && r.docScroll <= r.vw + 1;
+      check('#/designCenter 参数面板无横向溢出', ok, ok ? '' : `溢出 ${r.count} 处: ` + r.bad.map(b => `${b.t}[right=${b.right}]"${b.txt}"`).join(' / '));
+    }
+    await evalJs(`document.querySelector('#dc_pfSave')?.click()`); await wait(220);
+    /* S4：保存不分析 ⇒ 显式点顶部 ④，再点主按钮切到结果视图。 */
+    await evalJs(`[...document.querySelectorAll('#dc_flowbar [data-flow-step]')].find(b => b.dataset.flowStep === 'run')?.click()`); await wait(2200);
+    await evalJs(`document.querySelector('#dc_run')?.click()`); await wait(900);
+    if (await evalJs(`!!document.querySelector('#dc_resultNav')`)) {
       for (const nav of ['page1', 'riser', 'gating']) {
         await evalJs(`document.querySelector('#dc_resultNav [data-nav="${nav}"]')?.click()`); await wait(700);
         const r = await evalJs(OVERFLOW_FN);
         const ok = r.count === 0 && r.docScroll <= r.vw + 1;
         check(`#/designCenter 结果页 ${nav} 无横向溢出`, ok, ok ? '' : `溢出 ${r.count} 处: ` + r.bad.map(b => `${b.t}[right=${b.right}]"${b.txt}"`).join(' / '));
       }
+    } else {
+      check('#/designCenter 结果页三类别无横向溢出', false, '未生成结果导航（结果未产出）');
     }
 
     // 触摸目标尺寸（手机端）：主按钮不应小于 32px 高

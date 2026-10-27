@@ -185,13 +185,14 @@ export const tests = [
 
   /* ================= 二、左下角 Support / Resources ================= */
   {
-    name: '98-H 版本号 V1.1：唯一来源 + 侧栏静态 + 关于弹窗中英 + package/manifest/bat 七处一致',
+    name: '98-H 版本元数据 V2.0.0：唯一来源 + 关于弹窗中英 + package/manifest/bat 一致；侧栏同版本',
     fn: () => {
       assert(/^\d+\.\d+\.\d+$/.test(VERSION), `version.js 仍为语义化版本（实际 ${VERSION}）`);
-      assert(VERSION === '1.1.0', `本次发布版本应为 1.1.0（实际 ${VERSION}）`);
+      assert(VERSION === '2.0.0', `本次发布版本应为 2.0.0（实际 ${VERSION}）`);
       assert(VERSION_LABEL === 'v' + VERSION, 'VERSION_LABEL = v + VERSION');
       const html = read('index.html');
-      assert(html.includes(`<b id="appVersion">${VERSION_LABEL}</b>`), `侧栏静态版本 = ${VERSION_LABEL}`);
+      // V2.0.0 正式版：侧栏显示与 version.js 相同的发布版本。
+      assert(html.includes(`<b id="appVersion">${VERSION_LABEL}</b>`), `侧栏显示 ${VERSION_LABEL}`);
       assert(html.includes(`<b>版本：</b>${VERSION_LABEL} `), `关于弹窗静态版本 = ${VERSION_LABEL}`);
       assert(read('js/i18n/zh-CN.js').includes(`<b>版本：</b>${VERSION_LABEL} `), '中文词条表版本');
       assert(read('js/i18n/en-US.js').includes(`<b>Version:</b> ${VERSION_LABEL} `), '英文词条表版本');
@@ -224,28 +225,20 @@ export const tests = [
     },
   },
   {
-    name: '98-J 作者行放大加粗：只加一个 class，不动其他行、不上大标题',
+    name: '98-J 168 A2：作者行不再单独放大，所有信息项统一字号/字重',
     fn: () => {
       const html = read('index.html');
-      assert(/class="sf-line sf-author" data-i18n="app\.author"/.test(html), '作者行应挂 sf-author 类');
-      // 只此一处挂 sf-author（不波及邮箱/QQ/公众号/开源行）
-      assert((html.match(/sf-author/g) || []).length === 1, 'sf-author 只应出现一次');
+      assert(/class="sf-line" data-i18n="app\.author"/.test(html), '作者行应与普通信息行同一 class');
+      assert(!/sf-author/.test(html), '不应再保留 sf-author 特殊样式钩子');
+      assert((html.match(/sf-author/g) || []).length === 0, 'index.html 不应有 sf-author');
       const css = read('css/app.css');
-      const m = css.match(/\.sf-author\s*\{([^}]*)\}/);
-      assert(m, 'app.css 应有 .sf-author 规则');
-      const body = m[1];
-      const fs = body.match(/font-size:\s*([\d.]+)rem/);
-      const fw = body.match(/font-weight:\s*(\d+)/);
-      assert(fs, '.sf-author 应设置 font-size');
-      assert(fw, '.sf-author 应设置 font-weight');
-      const legacy = Number((css.match(/\.sf-about\s*\{[^}]*font-size:\s*([\d.]+)rem/) || [])[1]);
-      assert(Number(fs[1]) > legacy, `字号应比 .sf-about 大（${fs[1]}rem vs ${legacy}rem）`);
-      assert(Number(fs[1]) <= 0.9, `字号不得夸张成标题（实际 ${fs[1]}rem ≤ 0.9）`);
-      assert(Number(fw[1]) >= 600, `字重应达加粗（实际 ${fw[1]}）`);
-      // 未改动其他行：邮箱行 / QQ 行 / 开源行都没有被加样式
-      assert(!/sf-line\s*\{/.test(css), '不应给 .sf-line 加整体样式（那会波及其他行）');
-      assert(/\.sf-lite\s*\{\s*opacity:\s*\.8;?\s*\}/.test(css), '.sf-lite 应保持原样');
-      console.log(`      sf-author: ${fs[1]}rem / ${fw[1]}（.sf-about 基准 ${legacy}rem）`);
+      assert(!/\.sf-author\s*\{/.test(css), 'app.css 不应再保留 .sf-author 特例');
+      const rule = css.match(/\.sf-line,\s*\.sf-linkline\s*\{([^}]*)\}/);
+      assert(rule, '应有统一的 .sf-line/.sf-linkline 信息项规则');
+      assert(/font-size:\s*\.72rem/.test(rule[1]), '统一字号 .72rem');
+      assert(/font-weight:\s*600/.test(rule[1]), '统一字重 600');
+      assert(/\.sf-about\s*\{[^}]*font-size:\s*\.72rem/.test(css), '信息区基准字号应与信息项一致');
+      console.log('      所有信息项统一为 .72rem / 600；无 sf-author 特例');
     },
   },
   {
@@ -263,8 +256,15 @@ export const tests = [
       }
       // 下拉与设计中心都从 Object.keys(RATIO_PRESETS) 生成 → 新预设自动同源，不存在第二处硬编码清单
       assert(/Object\.keys\(RATIO_PRESETS\)/.test(gv), 'gatingView 下拉应由 RATIO_PRESETS 生成');
+      /* 146.txt §0/§3 更正了 145 的产品理解偏差：**淘汰的是"无 STL 的手动模式"，
+         不是"参数输入"** ⇒ 浇注系统比例的手工覆盖入口**按用户要求恢复**，
+         落在「分析条件与工艺参数」窗口的 C · 浇注系统模块里。
+         判据的**原意**（本测试自 PHASE 98 起的核心诉求）一字未变，反而更严了：
+         比例下拉必须**从 RATIO_PRESETS 单一来源生成**，设计中心里不得出现第二处硬编码档位清单。 */
       const dc = read('js/views/designCenter.js');
-      assert(/Object\.keys\(RATIO_PRESETS\)/.test(dc), '设计中心下拉应由 RATIO_PRESETS 生成');
+      assert(/process\.ratioKey/.test(dc), '146 §3：设计中心（参数窗口）必须提供「浇注系统比例」覆盖入口');
+      assert(/Object\.keys\(RATIO_PRESETS\)/.test(dc), '设计中心的比例下拉必须由 RATIO_PRESETS 生成（单一来源）');
+      assert(!/'封闭式常用型'|'开放式宽大型'|'坎贝勒推荐'/.test(dc), '设计中心不得硬编码比例档位清单');
       // 未新造第二套计算逻辑：campbellGating 与本预设无耦合（方法隔离，PHASE 65.1 定）
       assert(!/RATIO_PRESETS/.test(read('calcs/campbellGating.js')), 'campbellGating 不得引用 RATIO_PRESETS');
       console.log(`      RATIO_APPLIC 覆盖 ${applicKeys.length} 档 · 下拉均取自 RATIO_PRESETS 单一来源`);

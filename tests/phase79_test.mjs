@@ -135,7 +135,9 @@ export const tests = [
       const g2 = calc('gating')();
       assert(g2.rc === 1 && g2.L_r !== g1.L_r, `条数 2→1 → 长度重算（${g1.L_r} → ${g2.L_r} mm）`);
       assert(Math.abs(g2.Fr_act - 8 * g2.L_r * 1) < 1e-6, '面积恒等关系成立');
-      // 结果页：与内浇道同级（可改 + 一键恢复默认），参数区不再重复
+      // 结果页：与内浇道同级（可改 + 一键恢复默认），参数区不再重复。
+      // 164.txt 五：默认截面已改为按浇注类型自动匹配梯形；矩形功能保留在显式选择矩形时。
+      proj.set('process.runnerSection', 'rect', SRC.USER_INPUT, CONF.USER_CONFIRMED);
       const c = { innerHTML: '', querySelectorAll: () => [], querySelector: () => null };
       renderResultsCenter(c, { gating: g2 }, { ctx: {}, active: 'gating' });
       const html = c.innerHTML;
@@ -149,6 +151,7 @@ export const tests = [
       proj.set('production.runnerN', 0, SRC.USER_INPUT, CONF.USER_CONFIRMED);
       const g3 = calc('gating')();
       assert(g3.rc === 2 && g3.rt === 25 && g3.Fr_act === g0.Fr_act, '恢复默认值后与初始结果一致');
+      proj.set('process.runnerSection', '', SRC.DEFAULT, CONF.LOW);
     },
   },
   {

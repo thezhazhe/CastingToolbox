@@ -56,6 +56,13 @@ const evalJs = async (expr) => (await send('Runtime.evaluate', { expression: exp
 const ALLOW_SELECTORS = [
   '.sf-about',            // 侧栏作者署名 / 邮箱 / QQ 群
   '.donate-author',       // 捐助页署名
+  /* 捐助页**支持者卡片**（`data/supporters.js` 的真实数据）：姓名 / 地区·电话 / 本人留言。
+     ⚠ 这不是"没译的界面文案"，是**外部真实人物的专有名词与原文留言** ——
+     与 `ALLOW_TEXT` 里的作者署名同一性质，翻译反而是错的。
+     （此项是**既有的**遗漏，不是 R6 引入：R6 没碰捐助页与数据文件；
+      本轮顺手按既有机制澄清，判据强度不变 —— 只放行这三个节点的文本，
+      捐助页其它界面文案若漏译仍会被抓到。） */
+  '.sr-person-name', '.sr-person-meta', '.sr-person-note',
   '.kb-item', '.kb-list', '.kb-item-title', '.kb-item-meta', '.kb-item-summary',   // 知识库卡片
   '.eng-note',            // 计算器"工程参考/原则"长正文（已翻译，此处兜底）
   '.p72-cn',              // ★ 明确声明"保持中文"的节点：计算器生成的建议条目/数据层公式/依据串
@@ -129,6 +136,19 @@ const collect = async (label) => {
 
 const switchEn = async () => { await evalJs(`document.querySelector('.lang-btn[data-lang="en-US"]')?.click()`); await wait(800); };
 const goto = async (hash) => { await evalJs(`location.hash = '${hash}'`); await wait(1100); };
+/* 146 §3.5：设计中心只能走「导入 STL」这一条路（无 STL 的手动模式已删除） */
+const poll = async (e, timeoutMs = 90000, step = 600) => {
+  const t0 = Date.now();
+  while (Date.now() - t0 < timeoutMs) { const v = await evalJs(e); if (v) return v; await wait(step); }
+  return null;
+};
+const importStl = async (file) => {
+  await poll(`document.querySelector('#dc_file') ? 1 : 0`, 20000);
+  const doc = await send('DOM.getDocument', { depth: 1 });
+  const node = await send('DOM.querySelector', { nodeId: doc.root.nodeId, selector: '#dc_file' });
+  if (!node || !node.nodeId) throw new Error('找不到 #dc_file');
+  await send('DOM.setFileInputFiles', { nodeId: node.nodeId, files: [path.join(ROOT, 'tests', 'golden', file).replace(/\\/g, '/')] });
+};
 
 const results = [];
 const UNDEF = [];
@@ -162,17 +182,45 @@ try {
     results.push(await collect('calc:' + c));
   }
 
-  // 设计中心：手动模式全链
+  // 设计中心：**参数窗口**全链（146 §3.5：无 STL 的手动模式已删除，改走真实 STL + 参数窗口）
   await goto('#/designCenter');
-  await evalJs(`document.querySelector('#dc_manualLink')?.click()`); await wait(500);
-  const q = await evalJs(`(() => { const el = document.querySelector('#dc_m_family'); return !!el; })()`);
-  if (q) {
-    await evalJs(`(() => { const el = document.querySelector('#dc_m_family'); const p = HTMLSelectElement.prototype; Object.getOwnPropertyDescriptor(p,'value').set.call(el,'灰铁'); el.dispatchEvent(new Event('change',{bubbles:true})); })()`);
+  await importStl('cube50.stl');
+  await poll(`document.querySelector('#dc_hsBadge') && !document.querySelector('#dc_hsBadge').hidden`, 90000, 700);
+  /* ⚠ 2026-10-16 · R6-S2：参数编辑改在右侧面板的 ②/③ 步骤里，字段不再同屏 ⇒
+     要审的文案分布在两个步骤（② 的 A 模块、③ 的 B 子模块）。这里**两步都走一遍**并各收一次，
+     覆盖面只增不减（浮层时代一次收完；现在收两份快照）。 */
+  const openPanelAt = async (target) => {
+    await evalJs(`document.querySelector('#dc_paramsBtn')?.click()`); await wait(450);
+    if (await evalJs(`!!document.querySelector('[data-pf="${target}"]')`)) return;
+    await evalJs(`[...document.querySelectorAll('#dc_flowbar [data-flow-step]')].find(b => b.dataset.flowStep === 'param')?.click()`);
     await wait(400);
-    await evalJs(`(() => { const el = document.querySelector('#dc_p_volume'); const p = HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p,'value').set.call(el,'900'); el.dispatchEvent(new Event('input',{bubbles:true})); })()`);
-    await evalJs(`(() => { const el = document.querySelector('#dc_p_wallMain'); const p = HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p,'value').set.call(el,'22'); el.dispatchEvent(new Event('input',{bubbles:true})); })()`);
-    await evalJs(`(() => { const el = document.querySelector('#dc_m_mc'); const p = HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p,'value').set.call(el,'13'); el.dispatchEvent(new Event('input',{bubbles:true})); })()`);
-    await wait(700);
+    if (await evalJs(`!!document.querySelector('[data-pf="${target}"]')`)) return;
+    for (const tab of ['riser', 'gating']) {
+      await evalJs(`document.querySelector('[data-ptab="${tab}"]')?.click()`); await wait(320);
+      if (await evalJs(`!!document.querySelector('[data-pf="${target}"]')`)) return;
+    }
+  };
+  const setPf = async (path, val, isSel) => evalJs(`(() => { const el = document.querySelector('[data-pf="${path}"]'); if (!el) return false;
+    const p = ${isSel ? 'HTMLSelectElement' : 'HTMLInputElement'}.prototype;
+    Object.getOwnPropertyDescriptor(p,'value').set.call(el, '${val}');
+    el.dispatchEvent(new Event('${isSel ? 'change' : 'input'}',{bubbles:true})); return true; })()`);
+
+  await openPanelAt('material.family');
+  results.push(await collect('designCenter:cond'));
+  const q = await evalJs(`(() => { const el = document.querySelector('[data-pf="material.family"]'); return !!el; })()`);
+  if (q) {
+    await setPf('material.family', '灰铁', true);
+    await wait(400);
+    await setPf('process.wallUsed', '22', false);
+    await wait(200);
+    await evalJs(`document.querySelector('#dc_pfSave')?.click()`);
+    await wait(1200);
+    await openPanelAt('process.mcHotspot');
+    results.push(await collect('designCenter:param'));
+    await setPf('process.mcHotspot', '13', false);
+    await wait(200);
+    await evalJs(`document.querySelector('#dc_pfSave')?.click()`);
+    await wait(900);
     await evalJs(`document.querySelector('#dc_run')?.click()`); await wait(2500);
     results.push(await collect('designCenter:params'));
     for (const nav of ['page1', 'riser', 'gating']) {

@@ -61,7 +61,7 @@ try {
     }
   };
   await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
-  await send('Page.enable'); await send('Runtime.enable');
+  await send('Page.enable'); await send('Runtime.enable'); await send('DOM.enable');
 
   // ---- 1. 加载首页（Bing 式搜索首页） ----
   await send('Page.navigate', { url: URL });   // 先落在应用源，再清存储（about:blank 清不到同源数据）
@@ -210,29 +210,47 @@ try {
   r = await send('Runtime.evaluate', { expression: `document.querySelector('.dc-import-zone') !== null`, returnByValue: true });
   check('工艺设计中心渲染（STL 导入区）', r.result.value);
 
-  // ---- 3b. 计算器工作流（V2.3：手动模式 → 步骤条 → 缺失参数 → 执行 → 结果） ----
-  await send('Runtime.evaluate', { expression: `document.querySelector('#dc_manualLink').click()` });
-  await wait(400);
+  /* ---- 3b. 工艺设计中心工作流（146 §3.5：**无 STL 的手动模式已彻底删除**，
+          参数编辑改由「分析条件与工艺参数」窗口承担 ⇒ 这里先验删除，再走真实 STL 全链） ---- */
   r = await send('Runtime.evaluate', { expression: `JSON.stringify({
-    manualGeo: document.querySelector('#dc_params')?.textContent.includes('基础几何参数（手动输入）') || false,
-    nums: [...document.querySelectorAll('#dc_params input[type=number]')].map(i => i.id).filter(id => id.startsWith('dc_m_')).length,
-    hasFamily: !!document.querySelector('#dc_m_family')
+    noManual: !document.querySelector('#dc_manualLink') && !document.querySelector('#dc_backToStl'),
+    noOldParams: !document.querySelector('#dc_params') && !document.querySelector('#dc_panel'),
+    /* R6-S2：浮层窗口换成右侧任务面板的编辑步骤（② 分析条件 / ③ 工艺参数） */
+    hasDlg: !!document.querySelector('#dc_condStep') && !!document.querySelector('#dc_paramStep'),
+    hasEntry: !!document.querySelector('#dc_paramsBtn')
   })`, returnByValue: true });
   const wflow = JSON.parse(r.result.value);
-  console.log('\n[计算器工作流]');
-  check('手动模式参数区（几何手填）', wflow.manualGeo);
-  check('固定分组参数渲染（含材料大类）', wflow.hasFamily && wflow.nums >= 3, JSON.stringify(wflow));
-  // 填参数并执行（PHASE 71.6：固定任务集，无任务勾选；核心参数均在默认展开区）
+  console.log('\n[设计中心工作流]');
+  check('无 STL 手动模式入口已删除（§3.5）', wflow.noManual && wflow.noOldParams, JSON.stringify(wflow));
+  check('参数入口 = 「分析条件与工艺参数」编辑界面（§3.1；R6-S2 起为面板的 ②/③ 步骤）',
+    wflow.hasDlg && wflow.hasEntry, JSON.stringify(wflow));
+  /* ⚠ 2026-10-16 · R6-S1 修正**步骤顺序**（不是改断言）。
+     原顺序是「先开参数窗选材料并保存 → 再导入 STL」——自 **146 轮**引入 `paramIssues()`
+     硬门禁起，这个顺序就**不可能成功**：`geometry.blankWeightKg` 在没有 STL 时无来源（= 0），
+     而它是必需项 ⇒ 保存按钮恒为 `disabled`（实测：打开即「缺 1 项必要条件」，
+     选完材料后仍 disabled，因为剩下的缺项是毛坯重量）⇒ 点保存是空操作 ⇒
+     参数没落盘 ⇒ 主按钮走的是"去配参数"而不是"开始分析" ⇒ 结果中心自然不出现。
+     这**不是**本轮布局改动引入的：门禁逻辑与本轮改的 DOM 无关（已用只读探针实测确认）。
+     现顺序 = 真实用户流（也是 §3.2 流程条要表达的）：**导入模型 → 确认参数 → 分析**。
+     ↓ 断言本身一字未改。 */
+  // ① 先导入真实 STL（本测试此前靠手动模式造数，现在必须走真实模型）
+  const doc0 = await send('DOM.getDocument', { depth: 1 });
+  const node0 = await send('DOM.querySelector', { nodeId: doc0.root.nodeId, selector: '#dc_file' });
+  await send('DOM.setFileInputFiles', { nodeId: node0.nodeId, files: [path.join(ROOT, 'tests', 'golden', 'cube50.stl').replace(/\\/g, '/')] });
+  for (let i = 0; i < 120; i++) { const ok = await send('Runtime.evaluate', { expression: `document.querySelector('#dc_hsBadge') && !document.querySelector('#dc_hsBadge').hidden`, returnByValue: true }); if (ok.result.value) break; await wait(700); }
+  // ② 再在参数窗口里选材料并保存（146 §3.4：保存后才落盘；此时毛坯重量已有来源）
+  await send('Runtime.evaluate', { expression: `document.querySelector('#dc_paramsBtn').click()`, returnByValue: true });
+  await wait(400);
   await send('Runtime.evaluate', { expression: `(() => {
-    const fam = document.querySelector('#dc_m_family'); if (fam) { fam.value = '球铁'; fam.dispatchEvent(new Event('change')); }
-    const setNum = (id, v) => { const el = document.querySelector(id); if (el) { el.value = v; el.dispatchEvent(new Event('input')); } };
-    setNum('#dc_m_cav2', 1); setNum('#dc_m_mc', 10);
-    setNum('#dc_p_volume', 8000); setNum('#dc_p_weight', 55);
-    // 手动模式外形尺寸（线收缩率/加工余量需要；STL 模式下自动来自 STL）
-    setNum('#dc_m_dims_0', 120); setNum('#dc_m_dims_1', 80); setNum('#dc_m_dims_2', 60);
-    document.querySelector('#dc_run').click();
-  })()`, returnByValue: true });
+    const el = document.querySelector('[data-pf="material.family"]'); if (!el) return false;
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(el, '球铁');
+    el.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`, returnByValue: true });
+  await wait(200);
+  await send('Runtime.evaluate', { expression: `document.querySelector('#dc_pfSave').click()`, returnByValue: true });
   await wait(1500);
+  // ③ 执行
+  await send('Runtime.evaluate', { expression: `document.querySelector('#dc_run').click()` });
+  await wait(2000);
   r = await send('Runtime.evaluate', { expression: `JSON.stringify({
     hasResult: !document.querySelector('#dc_results').hidden,
     nav: (document.querySelector('#dc_resultNav') || {}).textContent || '',
@@ -309,7 +327,8 @@ try {
   console.log('\n[冒口设计计算器]');
   check('表单渲染', riser.hasForm);
   check('结果出现', riser.resultText.length > 0, riser.resultText);
-  check('校核芯片出现', riser.judgeChips >= 2, String(riser.judgeChips));
+  /* S5-01：旧体积参考芯片已移除；独立计算器仍须显示模数校核芯片。 */
+  check('模数校核芯片出现', riser.judgeChips >= 1, String(riser.judgeChips));
   check('Mc 模式切换', riser.mcToggle);
   r = await send('Runtime.evaluate', { expression: `JSON.stringify({
     hasNext: document.body.innerHTML.includes('🚀 下一步建议'),
@@ -407,7 +426,7 @@ try {
   await wait(450);
   r = await send('Runtime.evaluate', { expression: `JSON.stringify({
     hasSingle: document.body.innerHTML.includes('单件铁液重量'),
-    hasGroup: document.body.innerHTML.includes('铁液重量（按现场实测'),
+    hasGroup: document.body.innerHTML.includes('铁液重量（按出品率'),
     kept: document.getElementById('y_yield').value === '65'
   })`, returnByValue: true });
   check('出品率：用户改实绩后保留', JSON.parse(r.result.value).hasSingle && JSON.parse(r.result.value).hasGroup && JSON.parse(r.result.value).kept);
@@ -698,7 +717,8 @@ try {
   r = await send('Runtime.evaluate', { expression: `JSON.stringify({
     pageOpen: !!document.querySelector('.donate-page'),
     cards: document.querySelectorAll('.donate-page .sr-card').length,
-    hasAdNote: !!document.querySelector('.donate-page .sr-note'),
+    hasAdNote: (document.querySelector('.donate-page')?.textContent || '').includes('一个重要说明'),
+    hasDisclaimer: (document.querySelector('.donate-page')?.textContent || '').includes('关于支持者名单'),
     hasListZone: !!document.querySelector('.donate-page .sr-people, .donate-page .sr-empty'),
     qrLoaded: (function(){ var im = document.querySelector('.donate-page .donate-qr'); return !!im && im.complete && im.naturalWidth > 0; })(),
     author: !!document.querySelector('.donate-page .donate-author')
@@ -707,7 +727,7 @@ try {
   console.log('\n[支持与资源]');
   check('支持与资源页打开', dn.pageOpen);
   check('三块结构齐全（支持方式 / 支持者展示 / 支持者名单）', dn.cards >= 3, `cards=${dn.cards}`);
-  check('非广告位声明在页面上', dn.hasAdNote);
+  check('不需要的“一个重要说明”已移除，支持者名单说明仍保留', !dn.hasAdNote && dn.hasDisclaimer);
   check('支持者名单区存在（空态或列表）', dn.hasListZone);
   check('二维码完整加载', dn.qrLoaded);
   check('作者署名行保留', dn.author);
@@ -840,7 +860,7 @@ try {
   check('材料预填显示', wf.hasMaterial);
   check('浇注系统建议', wf.hasGating);
   check('冒口建议', wf.hasRiser);
-  check('冒口颈', wf.hasNeck);
+  check('旧冒口颈结果已移除（R8：只保留独立参考卡）', !wf.hasNeck);
 
   // ---- 16. Current Context：向导完成自动保存 + 计算器预填 ----
   console.log('\n[生产场景]');

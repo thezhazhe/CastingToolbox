@@ -43,19 +43,26 @@ export const tests = [
     },
   },
   {
-    name: '59-T3 riser 五材料数值不变（抽样锁定 56 实验值）',
+    name: '59-T3 riser 五材料参数不变（PHASE V2.0-22 重新基线化：尺寸不再随材料/重量变）',
     fn: () => {
-      // 与 56.txt 数值实验输出逐项一致（形状=球顶柱暗冒口 eff25%、Mc=15 直接输入）
+      // ⚠ PHASE V2.0-22（138.txt §3.4）：推荐尺寸改由目标模数 `Mr = 1.2 × Mc` 决定，
+      //   旧体积约束不再参与 ⇒ 同一 Mc 下 D/H **与材料、铸件重量无关**（Mc=15 ⇒ Mr=18 ⇒ D=108）。
+      //   旧期望（56.txt 抽样：f 1.10/1.25/1.35/1.95、D 99/113/122/176）是"体积约束主导尺寸"
+      //   时代的产物，随本阶段规则变更**整体失效**；本用例改为守住"仍然与材料有关"的那部分：
+      //   材料表参数（rho / shrink / neck_k）与由 Mc 决定的冒口颈。
       const exp = [
-        ['灰铁', 50, 'sphere_head', 1.10, 99], ['球铁', 50, 'sphere_head', 1.25, 113],
-        ['铸钢', 50, 'sphere_head', 1.35, 122], ['铝合金', 50, 'sphere_head', 1.95, 176],
+        ['灰铁', 0.02, 7.0, 45], ['球铁', 0.03, 7.1, 60],
+        ['铸钢', 0.045, 7.8, 66], ['铝合金', 0.045, 2.7, 60],
       ];
-      for (const [m, w, shape, f, D] of exp) {
-        const r = runRiser({ mat: m, cast_wt: w, mc_mode: 'direct', mc: 15, shape, hd_ratio: 1.0 });
-        assert(Math.abs(r.final_f - f) < 0.011 && r.D === D, `${m} ${w}kg: f=${r.final_f} D=${r.D}（期望 ${f}/${D}）`);
+      for (const [m, shrink, rho, neck] of exp) {
+        const r = runRiser({ mat: m, cast_wt: 50, mc_mode: 'direct', mc: 15, shape: 'sphere_head', hd_ratio: 1.0 });
+        assert(r.D === 108 && r.H === 108, `${m} Mc=15 的 D/H（实际 ${r.D}/${r.H}，期望 108/108）`);
+        assert(r.final_f === 1.2, `${m} 目标模数比应为 1.2（实际 ${r.final_f}）`);
+        assert(r.md.shrink === shrink && r.rhoUsed === rho, `${m} 材料表参数（shrink=${r.md.shrink} rho=${r.rhoUsed}）`);
+        assert(r.d_neck === neck, `${m} 冒口颈（实际 ${r.d_neck}，期望 ${neck}）`);
       }
       const cu = runRiser({ mat: '铜合金', cast_wt: 10, mc_mode: 'direct', mc: 15, shape: 'cyl', hd_ratio: 1.0 });
-      assert(cu.final_f === 1.10 && cu.D === 99, `铜 10kg cyl f/D（实际 ${cu.final_f}/${cu.D}）`);
+      assert(cu.final_f === 1.2 && cu.D === 108, `铜 10kg cyl f/D（实际 ${cu.final_f}/${cu.D}）`);
       // 灰铁 neck_k=0.75 等材料参数未动
       assert(runRiser({ mat: '灰铁', cast_wt: 50, mc_mode: 'direct', mc: 15, shape: 'cyl', hd_ratio: 1.0 }).d_neck === 45, '灰铁颈径不变（0.75×15×4=45）');
     },

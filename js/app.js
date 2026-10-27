@@ -6,8 +6,6 @@
 import * as calculatorsView from './views/calculators.js';
 import * as knowledgeView from './views/knowledge.js';
 import * as wizardView from './views/wizard.js';
-import * as designCenterView from './views/designCenter.js';
-import * as inspectionCenterView from './views/inspectionCenter.js';   // PHASE 88/93：工艺检测中心
 import * as homeView from './views/home.js';
 import * as donateView from './views/donateView.js';
 import * as searchView from './views/search.js';
@@ -18,7 +16,7 @@ import { loadKnowledge } from './search.js';
 // PHASE 72（80.txt）：界面语言切换（zh-CN / en-US）——只做显示层，不动项目/计算
 import * as i18n from './i18n/index.js';
 import * as viewState from './i18n/viewState.js';
-import { VERSION_LABEL } from './version.js';   // PHASE 73：版本号唯一来源
+import { VERSION_LABEL } from './version.js';
 
 const viewEl = document.getElementById('view');
 const navEl = document.getElementById('nav');
@@ -30,11 +28,36 @@ const VIEWS = {
   calculators: calculatorsView,
   knowledge: knowledgeView,
   wizard: wizardView,
-  designCenter: designCenterView,
-  inspection: inspectionCenterView,   // PHASE 88：#/inspection 工艺检测中心（PHASE 93 §四 起是侧栏独立栏目）
   donate: donateView,
   search: searchView,
 };
+/* 168.txt B：工艺设计中心 / 工艺检测中心都依赖 ModelView3D → three.js。
+   首页/普通计算器不 import 它们，只有真正进入这两个路由时才动态加载；
+   已加载的 module 保留在 lazyModules 中，后续切换复用，不重复 import。 */
+const LAZY_VIEWS = {
+  designCenter: () => import('./views/designCenter.js'),
+  inspection: () => import('./views/inspectionCenter.js'),
+};
+const lazyModules = new Map();
+const lazyPromises = new Map();
+const isKnownView = (v) => Object.prototype.hasOwnProperty.call(VIEWS, v)
+  || Object.prototype.hasOwnProperty.call(LAZY_VIEWS, v);
+
+function loadLazyView(view) {
+  if (lazyModules.has(view)) return Promise.resolve(lazyModules.get(view));
+  if (!lazyPromises.has(view)) {
+    const p = LAZY_VIEWS[view]().then((mod) => {
+      lazyModules.set(view, mod);
+      lazyPromises.delete(view);
+      return mod;
+    }).catch((err) => {
+      lazyPromises.delete(view);   // 失败后允许用户点击重试
+      throw err;
+    });
+    lazyPromises.set(view, p);
+  }
+  return lazyPromises.get(view);
+}
 
 /* ---- 主题切换（auto / light / dark，localStorage 记忆） ---- */
 const SUN_SVG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
@@ -58,19 +81,85 @@ document.getElementById('themeBtn')?.addEventListener('click', cycleTheme);
 function parseHash() {
   const h = location.hash.replace(/^#\/?/, '');
   const [view = 'home', ...rest] = h.split('/');
-  return { view: VIEWS[view] ? view : 'home', params: { id: rest[0], cat: rest[0] } };
+  return { view: isKnownView(view) ? view : 'home', params: { id: rest[0], cat: rest[0] } };
 }
 
-function render(opts = {}) {
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+}[c]));
+
+function renderLazyLoading(view) {
+  viewEl.innerHTML = `<div class="view-loading" data-lazy-view="${escapeHtml(view)}" data-lazy-state="loading" role="status" aria-live="polite">
+    <div class="view-loading-card">
+      <div class="view-loading-spinner" aria-hidden="true"></div>
+      <div class="view-loading-title">${i18n.t('正在加载三维模块…')}</div>
+      <div class="view-loading-sub">${i18n.t('首次进入工艺设计或工艺检测时需要加载本地三维资源；加载完成后会复用，不重复下载。')}</div>
+      <div class="view-loading-track" aria-hidden="true"><span></span></div>
+    </div>
+  </div>`;
+}
+
+function renderLazyError(view, err) {
+  const detail = err && err.message ? err.message : String(err || '');
+  viewEl.innerHTML = `<div class="view-loading" data-lazy-view="${escapeHtml(view)}" data-lazy-state="error" role="alert">
+    <div class="view-loading-card">
+      <div class="view-loading-error-icon" aria-hidden="true">⚠️</div>
+      <div class="view-loading-title">${i18n.t('三维模块加载失败')}</div>
+      <div class="view-loading-sub">${i18n.t('请检查本地文件是否完整，然后重试。')}</div>
+      <div class="view-loading-error">${escapeHtml(detail)}</div>
+      <div class="view-loading-actions">
+        <button type="button" class="btn btn-primary" data-lazy-retry>${i18n.t('重试')}</button>
+        <button type="button" class="btn btn-ghost" data-lazy-back>${i18n.t('返回首页')}</button>
+      </div>
+    </div>
+  </div>`;
+  viewEl.querySelector('[data-lazy-retry]')?.addEventListener('click', () => render());
+  viewEl.querySelector('[data-lazy-back]')?.addEventListener('click', () => { location.hash = '#/home'; });
+}
+
+let renderSeq = 0;
+async function render(opts = {}) {
+  const seq = ++renderSeq;
   const { view, params } = parseHash();
   // PHASE 72：语言切换触发的重渲染保留滚动位置（否则切语言会跳回页首）
   if (!opts.keepScroll) window.scrollTo(0, 0);   // 切换视图回顶部：点搜索结果进详情不再停留在旧滚动位置
   const activeView = view === 'search' ? 'home' : view;   // 搜索结果页时点亮首页
   document.body.classList.toggle('view-home', view === 'home');   // 首页隐藏顶栏搜索（首页自带大搜索框）
+  // V2.0-P1-01 D2：工艺设计中心是"3D 主工作区"，需要比通用 1080px 更宽（142.txt §四 D2）。
+  //   沿用同一套 body 级视图类机制（不引入 :has()，也不给 #view 加需要手工清理的状态）。
+  document.body.classList.toggle('view-dc', view === 'designCenter');
   navEl.querySelectorAll('.nav-item').forEach(el =>
     el.classList.toggle('active', el.dataset.view === activeView));
   // PHASE 72：进入视图前复位"换语言钩子"——由视图自己声明支持（支持 → 切换语言时重渲染它）
   viewState.resetViewHooks();
+  const mountLazy = (mod) => {
+    try {
+      const out = mod.render(viewEl, params);
+      if (out && typeof out.then === 'function') {
+        out.catch((err) => { if (seq === renderSeq) renderLazyError(view, err); });
+      }
+    } catch (err) {
+      if (seq === renderSeq) renderLazyError(view, err);
+    }
+  };
+  if (LAZY_VIEWS[view]) {
+    const cached = lazyModules.get(view);
+    if (cached) {
+      mountLazy(cached);
+      return;
+    }
+    renderLazyLoading(view);
+    let mod;
+    try {
+      mod = await loadLazyView(view);
+    } catch (err) {
+      if (seq === renderSeq) renderLazyError(view, err);
+      return;
+    }
+    if (seq !== renderSeq) return;   // 用户在加载期间切走了：不要覆盖新视图
+    mountLazy(mod);
+    return;
+  }
   VIEWS[view].render(viewEl, params);
 }
 
@@ -236,7 +325,7 @@ i18n.onChange(() => {
   viewState.relocalizeView(viewEl, () => render({ keepScroll: true }));
 });
 
-/* ---- PHASE 73：版本号从唯一来源写入侧栏左下角（关于弹窗正文由词条表提供，有测试守卫一致） ---- */
+/* ---- 侧栏左下角版本显示：与 version.js 单一来源一致（V2.0.0 正式版不再显示候选代际文案）。 ---- */
 (function applyVersion() {
   const a = document.getElementById('appVersion');
   if (a) a.textContent = VERSION_LABEL;

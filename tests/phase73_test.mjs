@@ -16,14 +16,14 @@ const assert = (cond, msg) => { if (!cond) throw new Error(msg); };
 
 export const tests = [
   {
-    name: '73-T1 版本号唯一来源 = 应用内显示（侧栏 / 关于弹窗中英 / 报告）',
+    name: '73-T1 版本元数据唯一来源 = 关于弹窗/报告/侧栏（V2.0.0 正式版）',
     fn: () => {
       assert(/^\d+\.\d+\.\d+$/.test(VERSION), `version.js 语义化版本（实际 ${VERSION}）`);
       assert(VERSION_LABEL === 'v' + VERSION, 'VERSION_LABEL = v + VERSION');
-      // 侧栏：index.html 里的静态文本（运行时由 app.js 用 VERSION_LABEL 覆盖，静态值也要对齐）
       const html = read('index.html');
-      assert(html.includes(`id="appVersion"`), '侧栏版本节点存在（供运行时写入）');
-      assert(html.includes(`<b id="appVersion">${VERSION_LABEL}</b>`), `侧栏静态版本 = ${VERSION_LABEL}`);
+      assert(html.includes(`id="appVersion"`), '侧栏版本节点存在');
+      // V2.0.0 正式版：侧栏、关于弹窗、报告全部使用 version.js 单一来源。
+      assert(html.includes(`<b id="appVersion">${VERSION_LABEL}</b>`), `侧栏显示 ${VERSION_LABEL}`);
       assert(html.includes(`<b>版本：</b>${VERSION_LABEL} `), `关于弹窗静态版本 = ${VERSION_LABEL}`);
       // 关于弹窗正文由词条表提供（applyDom 会整体替换 innerHTML）→ 词条表必须同步
       const zh = read('js/i18n/zh-CN.js');

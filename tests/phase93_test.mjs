@@ -265,13 +265,16 @@ export const tests = [
         return o;
       };
       // 恰好 1.2
-      let r = buildRiserRows([hs(1, 0, 0, 0, 10)], [mk(12)]);
+      // PHASE V2.0-06A1（113.txt §四.4）：本用例测的是**比值公式**，故显式声明"热点模数已确认"。
+      //   `ok`（比值算出来够不够）与"结论能不能定"是两件事：前者不受确认位影响（下一行照旧断言），
+      //   后者才是新的 MODULUS_OK_UNCONFIRMED 分支（93-U 专门测）。
+      let r = buildRiserRows([hs(1, 0, 0, 0, 10)], [mk(12)], { mcConfirmed: true });
       near(r.rows[0].nearest.ratio, 1.2, 1e-12, '比值应为 1.2');
       assert(r.rows[0].ok === true, '≥ 1.2 必须判为满足');
       let s = summarizeRisers({ product: {}, hotspots: [hs(1, 0, 0, 0, 10)], risers: [mk(12)], rows: r });
       assert(s.warns === 0, '满足时不得有 WARNING');
       assert(s.items.some(i => i.code === RISER_CODE.MODULUS_OK && i.params[0] === 1), '应报 1 个满足');
-      // 明显大于
+      // 明显大于（确认位不影响比值本身）
       r = buildRiserRows([hs(1, 0, 0, 0, 10)], [mk(25)]);
       assert(r.rows[0].ok === true && r.rows[0].nearest.ratio === 2.5, '2.5 应判满足');
     },
@@ -362,6 +365,8 @@ export const tests = [
         '请先导入产品 STL', '暂未导入冒口',
         '未检出热点（模型壁厚均匀或热点低于置信度门槛），没有可比的热点模数',
         '{n} 个冒口的模数比满足（M冒口 / M热点 ≥ {r}）',
+        // PHASE V2.0-06A1 新增：未确认的自动 Mc 走独立 code（113.txt §四.4）
+        '{n} 个冒口的模数比计算通过（M冒口 / M热点 ≥ {r}）；但热点模数 Mc 是未经确认的自动估计值，本结论待确认',
         '{n} 个冒口的模数比不足（M冒口 / M热点 < {r}）',
         '{n} 个冒口没有可比的热点模数，未参与判定',
         '{n} 个冒口的模数无法可靠计算（几何不是有效封闭实体），未参与判定',

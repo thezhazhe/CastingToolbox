@@ -72,7 +72,9 @@ export function defaultProject() {
       cavities: P(1, SRC.USER_INPUT, CONF.USER_CONFIRMED, true),   // 一模件数
       ingateN: P(0, SRC.DEFAULT, CONF.LOW, true),                  // 内浇道个数（0=按推荐自动 2~3）
       // PHASE 80（79.txt 追问）：横浇道条数——与内浇道同级，结果页 ③ 可直接改（0=用默认 2 条）
-      runnerN: P(0, SRC.DEFAULT, CONF.LOW, true),                  // 横浇道条数
+      runnerN: P(0, SRC.DEFAULT, CONF.LOW, true),                  // 横浇道条数（矩形）
+      // 164.txt 五：三种梯形正式接入后的条数。与矩形条数分开保存，切换截面时不互相重置。
+      trapezoidN: P(1, SRC.DEFAULT, CONF.LOW, true),               // 梯形横浇道条数（默认 1）
       line: P('不指定', SRC.DEFAULT, CONF.LOW, true),               // 造型线
       prod: P('不指定', SRC.DEFAULT, CONF.LOW, true),               // 生产方式
       method: P('不指定', SRC.DEFAULT, CONF.LOW, true),             // 铸造方法
@@ -83,16 +85,23 @@ export function defaultProject() {
       // PHASE 28.3-A canonical：mcUsed 双语义拆分（热结模数 vs 壁厚/2）
       mcHotspot: P(0, SRC.DEFAULT, CONF.LOW, true),                 // 热结模数 Mc（STL 热结自动；riser 有热结时用）
       wallHot: P(0, SRC.DEFAULT, CONF.LOW, true),                   // 壁厚模数 = 主体壁厚/2（DERIVED；无热结时 riser 用；chill T=2×wallHot）
-      riserHeight: P(0, SRC.DEFAULT, CONF.LOW, true),               // 冒口高度 mm（riser 结果回写 CALC_RESULT；gating Hp 用，可改）
+      // R6-S3.1：**RH = 冒口顶面高出铸件顶面的距离**（浇注系统几何量），不是冒口自身总高 H。
+      //   由用户按实际冒口位置指定；riser 计算不再自动回写该字段。
+      riserHeight: P(0, SRC.DEFAULT, CONF.LOW, true),
       // PHASE 71.7（77.txt 二）：冒口热结选择——[{id, mc}]，空 = 自动（主热结 H1）
       hsPick: P([], SRC.DEFAULT, CONF.LOW, true),                   // 用户勾选的热结 + 各自 Mc（弹窗改值）
       // PHASE 71.7（77.txt 六）：内浇道厚度/个数（推荐 = 主体壁厚÷3 / 2~3 个；0=按推荐自动）
       gateThk: P(0, SRC.DEFAULT, CONF.LOW, true),                   // 内浇道厚度 mm
       // PHASE 80（79.txt 追问）：横浇道厚度——同上，0 = 用工具既有默认 25 mm
       runnerThk: P(0, SRC.DEFAULT, CONF.LOW, true),                 // 横浇道厚度 mm
+      // 164.txt 五：横浇道截面。'' = 自动（开放式→扁梯形 / 封闭式→高梯形 / 其它→标准梯形）；
+      // 用户手动选择后保存具体键，后续结果重建不再自动覆盖。
+      runnerSection: P('', SRC.DEFAULT, CONF.LOW, true),            // rect / standard / flat / tall
       // PHASE 78（78.txt 二/三/八）：三项用户可选的工艺设计口径（默认值=工程常用档）
       ratioKey: P('', SRC.DEFAULT, CONF.LOW, true),                 // 浇注系统比例预设（'' = 按材料/重量自动推荐）
       riserShape: P('cyl', SRC.DEFAULT, CONF.LOW, true),            // 冒口形状（riser.RISER_SHAPES 键；默认圆柱形）
+      // S5-05：冒口 H/D（高度/直径比）。默认 1.0，保持既有行为；球形不使用（H ≡ D）。
+      hdRatio: P(1.0, SRC.DEFAULT, CONF.LOW, true),
       // PHASE 79（79.txt 四）：排气 = 用户定**直径**、系统按企业标准反算**孔数**
       //   （79.txt 原文："直径用户可以输入，默认 3，可以改成 2 或 1；数量根据总排气面积由系统自动生成"）
       ventD: P(3, SRC.DEFAULT, CONF.LOW, true),                     // 排气孔直径 mm（默认 3）
@@ -141,6 +150,16 @@ export function migrateProject(p) {
   if (wt) { dup(p.geometry, wt, 'netWeightKg'); dup(p.geometry, wt, 'blankWeightKg'); delete p.geometry.weightKg; }
   const mc = old('process.mcUsed');
   if (mc) { dup(p.process, mc, 'mcHotspot'); dup(p.process, mc, 'wallHot'); delete p.process.mcUsed; }
+  /* R6-S3.1（154.txt §五.3）：旧版本把**冒口总高 H** 自动回写到 process.riserHeight，
+     而该字段的真实语义是浇注系统的 RH（冒口顶面高出铸件顶面的距离）。两者只在
+     “顶冒口直接坐在铸件顶面”时相等，不能继续把旧自动值当成用户指定的 RH 使用。
+     ⇒ 载入旧项目时，仅清除 CALC_RESULT 来源的旧自动值；USER_INPUT / USER_OVERRIDE
+     是用户明确指定的 RH，原样保留。 */
+  const rh = old('process.riserHeight');
+  if (rh && rh.src === SRC.CALC_RESULT) {
+    rh.v = 0; rh.src = SRC.DEFAULT; rh.conf = CONF.LOW;
+    delete rh.orig;
+  }
   return p;
 }
 
@@ -216,7 +235,11 @@ export function set(path, v, src, conf) {
   //   支持 UI 显示"STL 原始 X · 当前采用 Y"与一键恢复（不丢来源语义）。
   //   自动写入（STL/DERIVED）→ 基准随时刷新为最新自动值；
   //   非自动写入且原值是自动值 → 首次覆盖时固化基准（orig ??= 旧值，多次覆盖只保留最初的自动值）。
-  const wasAuto = p.src === SRC.STL_GEOMETRY_ANALYSIS || p.src === SRC.DERIVED;
+  /* R6-S3（153.txt §七.5）：`CALC_RESULT` 也是自动值（上面的默认来源判定已把它算进去）。
+     旧实现漏在这里 ⇒ 用户第一次改 `process.riserHeight`（冒口计算回写值）时不会固化自动原值，
+     「↺ 恢复自动值」永远不出现 —— 与"自动值可改、可恢复"的既有承诺不一致。
+     纳入后只影响"CALC_RESULT → 用户覆盖"这一条路径：首次覆盖时记下 orig，其余行为不变。 */
+  const wasAuto = p.src === SRC.STL_GEOMETRY_ANALYSIS || p.src === SRC.DERIVED || p.src === SRC.CALC_RESULT;
   if (src === SRC.STL_GEOMETRY_ANALYSIS || src === SRC.DERIVED) {
     // 自动写入本身即基准值（STL 重算/单位切换后 orig 随最新自动值刷新）
     p.orig = { v, src, conf: conf || p.conf };
@@ -419,10 +442,20 @@ export function clearStlBoundData() {
   clearIfNotUserInput('process.wallUsed');
   clearIfNotUserInput('process.mcHotspot');
   clearIfNotUserInput('process.wallHot');
-  // PHASE 28.4 修复：process.riserHeight（riser 结果回写）随 risers.items 一并清理——
-  //   替换 STL 后旧模型的冒口高度残留会让 gating Hp 用旧模型值（新模型只跑 gating 不跑 riser 时不自愈）。
-  //   与 risers.items 无条件清语义一致；USER_INPUT（用户手动填预估）保留。
-  clearIfNotUserInput('process.riserHeight');
+  /* PHASE 28.4 修复：process.riserHeight（riser 结果回写）随 risers.items 一并清理——
+     替换 STL 后旧模型的**自动**冒口高度残留会让 gating Hp 用旧模型值
+     （新模型只跑 gating 不跑 riser 时不自愈）。
+     R6-S3（153.txt §七.5）：`USER_OVERRIDE` 也是**用户显式指定**的 RH，不能随换模型静默清掉
+     （旧实现只保留 USER_INPUT，UI 若写 USER_OVERRIDE 就会被清 —— 注释与实现不一致）。
+     现在：自动来源（CALC_RESULT / DEFAULT / DERIVED / STL…）清；两类用户来源都保留。
+     保留的 USER_OVERRIDE 的 `orig` 已在上方 `dropOrig` 里失效 ⇒ 不会再恢复成旧模型的自动高度；
+     换模型后 UI 必须提示用户复核（见 designCenter.importFile）。 */
+  const keepUserRiserHeight = (() => {
+    const p = get('process.riserHeight');
+    if (!p || (p.src !== SRC.USER_INPUT && p.src !== SRC.USER_OVERRIDE)) return false;
+    return true;
+  })();
+  if (!keepUserRiserHeight) clearIfNotUserInput('process.riserHeight');
 
   return cleared;
 }

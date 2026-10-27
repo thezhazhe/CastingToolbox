@@ -193,17 +193,17 @@ export function renderCampbell(container, calc) {
       ${r.slot.overThin
         ? `<div class="field-hint" style="padding:4px 4px 0;color:var(--danger,#DC2626)">⚠️ 内浇口厚度 ${r.slot.t}mm 已超过壁厚一半（${(r.wall / 2).toFixed(1)}mm）——可能形成"内浇口下热节"；如非必要请改回 ≤ ${r.slot.minT}mm（长度会自动重算）。</div>`
         : `<div class="field-hint" style="padding:4px 4px 0">规则：厚度 ≤ 壁厚/2 可消除 T 形热节；想改厚/改薄在输入框直接改，长度实时更新。</div>`}
-      <div class="field-hint" style="padding:6px 4px 0">🍕 <b>内浇口款式（Campbell）</b>：宜做成<b>垂直扇形</b>——从横浇道底部向上扩张、开口呈扇形展开，本身是有效的减速器（可靠性约提高 4 倍）；本速算按等截面矩形口给出面积，扇形属于布置款式，面积需求不变。</div>
+      <details class="sc-fold"><summary>ⓘ 内浇口款式（Campbell）</summary><div class="field-hint">🍕 <b>内浇口款式（Campbell）</b>：宜做成<b>垂直扇形</b>——从横浇道底部向上扩张、开口呈扇形展开，本身是有效的减速器（可靠性约提高 4 倍）；本速算按等截面矩形口给出面积，扇形属于布置款式，面积需求不变。</div></details>
     ` : '';
 
     sysT.innerHTML = `浇注系统 1 : 1 : ${r.nTotal} ${KB('campbell_ratio_1_1_n', '为什么 ⓘ')}`;
     sprueOut.innerHTML = row('⏬ 直浇道底部（Sprue 出口）', `面积 ${fmt(r.sprue.area, 0)} mm² · ⌀${r.sprue.d}`, 'mm', 'ok',
       `参考 ${fmt(r.Ai, 0)} mm²（=单口面积）→ 圆取 ⌀${r.sprue.d}（实际 ${fmt(r.sprue.area, 0)} ≥ 参考）；直浇道一般圆形，高度取决于实际液面与布置（v=√(2gh)）——此处不是排气面积`) +
-      `<div class="field-hint" style="padding:6px 4px 0">🔻 <b>直浇道形状（Campbell）</b>：宜做成<b>上大下小的锥形</b>，锥度匹配金属液下落流股的自然收缩（平行/倒锥直浇道会卷气）；自动造型线只能做倒锥起模时，补救=入口尺寸正确 + 锥度尽量小 + <b>底部紧跟过滤器</b>。<br>🏺 <b>浇口窝（直浇道底部）</b>：注意——Campbell 明确<b>不推荐</b>传统教科书式的"直浇道窝/扩张窝"（先膨胀再加速是卷气源）；底部要做的是与横浇道<b>平滑过渡、不突然变截面</b>。</div>`;
+      `<details class="sc-fold"><summary>ⓘ 直浇道形状与浇口窝（Campbell）</summary><div class="field-hint">🔻 <b>直浇道形状（Campbell）</b>：宜做成<b>上大下小的锥形</b>，锥度匹配金属液下落流股的自然收缩（平行/倒锥直浇道会卷气）；自动造型线只能做倒锥起模时，补救=入口尺寸正确 + 锥度尽量小 + <b>底部紧跟过滤器</b>。<br>🏺 <b>浇口窝（直浇道底部）</b>：注意——Campbell 明确<b>不推荐</b>传统教科书式的"直浇道窝/扩张窝"（先膨胀再加速是卷气源）；底部要做的是与横浇道<b>平滑过渡、不突然变截面</b>。</div></details>`;
     runnerOut.innerHTML = `
       ${row('➡️ 横浇道（Runner）', `面积 ${fmt(r.runner.area, 0)} mm² · ${r.runner.l} × ${r.runner.h}（长 × 高）`, 'mm', 'ok',
         `${r.runnerCustom ? '高度用你输入的值' : '高度为自动值（可在上方输入框修改）'}；参考 = Sprue ×1.2 ≈ ${fmt(r.runnerRefArea, 0)} mm²（弯角摩擦裕度，略大于直浇道；仍循"满足流量下尽可能小"）；弯道内侧建议大圆角（1~2 倍通道厚度）${KB('campbell_runner_sprue', '为什么 1:1 ⓘ')}`)}
-      <div class="field-hint" style="padding:6px 4px 0">🔧 <b>工程提示</b>：直浇道与横浇道连接处避免突然变截面与尖锐转角（弯角摩擦降速约 20%，三个直角弯≈半速；内弯做大圆角）；横浇道宜保持在下箱、金属液先充满横浇道再进内浇口（<b>放上箱不推荐</b>——金属液要"爬"进型腔，违反无跌落原则，传统铸铁这么做是错的）。</div>
+      <details class="sc-fold"><summary>ⓘ 横浇道连接与位置（Campbell）</summary><div class="field-hint">🔧 <b>工程提示</b>：直浇道与横浇道连接处避免突然变截面与尖锐转角（弯角摩擦降速约 20%，三个直角弯≈半速；内弯做大圆角）；横浇道宜保持在下箱、金属液先充满横浇道再进内浇口（<b>放上箱不推荐</b>——金属液要"爬"进型腔，违反无跌落原则，传统铸铁这么做是错的）。</div></details>
     `;
   };
   let timer;

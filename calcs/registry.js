@@ -89,9 +89,9 @@ export const CALCULATORS = [
     cat: 'dim',   // PHASE 78 分类
     name: '加工余量',
     icon: '🛠️',
-    desc: '方法×材质 → 余量范围（等级自动，不选等级）· 顶面/底面分级 · GB/T 6414',
-    tags: ['加工', 'GB/T 6414', 'RMA'],
-    keywords: ['加工余量', 'GB/T 6414', '公差等级', 'RMA', '机械加工', '顶面'],
+    desc: '方法×材质 → 余量范围（等级自动，不选等级）· 顶面/底面分级 · GB/T 42124.3-2025',
+    tags: ['加工', 'GB/T 42124.3-2025', 'GB/T 6414', 'RMA'],
+    keywords: ['加工余量', 'GB/T 42124.3-2025', 'GB/T 6414', '公差等级', 'RMA', '机械加工', '顶面'],
     next: [
       { icon: '📏', label: '线收缩率', kind: 'calc', target: 'shrinkage' },
       { icon: '🏰', label: '结构工艺性', kind: 'calc', target: 'castability' },

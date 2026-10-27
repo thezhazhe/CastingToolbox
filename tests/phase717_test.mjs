@@ -140,9 +140,15 @@ export const tests = [
       assert(html.includes('用户输入') && html.includes('该热结检出 9'), 'H2 标注用户修改值与该热结检出值');
       assert(html.includes(String(r.items[0].D)) && html.includes(String(r.items[1].D)), '两块冒口尺寸各自渲染');
       assert(html.includes('冒口结果来自现有冒口计算器'), '结果出处标注保留');
-      assert(html.includes('体积校核') && html.includes('冒口颈'), '校核字段齐全');
-      // PHASE 78（78.txt 三）：冒口形状可选（4 种，默认圆柱形）
-      assert(html.includes('id="dc_riserShape"') && html.includes('圆柱形') && html.includes('球顶圆柱') && html.includes('球形') && html.includes('正方柱'), '冒口形状下拉（4 种）');
+      // S5-01：旧体积提示已移除；保留设计依据（目标模数）、冒口颈与 H/D 等真实结果。
+      assert(html.includes('目标冒口模数 Mr_target') && html.includes('冒口颈') && html.includes('H/D（高度 / 直径）'),
+        '主要字段齐全（目标模数 / 冒口颈 / H/D）');
+      assert(!html.includes('旧体积模型参考') && !html.includes('旧体积参考不足'),
+        '多热结结果不得再显示旧体积提示');
+      /* R6-S3（153.txt §六.3）：结果页不再有第二个形状下拉；形状唯一入口在参数面板。
+         结果页必须只读展示当前形状并给出回参数面板的入口。 */
+      assert(!html.includes('id="dc_riserShape"'), '结果页不得再有第二个形状下拉');
+      assert(html.includes('data-shape-readonly') && html.includes('data-edit-param="process.riserShape"'), '结果页只读形状 + 去参数面板入口');
     },
   },
   {
@@ -158,8 +164,12 @@ export const tests = [
       const html = container.innerHTML;
       assert(html.includes('总截面'), '直/横/内浇道总截面积');
       assert(html.includes('总排气面积'), '排气总面积（77.txt 六：这些才是重点）');
-      assert(!/<svg/i.test(html), '结果页不含示意图（已移入参数区）');
-      assert(html.includes('参数与执行条件'), '提示示意图位置');
+      assert(!/<svg/i.test(html), '结果页不含示意图');
+      /* 145.txt §三：参数输入窗口（连同"浇注方向示意图"）已按产品方向**整体移除** ——
+         设计中心改为固定三步流程（导入 → 分析 → 查看结果），没有手动参数输入入口。
+         原断言要求结果页"提示示意图在参数区的位置"，那是对已删功能的引用，
+         现在反过来钉住更严的契约：**不得再引用一个不存在的入口**（悬空指引比缺提示更糟）。 */
+      assert(!html.includes('参数与执行条件'), '结果页不再引用已移除的参数输入窗口');
     },
   },
   {

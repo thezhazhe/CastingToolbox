@@ -84,7 +84,8 @@ try {
   // ---- 1. 首页 ----
   await waitFor(`!!document.getElementById('homeSearch')`);
   const homeCards = await evalJ(`document.querySelectorAll('.tool-card').length`);
-  check('首页渲染（常用工具卡）', homeCards === 13, String(homeCards));
+  // 当前注册信息与首页均为 15 个计算工具（README/qa_static 同口径）。
+  check('首页渲染（常用工具卡）', homeCards === 15, String(homeCards));
 
   // ---- 1b. 生产场景：5 材质族逐一验证参数速查卡 ----
   const SC_FAM = { 灰铁: 'HT200', 球铁: 'QT450', 铸钢: 'ZG270-500', 铝合金: 'ZL101', 铜合金: 'ZCuSn10Pb1' };

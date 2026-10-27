@@ -35,92 +35,161 @@ export function detachPosition(geometry) {
   return geometry;
 }
 
+/* ============================================================
+   145.txt §四：三维视口与明暗主题协调
+   原来视口背景是**硬编码纯黑** `#0b0f1a`：亮色主题下"大面积纯白页面 + 纯黑视口"直接拼接，
+   割裂感很强；而模型本身是浅蓝灰（0x9fb4d4），换到浅色背景又会糊成一片。
+   ⇒ 按主题给两组**成套**参数（背景 + 模型色 + 三点光照强度），保证两种主题下
+     模型轮廓/孔洞/表面细节/热结标记都清楚。计算方法、坐标、缩放、旋转、热点定位一律不变。
+   ============================================================ */
+const VIEW_THEME = {
+  dark: { bg: 0x0f1522, mesh: 0x9fb4d4, ambient: 0.55, hemiSky: 0xbfd4ff, hemiGround: 0x1a2030, hemi: 0.65, dir: 1.10, axes: 0.28 },
+  light: { bg: 0xe7edf6, mesh: 0x6d8399, ambient: 0.72, hemiSky: 0xffffff, hemiGround: 0xa9b6c9, hemi: 0.55, dir: 1.00, axes: 0.45 },
+};
+/** 当前生效的主题（data-theme 优先，auto 跟随系统偏好） */
+function resolveTheme() {
+  const t = document.documentElement.getAttribute('data-theme');
+  if (t === 'light') return 'light';
+  if (t === 'dark') return 'dark';
+  try { return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }
+  catch (e) { return 'dark'; }
+}
+
 export class ModelView3D {
   constructor(container) {
     this.container = container;
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0b0f1a);
+    this._disposed = false;
+    this._raf = null;              // 当前已安排的动画帧 ID（dispose/失败时取消）
+    try {
+      this.scene = new THREE.Scene();
+      this._theme = resolveTheme();
+      this.scene.background = new THREE.Color(VIEW_THEME[this._theme].bg);
 
-    // 相机：透视 + 轨道控制（旋转/缩放/平移）
-    this.camera = new THREE.PerspectiveCamera(40, container.clientWidth / Math.max(1, container.clientHeight), 1, 100000);
-    this.camera.position.set(120, 100, 180);
-    this.controls = new OrbitControls(this.camera, container);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.08;
+      // 相机：透视 + 轨道控制（旋转/缩放/平移）
+      this.camera = new THREE.PerspectiveCamera(40, container.clientWidth / Math.max(1, container.clientHeight), 1, 100000);
+      this.camera.position.set(120, 100, 180);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setSize(container.clientWidth, container.clientHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(this.renderer.domElement);
+      /* 169 审计风险 1：**Renderer 先于 OrbitControls 创建**。
+         WebGL 不可用时构造函数直接抛错 —— 此时还没有任何 container 监听或
+         Controls 需要回收；反过来（旧顺序）Renderer 失败会留下已绑定的 controls。 */
+      this.renderer = new THREE.WebGLRenderer({ antialias: true });
+      this.renderer.setSize(container.clientWidth, container.clientHeight);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(this.renderer.domElement);
 
-    // 按需渲染：仅当相机/模型/marker 变化时才 render()。
-    // 无头/后台环境 rAF 无 vsync 节流，若每帧渲染大网格（软件渲染 ~20ms/帧），
-    // 会挤占 MessageChannel 宏任务——分析分片让出（yieldFn）被拖慢到每片一帧
-    // （17.8 万面模型 + 882 片 ≈ 19s）。画面静止时重复渲染本无意义。
-    this._needsRender = true;
-    this.controls.addEventListener('change', () => { this._needsRender = true; });
+      this.controls = new OrbitControls(this.camera, container);
+      this.controls.enableDamping = true;
+      this.controls.dampingFactor = 0.08;
 
-    // 灯光
-    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
-    const hemi = new THREE.HemisphereLight(0xbfd4ff, 0x1a2030, 0.65);
-    const dir = new THREE.DirectionalLight(0xffffff, 1.1);
-    dir.position.set(120, 200, 100);
-    this.scene.add(ambient, hemi, dir);
+      // 按需渲染：仅当相机/模型/marker 变化时才 render()。
+      // 无头/后台环境 rAF 无 vsync 节流，若每帧渲染大网格（软件渲染 ~20ms/帧），
+      // 会挤占 MessageChannel 宏任务——分析分片让出（yieldFn）被拖慢到每片一帧
+      // （17.8 万面模型 + 882 片 ≈ 19s）。画面静止时重复渲染本无意义。
+      this._needsRender = true;
+      this.controls.addEventListener('change', () => { this._needsRender = true; });
 
-    // 坐标轴（弱化，不抢模型；无地面网格——网格线会穿过模型形成"平面"感，干扰观察）
-    const axes = new THREE.AxesHelper(200);
-    axes.material.transparent = true;
-    axes.material.opacity = 0.25;
-    this.scene.add(axes);
+      // 灯光（强度随主题成套切换，见 applyTheme）
+      const T0 = VIEW_THEME[this._theme];
+      const ambient = new THREE.AmbientLight(0xffffff, T0.ambient);
+      const hemi = new THREE.HemisphereLight(T0.hemiSky, T0.hemiGround, T0.hemi);
+      const dir = new THREE.DirectionalLight(0xffffff, T0.dir);
+      dir.position.set(120, 200, 100);
+      this.scene.add(ambient, hemi, dir);
+      this._lights = { ambient, hemi, dir };
 
-    this.meshGroup = new THREE.Group();
-    this.hsGroup = new THREE.Group();
-    this.scene.add(this.meshGroup, this.hsGroup);
+      // 坐标轴（弱化，不抢模型；无地面网格——网格线会穿过模型形成"平面"感，干扰观察）
+      const axes = new THREE.AxesHelper(200);
+      axes.material.transparent = true;
+      axes.material.opacity = T0.axes;
+      this.scene.add(axes);
+      this._axes = axes;
 
-    this.hotspots = [];        // 热结数据（居中坐标）
-    this.markerMeshes = [];    // marker group 列表（拾取用）
-    this.selectedHs = -1;
-    this.onSelectHotspot = null;   // 选中回调(idx)；-1 = 取消选中
+      /* 主题切换 → 视口跟着换（应用主题由 app.js 写在 <html data-theme> 上；
+         auto 模式还要跟随系统偏好变化）。观察器在 dispose 时断开，不泄漏。 */
+      this._themeObs = new MutationObserver(() => this.applyTheme());
+      this._themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+      this._mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+      this._onMq = () => this.applyTheme();
+      try { this._mq?.addEventListener('change', this._onMq); } catch (e) { /* 老浏览器 */ }
 
-    /* 网格拾取（PHASE 89 工艺检验中心 · 浇注系统入口面点选）。
-       与热结 marker 拾取是**两套独立机制**：marker 走 pointerdown（即时响应），
-       网格拾取走 pointerup 且要求位移 < 4px —— 因为用户按下拖动是在转视角，
-       pointerdown 就拾取的话，每转一次视角都会误加一个入口点。 */
-    this.pickTargets = [];        // 可拾取的网格对象（带 userData.pickKey）
-    this.pickMode = null;         // { cb } —— 开启后点击网格回调 {key, tri, point, normal}
-    /* 流道叠加层（PHASE 90 §十五：产品连接 / flow path / 分叉点 / 最小截面积位置 / 面积突变位置）。
-       单独立一个 Group，**不能**塞进 meshGroup（setDisplayMode 会遍历它把叠加层也切成线框/透明），
-       也**不能**进 pickTargets（折线会抢网格拾取）。 */
-    this.flowGroup = new THREE.Group();
-    this.scene.add(this.flowGroup);
-    this._downPos = null;
-    this.container.addEventListener('pointerdown', this._onDown = (e) => { this._downPos = [e.clientX, e.clientY]; });
-    this.container.addEventListener('pointerup', this._onUp = (e) => {
-      const d = this._downPos; this._downPos = null;
-      if (!this.pickMode || !d) return;
-      if (Math.hypot(e.clientX - d[0], e.clientY - d[1]) > 4) return;   // 是拖拽，不是点击
-      this.pickMesh(e);
-    });
+      this.meshGroup = new THREE.Group();
+      this.hsGroup = new THREE.Group();
+      this.scene.add(this.meshGroup, this.hsGroup);
 
-    this._animate();
-    window.addEventListener('resize', this._onResize = () => this.resize());
-    // 3D 内点击拾取热结（marker 点击 → 选中+聚焦+回调）
-    this.container.addEventListener('pointerdown', this._onPick = (e) => this.pick(e));
-    // 调试口：?hsDebug=1 时挂到 window，供自动化验证相机/坐标（生产环境不挂载）
-    if (new URLSearchParams(location.search).has('hsDebug')) window.__view3d = this;
+      this.hotspots = [];        // 热结数据（居中坐标）
+      this.markerMeshes = [];    // marker group 列表（拾取用）
+      this.selectedHs = -1;
+      this.onSelectHotspot = null;   // 选中回调(idx)；-1 = 取消选中
+
+      /* 网格拾取（PHASE 89 工艺检验中心 · 浇注系统入口面点选）。
+         与热结 marker 拾取是**两套独立机制**：marker 走 pointerdown（即时响应），
+         网格拾取走 pointerup 且要求位移 < 4px —— 因为用户按下拖动是在转视角，
+         pointerdown 就拾取的话，每转一次视角都会误加一个入口点。 */
+      this.pickTargets = [];        // 可拾取的网格对象（带 userData.pickKey）
+      this.pickMode = null;         // { cb } —— 开启后点击网格回调 {key, tri, point, normal}
+      /* 流道叠加层（PHASE 90 §十五：产品连接 / flow path / 分叉点 / 最小截面积位置 / 面积突变位置）。
+         单独立一个 Group，**不能**塞进 meshGroup（setDisplayMode 会遍历它把叠加层也切成线框/透明），
+         也**不能**进 pickTargets（折线会抢网格拾取）。 */
+      this.flowGroup = new THREE.Group();
+      this.scene.add(this.flowGroup);
+      this._downPos = null;
+      this.container.addEventListener('pointerdown', this._onDown = (e) => { this._downPos = [e.clientX, e.clientY]; });
+      this.container.addEventListener('pointerup', this._onUp = (e) => {
+        const d = this._downPos; this._downPos = null;
+        if (!this.pickMode || !d) return;
+        if (Math.hypot(e.clientX - d[0], e.clientY - d[1]) > 4) return;   // 是拖拽，不是点击
+        this.pickMesh(e);
+      });
+
+      /* 容器尺寸监听（PHASE V2.0-P1-01 · D1 · 风险 H1）：
+         只监听 window.resize 时，"窗口没变、容器变了"的每一次布局变化都不会更新画布——
+         左栏折叠、参数面板显隐、双列↔单列切换、3D 放大/恢复全属于这一类。
+         ResizeObserver 直接观察承载元素本身，覆盖上述全部情形；window.resize 保留，
+         用于容器尺寸不随窗口变化但需要重算的场合（如窗口缩放改变 devicePixelRatio）。 */
+      this._ro = (typeof ResizeObserver !== 'undefined') ? new ResizeObserver(() => this.resize()) : null;
+      if (this._ro) this._ro.observe(container);
+      window.addEventListener('resize', this._onResize = () => this.resize());
+      // 3D 内点击拾取热结（marker 点击 → 选中+聚焦+回调）
+      this.container.addEventListener('pointerdown', this._onPick = (e) => this.pick(e));
+      // 调试口：?hsDebug=1 时挂到 window，供自动化验证相机/坐标（生产环境不挂载）
+      if (new URLSearchParams(location.search).has('hsDebug')) window.__view3d = this;
+
+      /* 169 审计风险 2：**全部初始化成功后才启动动画循环**。
+         旧版在构造函数中部启动，后续步骤失败时会留下无人停止的 rAF。 */
+      this._animate();
+    } catch (err) {
+      // 构造函数失败时对象不会返回给调用方 ⇒ 必须在内部回收已创建的资源。
+      this._disposed = true;
+      this._releaseResources();
+      throw err;
+    }
   }
 
   _animate() {
-    this.controls.update();
-    if (this._needsRender) {
-      this.renderer.render(this.scene, this.camera);
-      this._needsRender = false;
+    // dispose 后必须停：原先 rAF 无条件自续，组件销毁后循环仍在跑（且 renderer 已释放）
+    this._raf = null;
+    if (this._disposed) return;
+    try {
+      this.controls?.update();
+      if (this._needsRender && this.renderer) {
+        this.renderer.render(this.scene, this.camera);
+        this._needsRender = false;
+      }
+    } catch (e) {
+      /* 渲染失败不再排下一帧（避免每帧抛错、空转）；资源仍由 dispose() 统一释放。 */
+      console.error('ModelView3D 渲染失败:', e);
+      return;
     }
-    requestAnimationFrame(() => this._animate());
+    if (!this._disposed) this._raf = requestAnimationFrame(() => this._animate());
   }
 
   resize() {
+    if (this._disposed) return;
     const w = this.container.clientWidth, h = Math.max(1, this.container.clientHeight);
+    // 容器不可见（hidden）或已脱离 DOM 时 clientWidth = 0：此时 setSize(0) 会把画布压成 0、
+    // aspect 变 0，模型直接消失且要等下一次 resize 才恢复。容器重新可见时 ResizeObserver
+    // 会再回调一次，所以这里跳过即可（风险 H1 的一半正是"隐藏期把尺寸算坏"）。
+    if (!(w > 0)) return;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
@@ -131,21 +200,30 @@ export class ModelView3D {
   load(mesh, fit = true) {
     this.clearMesh();
     const { geometry, bounds } = buildMesh(mesh);
-    // 显示层必须持有独立顶点副本（PHASE 21）：buildMesh 零拷贝引用 mesh.vertices，
-    // 若直接 translate 会原地改写分析引擎持有的共享数据 → UI inside=0 的 ROOT CAUSE。
-    // 这里先隔离 position，下面的居中 translate 只作用于副本。
-    detachPosition(geometry);
-    this.meshGroup.clear();
-    const material = new THREE.MeshPhysicalMaterial({
-      color: 0x9fb4d4, metalness: 0.15, roughness: 0.65,
-      side: THREE.DoubleSide, flatShading: false,
-    });
-    const meshObj = new THREE.Mesh(geometry, material);
-    // 居中：几何体平移到 bbox 中心为原点（CastEyes 同款方案，计算坐标系一致）
-    const c = bounds.center;
-    this._offset = c;
-    meshObj.geometry.translate(-c[0], -c[1], -c[2]);
-    this.meshGroup.add(meshObj);
+    let material = null;
+    try {
+      // 显示层必须持有独立顶点副本（PHASE 21）：buildMesh 零拷贝引用 mesh.vertices，
+      // 若直接 translate 会原地改写分析引擎持有的共享数据 → UI inside=0 的 ROOT CAUSE。
+      // 这里先隔离 position，下面的居中 translate 只作用于副本。
+      detachPosition(geometry);
+      this.meshGroup.clear();
+      material = new THREE.MeshPhysicalMaterial({
+        color: VIEW_THEME[this._theme].mesh, metalness: 0.15, roughness: 0.65,
+        side: THREE.DoubleSide, flatShading: false,
+      });
+      const meshObj = new THREE.Mesh(geometry, material);
+      // 居中：几何体平移到 bbox 中心为原点（CastEyes 同款方案，计算坐标系一致）
+      const c = bounds.center;
+      this._offset = c;
+      meshObj.geometry.translate(-c[0], -c[1], -c[2]);
+      this.meshGroup.add(meshObj);
+    } catch (err) {
+      /* 加载在加入 meshGroup 之前失败 ⇒ 本实例/实例清理都看不到这份 geometry/material，
+         必须在这里释放（170.txt §四.3）。加入成功后的异常由实例 dispose 统一回收。 */
+      try { geometry.dispose(); } catch (e) { /* 继续 */ }
+      try { material?.dispose?.(); } catch (e) { /* 继续 */ }
+      throw err;
+    }
     this.bounds = bounds;
     this.minSize = Math.min(...bounds.size);   // 模型最小包围盒尺寸（热结球封顶用）
     this._needsRender = true;
@@ -170,23 +248,37 @@ export class ModelView3D {
     const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
     for (const it of (items || [])) {
       if (!it?.mesh) continue;
-      const { geometry, bounds } = buildMesh(it.mesh);
-      detachPosition(geometry);   // PHASE 21 铁律：显示层不得改写分析引擎共享的顶点
-      geometry.translate(-center[0], -center[1], -center[2]);
-      const material = new THREE.MeshPhysicalMaterial({
-        color: it.color ?? 0x9fb4d4, metalness: 0.15, roughness: 0.65,
-        side: THREE.DoubleSide, flatShading: false,
-        transparent: it.opacity != null && it.opacity < 1,
-        opacity: it.opacity ?? 1,
-        depthWrite: it.opacity == null || it.opacity >= 1,
-      });
-      const meshObj = new THREE.Mesh(geometry, material);
-      meshObj.userData = { pickKey: it.key ?? null };
-      if (it.key) this.pickTargets.push(meshObj);
-      this.meshGroup.add(meshObj);
-      for (let k = 0; k < 3; k++) {
-        if (bounds.min[k] < lo[k]) lo[k] = bounds.min[k];
-        if (bounds.max[k] > hi[k]) hi[k] = bounds.max[k];
+      let geometry = null, material = null, added = false;
+      try {
+        const built = buildMesh(it.mesh);
+        geometry = built.geometry;
+        const bounds = built.bounds;
+        detachPosition(geometry);   // PHASE 21 铁律：显示层不得改写分析引擎共享的顶点
+        geometry.translate(-center[0], -center[1], -center[2]);
+        material = new THREE.MeshPhysicalMaterial({
+          color: it.color ?? 0x9fb4d4, metalness: 0.15, roughness: 0.65,
+          side: THREE.DoubleSide, flatShading: false,
+          transparent: it.opacity != null && it.opacity < 1,
+          opacity: it.opacity ?? 1,
+          depthWrite: it.opacity == null || it.opacity >= 1,
+        });
+        const meshObj = new THREE.Mesh(geometry, material);
+        meshObj.userData = { pickKey: it.key ?? null };
+        this.meshGroup.add(meshObj);
+        added = true;
+        if (it.key) this.pickTargets.push(meshObj);
+        for (let k = 0; k < 3; k++) {
+          if (bounds.min[k] < lo[k]) lo[k] = bounds.min[k];
+          if (bounds.max[k] > hi[k]) hi[k] = bounds.max[k];
+        }
+      } catch (err) {
+        /* 未加入 meshGroup 的对象实例清理看不到 ⇒ 在这里释放；
+           已加入的交给调用方的 dispose()（避免释放仍在场景里的对象）。 */
+        if (!added) {
+          try { geometry?.dispose?.(); } catch (e) { /* 继续 */ }
+          try { material?.dispose?.(); } catch (e) { /* 继续 */ }
+        }
+        throw err;
       }
     }
     if (lo[0] === Infinity) { this.bounds = null; return; }
@@ -221,7 +313,9 @@ export class ModelView3D {
    *   半径 = clamp(k × 区域等效半径, minR, maxR)（displayRadiusFor，只读计算数据）；
    *   位置优先使用 hs.displayPosition（引擎位置 + 有界中面修正），未提供则回落 hs.x/y/z。 */
   setHotspots(hsList) {
-    this.hsGroup.clear();
+    /* 旧 marker 的 SphereGeometry / 各种 Material / CanvasTexture 由本实例创建，
+       换一批热结后不再使用 ⇒ 必须真正 dispose（只 clear() 会留在 GPU 内存里）。 */
+    this._disposeGroup(this.hsGroup);
     this.hotspots = hsList || [];
     this.markerMeshes = [];
     this.selectedHs = -1;
@@ -291,8 +385,18 @@ export class ModelView3D {
     return new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
   }
 
-  /** 选中热结：高亮 + 相机聚焦（点击数据列表/3D marker 均可调用） */
-  selectHotspot(i, focus = true) {
+  /* ============================================================
+     146.txt §六：**点击热结不得自动放大 / 移动相机 / 跳转视图**
+       原实现 `selectHotspot(i, focus = true)` 默认聚焦：相机移到热点上方、
+       controls.target 改成热点位置、距离按模型尺寸缩放。3D marker 点击（pick）与
+       左栏列表点击都走这条默认路径 ⇒ 用户每点一个热结，视角就被拽走一次。
+       现在：**focus 默认 false** —— 点击只做「选中 + 高亮」（marker 放大变色、列表行高亮），
+       相机位置 / 朝向 / 缩放 / 观察状态一律不动。聚焦能力仍保留为**显式 opt-in**
+       （显式传 true 的调用方：inspectionCenter 的"定位到该热结"按钮、截图脚本），
+       不新建交互、不删能力。
+     ============================================================ */
+  /** 选中热结：高亮（默认不动相机）。focus=true 才把相机移到该热结。 */
+  selectHotspot(i, focus = false) {
     if (i < 0 || i >= this.hotspots.length) { this.selectedHs = -1; this._updateMarkerStyle(); return; }
     this.selectedHs = i;
     this._updateMarkerStyle();
@@ -338,7 +442,7 @@ export class ModelView3D {
       while (obj && obj.userData?.index === undefined) obj = obj.parent;
       if (obj) idx = obj.userData.index;
     }
-    this.selectHotspot(idx);
+    this.selectHotspot(idx, false);   // 146 §六：3D 内点 marker 只选择，不移动相机
     this.onSelectHotspot?.(idx);
   }
 
@@ -455,7 +559,7 @@ export class ModelView3D {
   }
 
   setFlowOverlay(overlay) {
-    this.flowGroup.clear();
+    this._disposeGroup(this.flowGroup);
     const o = this._offset || [0, 0, 0];
     const base = Math.max((this.bounds?.diagonal || 200) * 0.012, 0.5);
     const toLocal = (p) => new THREE.Vector3(p[0] - o[0], p[1] - o[1], p[2] - o[2]);
@@ -537,28 +641,132 @@ export class ModelView3D {
     this._needsRender = true;
   }
 
-  /** 清空网格（保留场景/相机） */
+  /**
+   * 释放一个 Group 内由本实例创建的 geometry / material / 贴图，然后清空组。
+   * 用 Set 去重，避免同一组内共享资源被重复 dispose；当前调用方
+   * （meshGroup / hsGroup / flowGroup）之间没有共享 geometry/material。
+   * 单个资源 dispose 抛错不影响其余资源释放。
+   */
+  _disposeGroup(group) {
+    if (!group) return;
+    const geos = new Set();
+    const mats = new Set();
+    const texs = new Set();
+    group.traverse((o) => {
+      if (!o) return;
+      /* ⚠ 两类 three 模块级共享 geometry **不能 dispose**：
+         ① Sprite：所有 Sprite 共用同一份 _geometry；
+         ② ArrowHelper 的 line / cone：所有 ArrowHelper 共用 _lineGeometry / _coneGeometry
+            （vendor/three.module.js r160：ArrowHelper 的两个子对象直接引用这两份对象）。
+         它们不属于本实例，dispose 会误伤其他视图/后续标记。
+         这些子对象各自创建的 material（以及 Sprite 的 CanvasTexture）仍正常释放。 */
+      const isArrowHelperPart = o.parent?.type === 'ArrowHelper'
+        && (o === o.parent.line || o === o.parent.cone);
+      if (o.geometry && !o.isSprite && !isArrowHelperPart) geos.add(o.geometry);
+      const list = Array.isArray(o.material) ? o.material : (o.material ? [o.material] : []);
+      for (const m of list) {
+        if (!m) continue;
+        mats.add(m);
+        for (const k of ['map', 'alphaMap', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap']) {
+          if (m[k]) texs.add(m[k]);
+        }
+      }
+    });
+    for (const g of geos) { try { g.dispose(); } catch (e) { /* 单个资源失败不阻断其他 */ } }
+    for (const t of texs) { try { t.dispose(); } catch (e) { /* 同上 */ } }
+    for (const m of mats) { try { m.dispose(); } catch (e) { /* 同上 */ } }
+    group.clear();
+  }
+
+  /** 清空网格（保留场景/相机）——geometry/material/贴图一并释放，避免重复导入累积 GPU 内存 */
   clearMesh() {
-    this.meshGroup.clear();
-    this.hsGroup.clear();
+    this._disposeGroup(this.meshGroup);
+    this._disposeGroup(this.hsGroup);
     // 叠加层也要清（否则 load() 之后旧的流道折线还挂在场景里，指着空气）
-    this.flowGroup.clear();
+    this._disposeGroup(this.flowGroup);
+    this.hotspots = [];
+    this.markerMeshes = [];
+    this.selectedHs = -1;
     this.pickTargets = [];
     this.bounds = null;
     this._offset = null;
   }
 
   /** 释放资源 */
-  dispose() {
-    window.removeEventListener('resize', this._onResize);
-    this.container.removeEventListener('pointerdown', this._onPick);
-    this.container.removeEventListener('pointerdown', this._onDown);
-    this.container.removeEventListener('pointerup', this._onUp);
+  /** 145 §四：按当前主题切换视口背景 / 模型色 / 光照（不触碰相机、坐标、缩放与计算结果） */
+  applyTheme() {
+    const t = resolveTheme();
+    if (t === this._theme) return;               // 无变化不重绘
+    this._theme = t;
+    const cfg = VIEW_THEME[t];
+    this.scene.background = new THREE.Color(cfg.bg);
+    if (this._lights) {
+      this._lights.ambient.intensity = cfg.ambient;
+      this._lights.hemi.color.setHex(cfg.hemiSky);
+      this._lights.hemi.groundColor.setHex(cfg.hemiGround);
+      this._lights.hemi.intensity = cfg.hemi;
+      this._lights.dir.intensity = cfg.dir;
+    }
+    if (this._axes) this._axes.material.opacity = cfg.axes;
+    // 模型材质：只在**仍然用着默认色**时替换（用户没改过颜色；线框/透明模式只动 wireframe/opacity）
+    for (const g of [this.meshGroup, this.flowGroup]) {
+      g?.traverse?.((o) => { if (o.isMesh && o.material?.isMeshPhysicalMaterial) o.material.color.setHex(cfg.mesh); });
+    }
+    this._needsRender = true;
+  }
+
+  /**
+   * 回收本实例已创建的资源。**必须能安全处理部分初始化状态**：
+   * 构造函数中途抛错时，renderer / controls / 各 Group / 监听器都可能不存在。
+   * 每一步独立 try/catch —— 一个资源释放失败不阻断其余资源。
+   */
+  _releaseResources() {
+    if (this._raf != null) {
+      try { cancelAnimationFrame(this._raf); } catch (e) { /* 无 rAF 环境 */ }
+      this._raf = null;
+    }
+    try { this._ro?.disconnect?.(); } catch (e) { /* 可能尚未创建 */ }
+    this._ro = null;
+    try { this._themeObs?.disconnect?.(); } catch (e) { /* 可能尚未创建 */ }
+    this._themeObs = null;
+    try { this._mq?.removeEventListener?.('change', this._onMq); } catch (e) { /* 老浏览器 */ }
+    try { if (this._onResize) window.removeEventListener('resize', this._onResize); } catch (e) { /* 可能尚未添加 */ }
+    try { if (this._onPick) this.container?.removeEventListener('pointerdown', this._onPick); } catch (e) { /* 同上 */ }
+    try { if (this._onDown) this.container?.removeEventListener('pointerdown', this._onDown); } catch (e) { /* 同上 */ }
+    try { if (this._onUp) this.container?.removeEventListener('pointerup', this._onUp); } catch (e) { /* 同上 */ }
+    // OrbitControls 的 pointerdown/move/up、wheel、contextmenu 监听都挂在 container 上，
+    //   而 container 元素本身**不随** dispose 消失——不 dispose 的话，
+    //   在同一容器上重复导入 STL 会一层层叠加整套控制监听（D1.5 资源泄漏）。
+    try { this.controls?.dispose?.(); } catch (e) { /* 可能尚未创建 */ }
+    this.controls = null;
+    // 模型 / 热结 / 流道三组资源（geometry + material + CanvasTexture）
+    try { this._disposeGroup(this.meshGroup); } catch (e) { /* 继续释放其余 */ }
+    try { this._disposeGroup(this.hsGroup); } catch (e) { /* 同上 */ }
+    try { this._disposeGroup(this.flowGroup); } catch (e) { /* 同上 */ }
+    this.meshGroup = null; this.hsGroup = null; this.flowGroup = null;
+    // 坐标轴（一次性资源）
+    try { this._axes?.geometry?.dispose?.(); } catch (e) { /* 同上 */ }
+    try { this._axes?.material?.dispose?.(); } catch (e) { /* 同上 */ }
+    this._axes = null;
+    this._lights = null;
+    // renderer.dispose() 不释放 WebGL 上下文（上下文要等 canvas 被 GC 才回收，浏览器上限约 16 个）。
+    //   反复导入/重进视图会累积到"Too many active WebGL contexts"→ 画布变黑。
+    try { this.renderer?.dispose?.(); } catch (e) { /* 继续 */ }
+    try { this.renderer?.forceContextLoss?.(); } catch (e) { /* 继续 */ }
+    try { this.renderer?.domElement?.remove?.(); } catch (e) { /* 继续 */ }
+    this.renderer = null;
     this.hotspots = [];
     this.markerMeshes = [];
     this.pickTargets = [];
     this.pickMode = null;
-    this.renderer.dispose();
-    this.container.innerHTML = '';
+    // ?hsDebug=1 的调试句柄若仍指向本实例，一并移除（避免全局持有已销毁对象）
+    try { if (typeof window !== 'undefined' && window.__view3d === this) delete window.__view3d; } catch (e) { /* 忽略 */ }
+  }
+
+  /** 释放资源（幂等：重复调用直接返回，不抛异常） */
+  dispose() {
+    if (this._disposed) return;
+    this._disposed = true;                       // 停 rAF 自续（_animate 首行判定）
+    this._releaseResources();
   }
 }

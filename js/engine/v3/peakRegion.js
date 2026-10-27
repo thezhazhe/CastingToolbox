@@ -126,7 +126,15 @@ export function extractRegion(M, sample, peakPt, opts = {}, field = null) {
   //   峰值检测/报告仍用封顶 M（14.txt 均匀件校准保持）；无 field 时回落纯 M（兼容旧路径）。
   const peakRaw = field && field.A[peakPt] > 1e-9 ? field.V[peakPt] / field.A[peakPt] : 0;
   const threshold = Math.max(peakM, peakRaw) * o.regionGrowRatio;
-  const cellVol = vs ** 3;
+  // PHASE V2.0-03（101.txt）：cell volume 必须用**实际采样点间距**，不是 vs³。
+  //   refineSample（sampling.js:326）在 gs > refineMaxPoints^(1/3) 时以 stride>1 降密度，
+  //   此时 pts 相邻间距 = vs × stride（2026-10-07 在真实件上逐轴实测吻合），
+  //   每个采样点代表 stride³ 个体素 → 旧式 pts.length × vs³ 按 stride³ 低估区域体积
+  //   （实测 stride=2/3/5 → 1/8、1/27、1/125；ALR2510 H1 52.82 vs 413.02 cm³）。
+  //   stride 与下方 gridNeighbors6 的步长同源——保证"区域连通步长"与"单点体积"一致；
+  //   sample 无 stride（旧夹具/外部调用）时退化为 1，与 gridNeighbors6 的默认一致。
+  const spacing = vs * (sample.stride ?? 1);
+  const cellVol = spacing ** 3;
   const rawOf = (t) => (field && field.A[t] > 1e-9 ? field.V[t] / field.A[t] : M[t]);
 
   const visited = new Uint8Array(insideIdx.length);
